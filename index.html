@@ -348,6 +348,73 @@ textarea.diary-input:focus{border-color:var(--primary)}
   .cd-unit{padding:10px 14px;min-width:60px}
   .cd-num{font-size:28px}
 }
+
+/* ═══════════════════════════════════════════
+   FLOATING CHAT WIDGET
+═══════════════════════════════════════════ */
+#chat-fab-dot{position:fixed;bottom:calc(10% + 60px);right:calc(2.5% + 0px);width:12px;height:12px;background:#4ade80;border-radius:50%;border:2px solid #fff;z-index:99999;box-shadow:0 0 0 0 rgba(74,222,128,.5);animation:chatPulse 2s infinite}
+@keyframes chatPulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.5)}70%{box-shadow:0 0 0 8px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+#chat-fab{position:fixed;bottom:10%;right:2.5%;width:62px;height:62px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));border:none;cursor:pointer;box-shadow:0 4px 20px rgba(212,101,10,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;z-index:99999;transition:all .25s}
+#chat-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(212,101,10,.6)}
+#chat-fab-icon{font-size:26px;line-height:1;transition:all .2s}
+#chat-fab-label{color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;font-family:'Nunito',sans-serif}
+#chat-fab-unread{position:absolute;top:-3px;right:-3px;background:#e74c3c;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid #fff;font-family:'Nunito',sans-serif}
+
+#chat-float{position:fixed;bottom:calc(10% + 80px);right:2.5%;width:340px;max-height:520px;border-radius:20px;background:#fff;border:1px solid rgba(212,101,10,.2);box-shadow:0 12px 48px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;z-index:99998;font-family:'Nunito',sans-serif;transition:all .25s}
+#chat-float.cf-open{display:flex;animation:cfIn .25s ease}
+@keyframes cfIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+#cf-hdr{background:linear-gradient(135deg,var(--brown),var(--primary-dark));padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+#cf-hdr-av{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+#cf-hdr-info{flex:1;min-width:0}
+#cf-hdr-name{font-size:14px;font-weight:800;color:#fff;font-family:'Playfair Display',serif}
+#cf-hdr-status{font-size:11px;color:rgba(255,255,255,.8);margin-top:1px;display:flex;align-items:center;gap:4px}
+.cf-live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;animation:chatPulse 2s infinite}
+.cf-hdr-actions{display:flex;align-items:center;gap:4px}
+.cf-size-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:11px;font-family:'Nunito',sans-serif;font-weight:700;transition:background .15s}
+.cf-size-btn:hover{background:rgba(255,255,255,.35)}
+.cf-icon-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.cf-icon-btn:hover{background:rgba(255,255,255,.35)}
+
+#cf-msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;background:#fef9ef;scroll-behavior:smooth}
+#cf-msgs::-webkit-scrollbar{width:3px}
+#cf-msgs::-webkit-scrollbar-thumb{background:rgba(212,101,10,.3);border-radius:3px}
+.cf-sys{text-align:center;font-size:11px;color:var(--text-muted);font-weight:600;padding:2px 0}
+.cf-row{display:flex;align-items:flex-end;gap:6px;max-width:92%}
+.cf-row.me{flex-direction:row-reverse;align-self:flex-end;max-width:92%}
+.cf-av{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(212,101,10,.2)}
+.cf-av-placeholder{width:26px;height:26px;border-radius:50%;background:var(--cream-dark);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border:1px solid rgba(212,101,10,.2)}
+.cf-bubble-wrap{display:flex;flex-direction:column;gap:2px}
+.cf-name{font-size:10px;font-weight:800;color:var(--brown-light);padding:0 6px}
+.cf-row.me .cf-name{display:none}
+.cf-bubble{padding:8px 12px;border-radius:16px;font-size:13px;line-height:1.55;word-break:break-word}
+.cf-bubble.other{background:#fff;color:var(--text);border:1px solid rgba(212,101,10,.15);border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.cf-bubble.me{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-bottom-right-radius:4px}
+.cf-time{font-size:10px;opacity:.55;padding:0 6px;align-self:flex-end;white-space:nowrap}
+
+#cf-footer{padding:10px 12px;border-top:1px solid var(--cream-dark);background:#fff;display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+#cf-my-av{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--primary-light)}
+#cf-input{flex:1;border:1.5px solid var(--cream-dark);border-radius:20px;padding:8px 14px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;resize:none;min-height:36px;max-height:100px;line-height:1.4;color:var(--text);transition:border-color .2s}
+#cf-input:focus{border-color:var(--primary)}
+#cf-send{width:36px;height:36px;border-radius:50%;background:var(--primary);border:none;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+#cf-send:hover{background:var(--primary-dark);transform:scale(1.08)}
+
+#cf-guest-bar{padding:8px 14px;background:rgba(245,166,35,.12);border-bottom:1px solid rgba(245,166,35,.3);display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:12px;color:var(--brown-light);font-weight:600}
+#cf-guest-bar .cf-gb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cf-gb-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
+
+/* Mobile: full screen chat */
+@media(max-width:600px){
+  #chat-float{width:100vw;right:0;bottom:0;max-height:100dvh;border-radius:20px 20px 0 0;border-bottom:none}
+  #chat-float.cf-open{animation:cfInMobile .25s ease}
+  @keyframes cfInMobile{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+  #chat-fab{bottom:24px;right:16px;width:56px;height:56px}
+  #chat-fab-dot{bottom:calc(24px + 52px);right:calc(16px - 4px)}
+}
+@media(min-width:601px){
+  #chat-float{height:480px}
+}
+
 </style>
 </head>
 <body>
@@ -418,7 +485,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-item" onclick="navigate('write')" data-page="write" id="nav-write" style="display:none"><span class="ni">✏️</span><span data-i18n="nav-write">寫今日日記</span></div>
         <div class="nav-item" onclick="navigate('gallery')" data-page="gallery"><span class="ni">📷</span><span data-i18n="nav-gallery">相片牆</span></div>
         <div class="nav-section" data-i18n="nav-interact">互動</div>
-        <div class="nav-item" onclick="navigate('chat')" data-page="chat"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
+        <div class="nav-item" onclick="chatToggle()" id="nav-chat-item"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
         <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile" style="display:none"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
         <div class="nav-item admin-only" onclick="navigate('admin')" data-page="admin" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
       </nav>
@@ -604,15 +671,6 @@ textarea.diary-input:focus{border-color:var(--primary)}
               <span style="font-size:12px;opacity:.75">LIVE</span>
             </div>
           </div>
-          <div class="chat-messages" id="chat-messages">
-            <div class="chat-system">💬 歡迎來到澳洲冒險即時聊天室！雖然你沒有來，但我們在線上等你 🦘</div>
-          </div>
-          <div class="chat-input-area">
-            <img id="chat-my-avatar" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">
-            <textarea class="chat-input" id="chat-input" placeholder="輸入訊息... (Enter 送出，訪客也可聊天)" rows="1" onkeydown="chatKeydown(event)"></textarea>
-            <button class="chat-send" onclick="sendMessage()">➤</button>
-          </div>
-        </div>
       </div>
 
       <!-- ====== PROFILE ====== -->
@@ -1031,6 +1089,12 @@ function updateSidebarUser(user) {
   // Show profile nav only when logged in
   const navProfile = document.getElementById('nav-profile');
   if(navProfile) navProfile.style.display = 'flex';
+  // Update chat widget user bar
+  updateCfUserBar();
+  // Cache nickname for chat
+  db.collection('profiles').doc(user.uid).get().then(s => {
+    if(s.exists && s.data().nickname) sessionStorage.setItem('profileNickname', s.data().nickname);
+  }).catch(()=>{});
 }
 
 function toggleAdminUI() {
@@ -1879,84 +1943,210 @@ document.getElementById('lightbox').addEventListener('touchend', e => {
 }, {passive:true});
 
 // ============================================================
-// CHAT
+// FLOATING CHAT WIDGET
 // ============================================================
+let cfOpen = false;
+let cfFontSize = 13;
+let cfUnreadCount = 0;
+let cfWasOpen = false;
+let cfChatListener = null;
+
+function chatToggle() {
+  cfOpen = !cfOpen;
+  const win = document.getElementById('chat-float');
+  const icon = document.getElementById('chat-fab-icon');
+  const sidebar = document.getElementById('sidebar');
+  if(win) win.classList.toggle('cf-open', cfOpen);
+  if(icon) icon.textContent = cfOpen ? '✕' : '💬';
+  if(cfOpen) {
+    cfUnreadCount = 0;
+    updateChatBadge();
+    setTimeout(() => document.getElementById('cf-input')?.focus(), 200);
+    // Close mobile sidebar if open
+    if(sidebar?.classList.contains('open')) toggleSidebar();
+  }
+}
+
+function cfSetSize(size) {
+  cfFontSize = size;
+  const msgs = document.getElementById('cf-msgs');
+  if(msgs) msgs.style.fontSize = size + 'px';
+}
+
+function updateChatBadge() {
+  const badge = document.getElementById('chat-fab-unread');
+  const navBadge = document.getElementById('chat-badge');
+  if(badge) {
+    badge.style.display = cfUnreadCount > 0 ? 'flex' : 'none';
+    badge.textContent = cfUnreadCount > 9 ? '9+' : cfUnreadCount;
+  }
+  if(navBadge) {
+    navBadge.style.display = cfUnreadCount > 0 ? 'inline' : 'none';
+    navBadge.textContent = cfUnreadCount;
+  }
+}
+
 function initChat() {
-  if(chatListener) chatListener();
-  const chatRef = rtdb.ref('chat').orderByChild('timestamp').limitToLast(100);
-  chatListener = chatRef.on('value', snap => {
+  if(cfChatListener) cfChatListener();
+  if(!rtdb) return;
+  
+  updateCfUserBar();
+  wireCfInput();
+  
+  const chatRef = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
+  cfChatListener = chatRef.on('value', snap => {
     const msgs = [];
-    snap.forEach(child => msgs.push({id:child.key, ...child.val()}));
-    renderChatMessages(msgs);
+    snap.forEach(c => msgs.push({id: c.key, ...c.val()}));
+    renderCfMessages(msgs);
   });
 }
 
-function renderChatMessages(msgs) {
-  const container = document.getElementById('chat-messages');
+function renderCfMessages(msgs) {
+  const container = document.getElementById('cf-msgs');
   if(!container) return;
-  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+  const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
   
-  container.innerHTML = `<div class="chat-system">💬 歡迎來到澳洲冒險即時聊天室！雖然你沒有來，但我們在線上等你 🦘</div>`;
+  const prevCount = container.querySelectorAll('.cf-row').length;
   
+  container.innerHTML = '<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
+  
+  let lastDate = '';
   msgs.forEach(msg => {
-    const isMe = currentUser && msg.uid === currentUser.uid;
-    const avatar = msg.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.userName||'U')}&background=d4650a&color=fff`;
-    const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
-    const deleteBtn = isAdmin ? `<button onclick="deleteChat('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:rgba(255,255,255,.5);padding:0 4px">✕</button>` : '';
-    container.innerHTML += `<div class="chat-msg ${isMe?'me':''}">
-      <img class="cm-avatar" src="${avatar}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=e0d0c0&color=5c3317'">
-      <div>
-        <div class="cm-bubble">
-          <div class="cm-name">${esc(msg.userName||'')}</div>
-          <div class="cm-text">${esc(msg.text||'')}</div>
-          <div class="cm-time">${time} ${deleteBtn}</div>
+    const isMe = (currentUser && msg.uid === currentUser.uid) || 
+                 (!currentUser && msg.uid && msg.uid.startsWith('guest_') && 
+                  msg.uid === sessionStorage.getItem('guestUid'));
+    const ts = msg.timestamp ? new Date(msg.timestamp) : null;
+    const time = ts ? ts.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '';
+    const dateStr = ts ? ts.toLocaleDateString('zh-TW', {month:'numeric', day:'numeric'}) : '';
+    
+    // Date separator
+    if(dateStr && dateStr !== lastDate) {
+      lastDate = dateStr;
+      container.innerHTML += `<div class="cf-sys">── ${dateStr} ──</div>`;
+    }
+    
+    const name = msg.userName || '訪客';
+    const initials = name.slice(0,1).toUpperCase();
+    const avatarHTML = msg.userPhoto 
+      ? `<img class="cf-av" src="${msg.userPhoto}" alt="" onerror="this.style.display='none';this.nextSibling&&(this.nextSibling.style.display='flex')">`
+      : `<div class="cf-av-placeholder">${initials}</div>`;
+    
+    const delBtn = isAdmin ? ` <button onclick="cfDeleteMsg('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:.5;padding:0 2px;color:inherit">✕</button>` : '';
+    
+    if(isMe) {
+      container.innerHTML += `<div class="cf-row me">
+        <div class="cf-bubble-wrap" style="align-items:flex-end">
+          <div class="cf-bubble me">${esc(msg.text||'')}${delBtn}</div>
+          <div class="cf-time">${time}</div>
         </div>
-      </div>
-    </div>`;
+      </div>`;
+    } else {
+      container.innerHTML += `<div class="cf-row">
+        ${avatarHTML}
+        <div class="cf-bubble-wrap">
+          <div class="cf-name">${esc(name)}</div>
+          <div class="cf-bubble other">${esc(msg.text||'')}${delBtn}</div>
+          <div class="cf-time">${time}</div>
+        </div>
+      </div>`;
+    }
   });
   
-  if(wasAtBottom) container.scrollTop = container.scrollHeight;
+  // Unread badge
+  const newCount = container.querySelectorAll('.cf-row').length;
+  if(!cfOpen && newCount > prevCount) {
+    cfUnreadCount += newCount - prevCount;
+    updateChatBadge();
+  }
+  
+  if(atBottom || msgs.length <= 3) {
+    requestAnimationFrame(() => container.scrollTop = container.scrollHeight);
+  }
 }
 
-async function sendMessage() {
-  const input = document.getElementById('chat-input');
-  const text = input?.value.trim();
-  if(!text) return;
-
-  // Allow guest chat with a prompt for nickname
-  let userName, userPhoto, uid;
+function updateCfUserBar() {
+  const guestBar = document.getElementById('cf-guest-bar');
+  const guestNameDisplay = document.getElementById('cf-guest-name-display');
+  const myAv = document.getElementById('cf-my-av');
+  
   if(currentUser) {
+    if(guestBar) guestBar.style.display = 'none';
+    if(myAv) myAv.src = currentUser.photoURL || 
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'U')}&background=d4650a&color=fff`;
+  } else {
+    if(guestBar) guestBar.style.display = 'flex';
+    const guestName = sessionStorage.getItem('guestName');
+    if(guestNameDisplay) guestNameDisplay.textContent = guestName ? `以「${guestName}」聊天` : '以訪客身分聊天';
+    if(myAv) {
+      const n = guestName || '??';
+      myAv.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=8b5e3c&color=fff`;
+    }
+  }
+}
+
+function wireCfInput() {
+  const input = document.getElementById('cf-input');
+  const sendBtn = document.getElementById('cf-send');
+  if(!input || !sendBtn) return;
+  
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); cfSendMessage(); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+  });
+  sendBtn.onclick = cfSendMessage;
+}
+
+async function cfSendMessage() {
+  const input = document.getElementById('cf-input');
+  const text = input?.value.trim();
+  if(!text || !rtdb) return;
+  
+  let userName, userPhoto, uid;
+  
+  if(currentUser) {
+    // Try to get saved nickname from profile
     userName = currentUser.displayName || currentUser.email;
     userPhoto = currentUser.photoURL || '';
     uid = currentUser.uid;
+    // Use stored nickname if available
+    const saved = sessionStorage.getItem('profileNickname');
+    if(saved) userName = saved;
   } else {
-    // Guest: ask for name once, store in sessionStorage
     let guestName = sessionStorage.getItem('guestName');
     if(!guestName) {
-      guestName = prompt('請輸入你的暱稱：', '訪客');
-      if(!guestName) return;
+      guestName = prompt('請輸入你的暱稱（訪客）：', '');
+      if(guestName === null) return;
       guestName = guestName.trim().slice(0, 20) || '訪客';
       sessionStorage.setItem('guestName', guestName);
+      updateCfUserBar();
     }
-    userName = guestName + ' (訪客)';
+    userName = guestName + ' 👋';
     userPhoto = '';
-    uid = 'guest_' + Math.random().toString(36).slice(2, 8);
+    uid = sessionStorage.getItem('guestUid') || 'guest_' + Math.random().toString(36).slice(2, 8);
+    sessionStorage.setItem('guestUid', uid);
   }
   
   try {
     await rtdb.ref('chat').push({ uid, userName, userPhoto, text, timestamp: Date.now() });
-    input.value = '';
-    input.style.height = '';
+    if(input) { input.value = ''; input.style.height = ''; }
   } catch(e) {
     showToast("發送失敗：" + e.message, "error");
   }
 }
 
-function chatKeydown(e) {
-  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+function cfChangeGuestName() {
+  const newName = prompt('更改你的暱稱：', sessionStorage.getItem('guestName') || '');
+  if(newName === null) return;
+  const name = newName.trim().slice(0, 20) || '訪客';
+  sessionStorage.setItem('guestName', name);
+  sessionStorage.removeItem('guestUid'); // new uid on name change
+  updateCfUserBar();
 }
 
-async function deleteChat(msgId) {
+async function cfDeleteMsg(msgId) {
   if(!isAdmin) return;
   try { await rtdb.ref('chat/' + msgId).remove(); } catch(e) {}
 }
@@ -1965,6 +2155,9 @@ async function clearAllChat() {
   if(!isAdmin || !confirm('確定要清空所有聊天紀錄嗎？')) return;
   try { await rtdb.ref('chat').remove(); showToast("聊天紀錄已清空", "success"); } catch(e) {}
 }
+
+// Keep old deleteChat alias for admin panel
+async function deleteChat(msgId) { return cfDeleteMsg(msgId); }
 
 // ============================================================
 // PROFILE
@@ -2181,5 +2374,57 @@ document.addEventListener('DOMContentLoaded', () => {
   initChat();
 });
 </script>
+
+<!-- ═══════════════════════════════════════
+     FLOATING CHAT WIDGET
+═══════════════════════════════════════ -->
+<!-- Online dot -->
+<span id="chat-fab-dot"></span>
+
+<!-- FAB Button -->
+<button id="chat-fab" onclick="chatToggle()" title="即時聊天室">
+  <div id="chat-fab-unread"></div>
+  <span id="chat-fab-icon">💬</span>
+  <span id="chat-fab-label">聊天</span>
+</button>
+
+<!-- Float Window -->
+<div id="chat-float">
+  <!-- Header -->
+  <div id="cf-hdr">
+    <div id="cf-hdr-av">🦘</div>
+    <div id="cf-hdr-info">
+      <div id="cf-hdr-name">澳洲冒險・即時聊天</div>
+      <div id="cf-hdr-status"><span class="cf-live-dot"></span>&nbsp;LIVE・與16位見習教師即時互動</div>
+    </div>
+    <div class="cf-hdr-actions">
+      <button class="cf-size-btn" onclick="cfSetSize(12)">小</button>
+      <button class="cf-size-btn" onclick="cfSetSize(14)">中</button>
+      <button class="cf-size-btn" onclick="cfSetSize(16)">大</button>
+      <button class="cf-icon-btn" onclick="chatToggle()" title="關閉">✕</button>
+    </div>
+  </div>
+
+  <!-- Guest name bar (shown when not logged in) -->
+  <div id="cf-guest-bar" style="display:none">
+    <span>👋</span>
+    <span class="cf-gb-name" id="cf-guest-name-display">以訪客身分聊天</span>
+    <button class="cf-gb-btn" onclick="cfChangeGuestName()">改名</button>
+    <button class="cf-gb-btn" style="background:var(--green)" onclick="openLoginModal()">登入</button>
+  </div>
+
+  <!-- Messages -->
+  <div id="cf-msgs">
+    <div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>
+  </div>
+
+  <!-- Input -->
+  <div id="cf-footer">
+    <img id="cf-my-av" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" alt="">
+    <textarea id="cf-input" placeholder="輸入訊息…（Enter 送出，Shift+Enter 換行）" rows="1"></textarea>
+    <button id="cf-send">➤</button>
+  </div>
+</div>
+
 </body>
 </html>
