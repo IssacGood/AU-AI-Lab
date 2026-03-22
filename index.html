@@ -573,7 +573,8 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-item" onclick="navigate('team')" data-page="team"><span class="ni">🧑‍🏫</span><span>見習成員</span></div>
         <div class="nav-item" onclick="navigate('install')" data-page="install"><span class="ni">📲</span><span>加入桌面</span></div>
         <div class="nav-item" onclick="chatToggle()" id="nav-chat-item"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
-        <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile" style="display:none"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
+        <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
+        <div class="nav-item" onclick="navigate('orgs')" data-page="orgs"><span class="ni">🏛️</span><span>機構介紹</span></div>
         <div class="nav-item admin-only" onclick="window.open('admin.html','_blank')" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
       </nav>
       <div class="sidebar-footer">
@@ -881,6 +882,80 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div id="admin-render-target"></div>
       </div>
 
+
+      <!-- ====== ORGS ====== -->
+      <div class="page" id="page-orgs">
+        <div class="page-header">
+          <h2>🏛️ 見習機構介紹</h2>
+          <p>I-8-29 計畫見習合作機構</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:24px">
+
+          <!-- NSW DoE -->
+          <div class="card">
+            <div style="background:linear-gradient(135deg,#003087,#0052cc);padding:20px 24px;display:flex;align-items:center;gap:14px">
+              <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🏛️</div>
+              <div>
+                <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff">新南威爾斯州教育廳</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:2px">NSW Department of Education</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:16px">新南威爾斯州教育廳（NSW Department of Education）負責管理澳洲新州超過 2,000 所公立中小學，提供從幼兒教育、中小學課程、原住民教育到多元文化教育等全面服務。該部門致力於提升教學質量，制定新進教師標準，並頒發國際認可的高中證書。</p>
+              <a href="https://education.nsw.gov.au" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#003087;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;font-family:'Nunito',sans-serif">🔗 education.nsw.gov.au</a>
+            </div>
+          </div>
+
+          <!-- USyd -->
+          <div class="card">
+            <div style="background:linear-gradient(135deg,#C4262E,#8B0000);padding:20px 24px;display:flex;align-items:center;gap:14px">
+              <div style="width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🎓</div>
+              <div>
+                <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff">雪梨大學教育學院</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:2px">The University of Sydney — Sydney School of Education and Social Work</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:16px">雪梨大學教育與社會工作學院（Sydney School of Education and Social Work）隸屬於澳洲歷史最悠久的雪梨大學，在教育學領域名列世界前茅。該學院專注於高質量的教師培訓、教育研究及社會工作，課程涵蓋幼教、小學及中學教育，重視教學實踐與教育政策分析，畢業生就業率高。</p>
+              <a href="https://www.sydney.edu.au" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#C4262E;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;font-family:'Nunito',sans-serif">🔗 sydney.edu.au</a>
+            </div>
+          </div>
+
+          <!-- UNSW -->
+          <div class="card">
+            <div style="background:linear-gradient(135deg,#FFB800,#E59400);padding:20px 24px;display:flex;align-items:center;gap:14px">
+              <div style="width:48px;height:48px;background:rgba(255,255,255,.25);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🔬</div>
+              <div>
+                <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff">新南威爾斯大學</div>
+                <div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:2px">UNSW Sydney</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <p style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:16px">新南威爾斯大學（UNSW Sydney）成立於 1949 年，位於澳洲雪梨，是頂尖的研究型大學及八校聯盟（Go8）成員。該校以「南半球的麻省理工」著稱，工程、商科、法律及醫學享譽國際，尤以工程學院規模全澳最大，且畢業生就業能力極強，為澳洲百強企業 CEO 與億萬富翁校友最多的學府。</p>
+              <a href="https://www.unsw.edu.au" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#FFB800;color:#333;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;font-family:'Nunito',sans-serif">🔗 unsw.edu.au</a>
+            </div>
+          </div>
+
+          <!-- 計畫說明卡片 -->
+          <div class="card" style="border:2px solid var(--primary-light)">
+            <div class="card-body" style="background:linear-gradient(135deg,#fff9ef,#fff)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <span style="font-size:24px">📋</span>
+                <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:16px">計畫資訊</h3>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+                <div><div style="font-weight:800;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">主題類別</div><div style="color:var(--text)">（八）專業職能培訓</div></div>
+                <div><div style="font-weight:800;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">國家城市</div><div style="color:var(--text)">澳洲 · 墨爾本 · 雪梨</div></div>
+                <div><div style="font-weight:800;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">活動期間</div><div style="color:var(--text)">2026年 8月3日 — 8月18日</div></div>
+                <div><div style="font-weight:800;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">見習人數</div><div style="color:var(--text)">16 位公立國小教師</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /app-layout -->
 </div><!-- /app -->
@@ -1114,6 +1189,7 @@ function navigate(page){
   if(page==='profile'){if(!currentUser){openLoginModal();return;}setTimeout(function(){renderProfilePage();},10);}
   if(page==='admin') setTimeout(function(){renderAdminPage();},10);
   if(page==='team') renderTeamPage();
+  if(page==='orgs') renderOrgsPage();
   var sb=document.getElementById('sidebar'); if(sb&&sb.classList.contains('open')) toggleSidebar();
   window.scrollTo(0,0);
 }
@@ -1575,6 +1651,8 @@ async function profUploadAvatar(input){
 // ─────────────────────────────────────────────
 // ADMIN / TEAM / INSTALL / EDIT DIARY
 // ─────────────────────────────────────────────
+function renderOrgsPage(){} // static HTML, no JS needed
+
 function renderAdminPage(){
   var target=document.getElementById('admin-render-target');if(!target)return;
   if(!isAdmin){target.innerHTML='<div style="text-align:center;padding:60px;color:#7a5c46"><div style="font-size:48px;margin-bottom:12px">🔒</div><p>僅管理員可見</p></div>';return;}
