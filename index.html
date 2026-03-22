@@ -2161,28 +2161,41 @@ async function profSave() {
   }
 }
 
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  formData.append('folder', 'au_ai_lab');
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST', body: formData
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  return data.secure_url;
+}
+
+
 async function profUploadAvatar(input) {
   if(!input.files[0] || !currentUser) return;
   const file = input.files[0];
   const status = document.getElementById('prof-status');
-  if(status) status.textContent = '上傳頭像中...';
+  if(status) { status.textContent = '上傳頭像中...'; status.style.color = '#7a5c46'; }
   try {
-    const blob = await compressImage(file, 200);
-    const ref  = storage.ref('avatars/' + currentUser.uid + '/avatar.jpg');
-    await ref.put(blob);
-    const url  = await ref.getDownloadURL();
-    await db.collection('profiles').doc(currentUser.uid).update({photoURL: url});
+    // Use Cloudinary (avoids Firebase Storage CORS issues)
+    const url = await uploadToCloudinary(file);
+    await db.collection('profiles').doc(currentUser.uid).update({ photoURL: url });
     ['prof-av','sidebar-avatar','topbar-avatar','cf-my-av'].forEach(id => {
       const el = document.getElementById(id); if(el) el.src = url;
     });
-    if(status){status.textContent='✅ 頭像已更新！';status.style.color='#2d5a27';}
-    setTimeout(()=>{if(status)status.textContent='';},2500);
-    showToast('頭像已更新 📷','success');
+    if(status) { status.textContent = '✅ 頭像已更新！'; status.style.color = '#2d5a27'; }
+    setTimeout(() => { if(status) status.textContent = ''; }, 2500);
+    showToast('頭像已更新 📷', 'success');
   } catch(e) {
-    if(status){status.textContent='❌ '+e.message;status.style.color='#c0392b';}
-    showToast('上傳失敗: '+e.message,'error');
+    if(status) { status.textContent = '❌ ' + e.message; status.style.color = '#c0392b'; }
+    showToast('上傳失敗: ' + e.message, 'error');
   }
 }
+
 
 
 // ============================================================
