@@ -388,14 +388,14 @@ textarea.diary-input:focus{border-color:var(--primary)}
 #cf-msgs::-webkit-scrollbar{width:3px}
 #cf-msgs::-webkit-scrollbar-thumb{background:#c8c2f5;border-radius:3px}
 .cf-sys{text-align:center;font-size:11px;color:#888;font-weight:600;padding:2px 0}
-.cf-row{display:flex;align-items:flex-end;gap:6px;max-width:88%}
+.cf-row{display:flex;align-items:flex-end;gap:6px;max-width:82%}
 .cf-row.me{flex-direction:row-reverse;align-self:flex-end;max-width:88%}
 .cf-av{width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #e0dcff;margin-bottom:2px}
 .cf-av-placeholder{width:24px;height:24px;border-radius:50%;background:#e0dcff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-bottom:2px;color:#5a4fcf;font-weight:700}
-.cf-bubble-wrap{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0}
+.cf-bubble-wrap{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0;width:100%}
 .cf-name{font-size:10px;font-weight:700;color:#7a72cc;padding:0 4px}
 .cf-row.me .cf-name{display:none}
-.cf-bubble{padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.6;word-break:normal;overflow-wrap:break-word;max-width:85%;white-space:pre-wrap;display:inline-block}
+.cf-bubble{padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.6;word-break:normal;overflow-wrap:anywhere;white-space:pre-wrap;display:inline-block;max-width:100%}
 .cf-bubble.other{background:#fff;color:#222;border:1px solid #e0dcff;border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .cf-bubble.me{background:var(--primary);color:#fff;border-bottom-right-radius:3px}
 .cf-time{font-size:10px;opacity:.55;padding:0 4px;align-self:flex-end;white-space:nowrap}
@@ -477,11 +477,11 @@ textarea.diary-input:focus{border-color:var(--primary)}
 
 /* Message action buttons (recall, delete) */
 .cf-actions{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
-.cf-action-btn{background:rgba(92,51,23,.08);border:1px solid rgba(92,51,23,.25);border-radius:6px;cursor:pointer;font-size:11px;font-weight:800;padding:3px 9px;color:#5c3317;font-family:'Nunito',sans-serif;transition:all .2s;white-space:nowrap}
-.cf-action-btn:hover{background:#5c3317;color:#fff;border-color:#5c3317}
+.cf-action-btn{background:#f5edd8;border:1.5px solid #c4844a;border-radius:20px;cursor:pointer;font-size:11px;font-weight:800;padding:4px 10px;color:#a84d08;font-family:'Nunito',sans-serif;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.cf-action-btn:hover{background:#a84d08;color:#fff;border-color:#a84d08}
 .cf-del-btn:hover{background:#e74c3c!important;color:#fff!important;border-color:#e74c3c!important}
-.cf-row.me .cf-action-btn{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.6);color:#fff;font-weight:800}
-.cf-row.me .cf-action-btn:hover{background:rgba(255,255,255,.9);color:#d4650a}
+.cf-row.me .cf-action-btn{background:#fff;border-color:#fff;color:#d4650a;font-weight:800}
+.cf-row.me .cf-action-btn:hover{background:#f5edd8;border-color:#f5edd8;color:#a84d08}
 
 
 /* Admin live chat panel */
@@ -3045,7 +3045,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <!-- Input -->
   <div id="cf-footer">
     <img id="cf-my-av" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" alt="">
-    <textarea id="cf-input" placeholder="輸入訊息…（Enter 送出，Shift+Enter 換行）" rows="1"></textarea>
+    <textarea id="cf-input" placeholder="輸入訊息… Shift+Enter 換行" rows="1"></textarea>
     <button id="cf-img-btn" onclick="document.getElementById('cf-img-input').click()" title="傳送圖片">🖼</button>
     <input type="file" id="cf-img-input" accept="image/*" multiple>
     <button id="cf-send">➤</button>
