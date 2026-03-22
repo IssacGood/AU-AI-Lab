@@ -1357,7 +1357,7 @@ async function populateDiaryFilters(){
       el.appendChild(pill);
     });
   }
-  buildPills('diary-date-pills',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+fmtShort(d):d;},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'date:'+val:'';renderDiary();});
+  buildPills('diary-date-pills',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+fmtShort(d):fmtShort(d);},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'date:'+val:'';renderDiary();});
   buildPills('diary-person-pills',uids,function(uid){return profMap[uid]?profMap[uid].nickname||profMap[uid].displayName||uid.slice(0,8):uid.slice(0,8);},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'person:'+val:'';renderDiary();});
 }
 
@@ -1379,7 +1379,7 @@ async function populateGalleryFilters(){
       c.appendChild(p);
     });
   }
-  build('gallery-date-pills','gallery-filter-date',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+fmtShort(d)d;});
+  build('gallery-date-pills','gallery-filter-date',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+fmtShort(d):fmtShort(d);});
   build('gallery-person-pills','gallery-filter-person',uids,function(uid){return profMap[uid]?profMap[uid].nickname||profMap[uid].displayName||uid.slice(0,8):uid.slice(0,8);});
 }
 
@@ -1447,8 +1447,8 @@ function renderDiaryCard(entry, profMap){
     +(canDelete?'<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry(\''+entry.date+'\',\''+entry.uid+'\')" title="刪除">🗑</button>':'')
     +'</div></div>'
     +(photos.length?'<div class="dc-photos '+pClass+'">'+photos.map(function(p,i){return '<img class="dc-photo" src="'+p+'" alt="" loading="lazy" onclick="openLightbox('+i+','+JSON.stringify(photos).replace(/"/g,"'")+',false)" onerror="this.style.display=\'none\'">';}).join('')+'</div>':'')
-    +'<div class="dc-body" id="dcb-'+entry.id+'" style="background:#fff">'+esc(entry.content||'')+'</div>'
-    +'<div style="padding:4px 20px"><button onclick="toggleExpand(\'dcb-'+entry.id+'\')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0">展開全文 ▼</button></div>'
+    +'<div class="dc-body" id="dcb-'+entry.id+'-'+entry.date+'" style="background:#fff">'+esc(entry.content||'')+'</div>'
+    +'<div style="padding:4px 20px"><button onclick="toggleExpand(\'dcb-'+entry.id+'-'+entry.date+'\')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0">展開全文 ▼</button></div>'
     +'<div class="dc-footer">'
     +'<button class="dc-action '+(liked?'liked':'')+'" onclick="toggleLike(\''+entry.date+'\',\''+entry.uid+'\')">'+(liked?'❤️':'🤍')+' '+likeCnt+'</button>'
     +'<button class="dc-action" onclick="toggleComments(\'cs-'+entry.id+'\')">💬 '+comments.length+'</button>'
