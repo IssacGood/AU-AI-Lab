@@ -6,6 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>🦘 澳洲冒險：AI教室實驗室</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="澳洲冒險">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="澳洲冒險AI教室">
+<link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=🦘&background=d4650a&color=fff&size=192&rounded=true">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -494,6 +500,23 @@ textarea.diary-input:focus{border-color:var(--primary)}
 .alc-recalled{font-style:italic;opacity:.55;font-size:12px}
 .alc-img{max-width:160px;border-radius:8px;display:block;margin-top:4px;cursor:pointer}
 
+
+/* ── ADD TO HOME SCREEN GUIDE ── */
+.pwa-section{background:linear-gradient(135deg,#1a0f05 0%,#3d1f0a 60%,#5c3317 100%);border-radius:var(--radius);padding:28px;color:#fff;margin-bottom:28px;position:relative;overflow:hidden}
+.pwa-section::before{content:'📱';position:absolute;right:24px;top:50%;transform:translateY(-50%);font-size:80px;opacity:.1}
+.pwa-section h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px;color:#f5a623}
+.pwa-section .pwa-sub{font-size:13px;opacity:.8;margin-bottom:20px}
+.pwa-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.pwa-tab{padding:7px 18px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700;border:2px solid rgba(255,255,255,.25);color:rgba(255,255,255,.7);background:transparent;font-family:'Nunito',sans-serif;transition:all .2s}
+.pwa-tab.active{background:#f5a623;border-color:#f5a623;color:#1a0f05}
+.pwa-steps{display:none}
+.pwa-steps.active{display:flex;flex-direction:column;gap:10px}
+.pwa-step{display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,.08);border-radius:10px;padding:12px 14px}
+.pwa-step-num{width:26px;height:26px;border-radius:50%;background:#f5a623;color:#1a0f05;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pwa-step-text{font-size:13px;line-height:1.6;opacity:.9}
+.pwa-step-text strong{color:#f5a623;font-weight:800}
+.pwa-step-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+
 </style>
 </head>
 <body>
@@ -646,6 +669,65 @@ textarea.diary-input:focus{border-color:var(--primary)}
           </div>
         </div>
       </div>
+
+          <!-- ── ADD TO HOME SCREEN ── -->
+          <div class="pwa-section" id="pwa-guide">
+            <h3>📲 加入手機桌面</h3>
+            <p class="pwa-sub">將此網頁加入手機首頁，下次一鍵進入，就像 App 一樣方便！</p>
+            <div class="pwa-tabs">
+              <button class="pwa-tab active" onclick="pwaSwitchOS('ios',this)">🍎 iPhone / iPad</button>
+              <button class="pwa-tab" onclick="pwaSwitchOS('android',this)">🤖 Android</button>
+            </div>
+
+            <!-- iOS Steps -->
+            <div class="pwa-steps active" id="pwa-ios">
+              <div class="pwa-step">
+                <span class="pwa-step-icon">🌐</span>
+                <div class="pwa-step-text">用 <strong>Safari</strong> 瀏覽器開啟此網頁（非 Chrome / Line 內建）</div>
+              </div>
+              <div class="pwa-step">
+                <div class="pwa-step-num">1</div>
+                <div class="pwa-step-text">點選下方工具列中間的 <strong>分享按鈕</strong>（方塊加箭頭 ⬆️ 圖示）</div>
+              </div>
+              <div class="pwa-step">
+                <div class="pwa-step-num">2</div>
+                <div class="pwa-step-text">在選單中向下滑，找到並點擊 <strong>「加入主畫面」</strong></div>
+              </div>
+              <div class="pwa-step">
+                <div class="pwa-step-num">3</div>
+                <div class="pwa-step-text">名稱可修改為「澳洲冒險」，點右上角 <strong>「新增」</strong> 完成 ✅</div>
+              </div>
+              <div class="pwa-step">
+                <span class="pwa-step-icon">🦘</span>
+                <div class="pwa-step-text">回到主畫面，就能看到澳洲冒險的圖示了！</div>
+              </div>
+            </div>
+
+            <!-- Android Steps -->
+            <div class="pwa-steps" id="pwa-android">
+              <div class="pwa-step">
+                <span class="pwa-step-icon">🌐</span>
+                <div class="pwa-step-text">用 <strong>Chrome</strong> 瀏覽器開啟此網頁</div>
+              </div>
+              <div class="pwa-step">
+                <div class="pwa-step-num">1</div>
+                <div class="pwa-step-text">點右上角的 <strong>三點選單 ⋮</strong></div>
+              </div>
+              <div class="pwa-step">
+                <div class="pwa-step-num">2</div>
+                <div class="pwa-step-text">選擇 <strong>「新增至主畫面」</strong> 或 <strong>「安裝應用程式」</strong></div>
+              </div>
+              <div class="pwa-step">
+                <div class="pwa-step-num">3</div>
+                <div class="pwa-step-text">點 <strong>「新增」</strong> 確認，完成 ✅</div>
+              </div>
+              <div class="pwa-step">
+                <span class="pwa-step-icon">🦘</span>
+                <div class="pwa-step-text">回到桌面，就能看到澳洲冒險的捷徑圖示了！</div>
+              </div>
+            </div>
+          </div>
+
 
       <!-- ====== SCHEDULE ====== -->
       <div class="page" id="page-schedule">
@@ -2897,6 +2979,14 @@ async function loadAdminStatsInline() {
     sv('stat-photos-val', photos);
     sv('stat-chat-val', chatCount);
   } catch(e) { console.warn('Admin stats:', e.message); }
+}
+
+
+function pwaSwitchOS(os, btn) {
+  document.querySelectorAll('.pwa-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pwa-steps').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pwa-' + os).classList.add('active');
 }
 
 // ============================================================
