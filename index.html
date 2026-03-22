@@ -392,10 +392,10 @@ textarea.diary-input:focus{border-color:var(--primary)}
 .cf-row.me{flex-direction:row-reverse;align-self:flex-end;max-width:88%}
 .cf-av{width:24px;height:24px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #e0dcff;margin-bottom:2px}
 .cf-av-placeholder{width:24px;height:24px;border-radius:50%;background:#e0dcff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-bottom:2px;color:#5a4fcf;font-weight:700}
-.cf-bubble-wrap{display:flex;flex-direction:column;gap:2px}
+.cf-bubble-wrap{display:flex;flex-direction:column;gap:2px;align-items:flex-start;min-width:0}
 .cf-name{font-size:10px;font-weight:700;color:#7a72cc;padding:0 4px}
 .cf-row.me .cf-name{display:none}
-.cf-bubble{padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.6;word-break:break-word;max-width:85%}
+.cf-bubble{padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.6;word-break:normal;overflow-wrap:break-word;max-width:85%;white-space:pre-wrap;display:inline-block}
 .cf-bubble.other{background:#fff;color:#222;border:1px solid #e0dcff;border-bottom-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .cf-bubble.me{background:var(--primary);color:#fff;border-bottom-right-radius:3px}
 .cf-time{font-size:10px;opacity:.55;padding:0 4px;align-self:flex-end;white-space:nowrap}
@@ -2207,13 +2207,17 @@ function renderCfMessages(msgs) {
   const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
   const prevCount = container.querySelectorAll('.cf-row').length;
   
-  const myUid = currentUser ? currentUser.uid : sessionStorage.getItem('guestUid');
-  
+  // Compute inside render so it's always current after login
+  const myUid = currentUser
+    ? currentUser.uid
+    : sessionStorage.getItem('guestUid');
+  const myGuestUid = sessionStorage.getItem('guestUid');
+
   container.innerHTML = '<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
   
   let lastDate = '';
   msgs.forEach(msg => {
-    const isMe = myUid && msg.uid === myUid;
+    const isMe = myUid && (msg.uid === myUid || (myGuestUid && msg.uid === myGuestUid));
     const ts = msg.timestamp ? new Date(msg.timestamp) : null;
     const time = ts ? ts.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '';
     const dateStr = ts ? ts.toLocaleDateString('zh-TW', {month:'numeric', day:'numeric'}) : '';
