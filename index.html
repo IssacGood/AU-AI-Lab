@@ -448,11 +448,14 @@ textarea.diary-input:focus{border-color:var(--primary)}
 }
 @media(min-width:601px){
   #chat-float.cf-fullscreen{
-    /* Desktop: taller and wider, anchored above FAB */
-    width:min(680px,88vw)!important;
-    height:calc(88vh - 80px)!important;
-    max-height:none!important;
-    border-radius:16px!important;
+    /* Desktop: fill content area (sidebar=240px, FAB area on right ~80px) */
+    left: calc(var(--nav-w) + 12px) !important;
+    right: 12px !important;
+    width: auto !important;
+    bottom: 0 !important;
+    height: 96vh !important;
+    max-height: 96vh !important;
+    border-radius: 16px 16px 0 0 !important;
   }
 }
 /* Chat image message */
@@ -2155,7 +2158,6 @@ function initChat() {
   if(!rtdb) { console.warn('rtdb not ready'); return; }
 
   updateCfUserBar();
-  wireCfInput();
 
   const chatRef = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
   const handler = (snap) => {
@@ -2315,7 +2317,10 @@ function updateCfUserBar() {
   }
 }
 
+let _chatWired = false;
 function wireCfInput() {
+  if(_chatWired) return;
+  _chatWired = true;
   const input = document.getElementById('cf-input');
   const sendBtn = document.getElementById('cf-send');
   const imgInput = document.getElementById('cf-img-input');
@@ -2979,6 +2984,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadFlightInfo();
   loadStats();
   navigate('home');
+  wireCfInput();  // wire once only - prevents duplicate event listeners
   initChat();
 });
 </script>
