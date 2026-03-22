@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦘</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🦘 澳洲冒險：AI教室實驗室</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -462,6 +463,27 @@ textarea.diary-input:focus{border-color:var(--primary)}
 .cf-row.me .cf-action-btn{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.3)}
 .cf-row.me .cf-action-btn:hover{background:rgba(255,255,255,.2);color:#fff}
 
+
+/* Admin live chat panel */
+#admin-live-chat{display:flex;flex-direction:column;height:420px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+#alc-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--cream);font-size:13px}
+#alc-msgs::-webkit-scrollbar{width:3px}
+#alc-msgs::-webkit-scrollbar-thumb{background:rgba(212,101,10,.3);border-radius:3px}
+#alc-input-row{padding:10px 14px;border-top:1px solid var(--cream-dark);background:#fff;display:flex;gap:8px;align-items:center}
+#alc-input{flex:1;padding:8px 14px;border:1.5px solid var(--cream-dark);border-radius:20px;font-family:'Nunito',sans-serif;font-size:13px;outline:none}
+#alc-input:focus{border-color:var(--primary)}
+#alc-send{background:var(--primary);color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px;flex-shrink:0;transition:all .2s}
+#alc-send:hover{background:var(--primary-dark)}
+.alc-row{display:flex;gap:8px;align-items:flex-start}
+.alc-row.me{flex-direction:row-reverse}
+.alc-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--cream-dark);display:flex;align-items:center;justify-content:center;font-size:12px;border:1px solid rgba(212,101,10,.2)}
+.alc-bubble{padding:7px 11px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;max-width:75%}
+.alc-bubble.other{background:#fff;border:1px solid rgba(212,101,10,.12);border-bottom-left-radius:3px}
+.alc-bubble.me{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-bottom-right-radius:3px}
+.alc-meta{font-size:10px;color:var(--text-muted);margin-top:2px}
+.alc-recalled{font-style:italic;opacity:.55;font-size:12px}
+.alc-img{max-width:160px;border-radius:8px;display:block;margin-top:4px;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -473,7 +495,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
     <div class="login-stamp">🦘</div>
     <h1>澳洲冒險<br>AI教室實驗室</h1>
     <p class="sub">I-8-29 青年百億海外圓夢基金計畫<br>Australia Adventure: AI Classroom Lab</p>
-    <div class="login-dates">📅 2025年8月3日 ─ 8月18日 │ 雪梨 × 墨爾本</div>
+    <div class="login-dates">📅 2026年8月3日（115年）─ 8月18日 │ 雪梨 × 墨爾本</div>
     <button class="btn-google" id="google-login-btn">
       <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       使用 Google 帳號登入
@@ -514,7 +536,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
       <div class="sidebar-logo">
         <span class="logo-icon">🦘</span>
         <h2 data-i18n="site-title">澳洲冒險：AI教室實驗室</h2>
-        <div class="logo-sub">2025 / 8.3 → 8.18</div>
+        <div class="logo-sub">2026 / 8.3 → 8.18</div>
       </div>
       <div class="sidebar-user" id="sidebar-user-area" style="cursor:pointer" onclick="handleAuthBtn()">
         <img id="sidebar-avatar" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" alt="">
@@ -552,7 +574,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
       <div class="page active" id="page-home">
         <div class="hero-banner">
           <h1 class="serif" id="hero-title">澳洲冒險：AI教室實驗室 🦘</h1>
-          <p class="hero-sub">I-8-29 │ 雪梨 × 墨爾本 │ 2025.08.03 — 08.18</p>
+          <p class="hero-sub">I-8-29 │ 雪梨 × 墨爾本 │ 2026.08.03 — 08.18</p>
           <div class="hero-badges">
             <span class="badge">🏫 NSW教育廳</span>
             <span class="badge">🎓 雪梨大學</span>
@@ -597,14 +619,14 @@ textarea.diary-input:focus{border-color:var(--primary)}
                 <div>
                   <h4 style="margin-bottom:12px;color:var(--brown)">去程</h4>
                   <div class="form-group"><label class="form-label">航班號</label><input class="input-field" id="fd-flight" placeholder="如 CI 783" style="width:100%"></div>
-                  <div class="form-group"><label class="form-label">日期時間</label><input class="input-field" id="fd-datetime" placeholder="2025-08-03 09:30" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">日期時間</label><input class="input-field" id="fd-datetime" placeholder="2026-08-03 09:30" style="width:100%"></div>
                   <div class="form-group"><label class="form-label">出發地 → 目的地</label><input class="input-field" id="fd-route" placeholder="台北(TPE) → 雪梨(SYD)" style="width:100%"></div>
                   <div class="form-group"><label class="form-label">備註</label><input class="input-field" id="fd-note" placeholder="如 候機室、集合時間" style="width:100%"></div>
                 </div>
                 <div>
                   <h4 style="margin-bottom:12px;color:var(--brown)">回程</h4>
                   <div class="form-group"><label class="form-label">航班號</label><input class="input-field" id="fr-flight" placeholder="如 CI 784" style="width:100%"></div>
-                  <div class="form-group"><label class="form-label">日期時間</label><input class="input-field" id="fr-datetime" placeholder="2025-08-18 16:45" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">日期時間</label><input class="input-field" id="fr-datetime" placeholder="2026-08-18 16:45" style="width:100%"></div>
                   <div class="form-group"><label class="form-label">出發地 → 目的地</label><input class="input-field" id="fr-route" placeholder="雪梨(SYD) → 台北(TPE)" style="width:100%"></div>
                   <div class="form-group"><label class="form-label">備註</label><input class="input-field" id="fr-note" placeholder="如 返台後集合報告" style="width:100%"></div>
                 </div>
@@ -784,16 +806,44 @@ textarea.diary-input:focus{border-color:var(--primary)}
             </div>
           </div>
         </div>
-        <!-- Chat moderation -->
+        <!-- Chat moderation + live preview side by side -->
         <div class="card" style="margin-bottom:20px">
           <div class="card-header">
-            <span style="font-weight:800">💬 聊天紀錄管理</span>
-            <button class="btn btn-danger btn-sm" onclick="clearAllChat()">🗑 清空聊天</button>
+            <span style="font-weight:800">💬 即時聊天管理</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" onclick="loadAdminChatLog()">🔄 重新整理</button>
+              <button class="btn btn-danger btn-sm" onclick="clearAllChat()">🗑 清空全部</button>
+            </div>
           </div>
-          <div class="card-body" id="admin-chat-list" style="max-height:400px;overflow-y:auto">
-            <div class="loading-spinner"></div>
+          <div style="display:grid;grid-template-columns:1fr 340px;gap:0;min-height:420px">
+            <!-- Left: log with multi-select -->
+            <div>
+              <div id="admin-chat-list" style="max-height:480px;overflow-y:auto;padding:12px 16px">
+                <div class="loading-spinner"></div>
+              </div>
+            </div>
+            <!-- Right: live chat preview -->
+            <div style="border-left:1px solid var(--cream-dark);display:flex;flex-direction:column;background:var(--cream)">
+              <div style="padding:10px 14px;font-size:12px;font-weight:800;color:var(--brown-light);border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;gap:6px">
+                <span class="cf-live-dot" style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block"></span>
+                即時預覽
+              </div>
+              <div id="admin-chat-live" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;max-height:400px">
+                <div class="cf-sys" style="text-align:center;font-size:11px;color:var(--text-muted)">載入中...</div>
+              </div>
+              <div style="padding:8px 10px;border-top:1px solid var(--cream-dark);display:flex;gap:6px">
+                <input id="admin-chat-input" class="input-field" placeholder="以管理員身分發送..." style="font-size:13px;padding:7px 12px">
+                <button class="btn btn-primary btn-sm" onclick="adminSendChat()">送出</button>
+              </div>
+            </div>
           </div>
         </div>
+        <style>
+        @media(max-width:900px){
+          #admin-chat-parent-grid{grid-template-columns:1fr!important}
+          #admin-chat-live-panel{display:none!important}
+        }
+        </style>
         <!-- Diary management -->
         <div class="card">
           <div class="card-header"><span style="font-weight:800">📓 日記管理</span></div>
@@ -839,27 +889,27 @@ const CLOUDINARY_PRESET = "au_ai_lab";         // ← 填你建立的 preset 名
 // CONSTANTS
 // ============================================================
 const ADMIN_EMAIL = "issac1120@gmail.com";
-const ACTIVITY_START = new Date("2025-08-03T00:00:00+08:00");
-const ACTIVITY_END   = new Date("2025-08-18T23:59:59+08:00");
+const ACTIVITY_START = new Date("2026-08-03T00:00:00+08:00");
+const ACTIVITY_END   = new Date("2026-08-18T23:59:59+08:00");
 const MAX_PHOTOS = 5;
 
 const SCHEDULE = [
-  {date:"2025-08-03",day:1,zh:"機場集合，搭乘國際航班前往澳洲雪梨。",en:"Airport assembly, fly to Sydney, Australia."},
-  {date:"2025-08-04",day:2,zh:"瞭解澳洲小學 STEM/AI 教育架構。以「角色轉換」為核心，引導見習教師定位為推動 UDL 與 AI/STEAM 教育的關鍵行動者。",en:"Understanding Australia's primary school STEM/AI framework. Role transformation workshop."},
-  {date:"2025-08-05",day:3,zh:"實作 AI 基礎 × 小學教師實務。學校現場實踐與 UDL 教學架構下的設計。跨域課程與學習支持系統。",en:"AI fundamentals × primary teacher practice. School visits & UDL design framework. Cross-domain curriculum & learning support."},
-  {date:"2025-08-06",day:4,zh:"實作 AI 基礎 × 小學教師實務。STEM 工具 × 動手實作。學校現場實踐與 UDL 教學架構下的設計。",en:"AI fundamentals × primary practice. STEM tools × hands-on making. School practice & UDL design."},
-  {date:"2025-08-07",day:5,zh:"非正式學習場域與 STEAM 教育設計，教案見習實作。透過互動式展示、情境模擬與跨學科主題設計，推動STEAM教育與科學素養培養。",en:"Informal learning spaces & STEAM design. Interactive exhibits, scenario simulation, cross-disciplinary themes."},
-  {date:"2025-08-08",day:6,zh:"城市景觀 × 教師放鬆。",en:"City exploration × teacher relaxation day."},
-  {date:"2025-08-09",day:7,zh:"參訪雪梨歌劇院。",en:"Visit Sydney Opera House."},
-  {date:"2025-08-10",day:8,zh:"AI + STEM 小學教師證書課程（雪梨大學）。拜訪新南威爾斯大學教育研究單位。",en:"AI + STEM Primary Teacher Certificate Course (University of Sydney). Visit UNSW Education Research unit."},
-  {date:"2025-08-11",day:9,zh:"AI + STEM 小學教師證書課程（雪梨大學）。見習新南威爾斯州立小學。",en:"AI + STEM Certificate Course (USyd). Observation at NSW public primary school."},
-  {date:"2025-08-12",day:10,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
-  {date:"2025-08-13",day:11,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
-  {date:"2025-08-14",day:12,zh:"教師專業發展（PD）模式交流與行動設計實作。",en:"Teacher Professional Development (PD) exchange & action design workshop."},
-  {date:"2025-08-15",day:13,zh:"個人興趣探索 ＋ 跨校小組分享。",en:"Personal interest exploration + cross-school group sharing."},
-  {date:"2025-08-16",day:14,zh:"拜會新南威爾斯州教育處。",en:"Visit NSW Department of Education."},
-  {date:"2025-08-17",day:15,zh:"輕量分享交流 × 一週課程反思。",en:"Light sharing & one-week course reflection."},
-  {date:"2025-08-18",day:16,zh:"抵達臺灣。",en:"Return to Taiwan."}
+  {date:"2026-08-03",day:1,zh:"機場集合，搭乘國際航班前往澳洲雪梨。",en:"Airport assembly, fly to Sydney, Australia."},
+  {date:"2026-08-04",day:2,zh:"瞭解澳洲小學 STEM/AI 教育架構。以「角色轉換」為核心，引導見習教師定位為推動 UDL 與 AI/STEAM 教育的關鍵行動者。",en:"Understanding Australia's primary school STEM/AI framework. Role transformation workshop."},
+  {date:"2026-08-05",day:3,zh:"實作 AI 基礎 × 小學教師實務。學校現場實踐與 UDL 教學架構下的設計。跨域課程與學習支持系統。",en:"AI fundamentals × primary teacher practice. School visits & UDL design framework. Cross-domain curriculum & learning support."},
+  {date:"2026-08-06",day:4,zh:"實作 AI 基礎 × 小學教師實務。STEM 工具 × 動手實作。學校現場實踐與 UDL 教學架構下的設計。",en:"AI fundamentals × primary practice. STEM tools × hands-on making. School practice & UDL design."},
+  {date:"2026-08-07",day:5,zh:"非正式學習場域與 STEAM 教育設計，教案見習實作。透過互動式展示、情境模擬與跨學科主題設計，推動STEAM教育與科學素養培養。",en:"Informal learning spaces & STEAM design. Interactive exhibits, scenario simulation, cross-disciplinary themes."},
+  {date:"2026-08-08",day:6,zh:"城市景觀 × 教師放鬆。",en:"City exploration × teacher relaxation day."},
+  {date:"2026-08-09",day:7,zh:"參訪雪梨歌劇院。",en:"Visit Sydney Opera House."},
+  {date:"2026-08-10",day:8,zh:"AI + STEM 小學教師證書課程（雪梨大學）。拜訪新南威爾斯大學教育研究單位。",en:"AI + STEM Primary Teacher Certificate Course (University of Sydney). Visit UNSW Education Research unit."},
+  {date:"2026-08-11",day:9,zh:"AI + STEM 小學教師證書課程（雪梨大學）。見習新南威爾斯州立小學。",en:"AI + STEM Certificate Course (USyd). Observation at NSW public primary school."},
+  {date:"2026-08-12",day:10,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
+  {date:"2026-08-13",day:11,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
+  {date:"2026-08-14",day:12,zh:"教師專業發展（PD）模式交流與行動設計實作。",en:"Teacher Professional Development (PD) exchange & action design workshop."},
+  {date:"2026-08-15",day:13,zh:"個人興趣探索 ＋ 跨校小組分享。",en:"Personal interest exploration + cross-school group sharing."},
+  {date:"2026-08-16",day:14,zh:"拜會新南威爾斯州教育處。",en:"Visit NSW Department of Education."},
+  {date:"2026-08-17",day:15,zh:"輕量分享交流 × 一週課程反思。",en:"Light sharing & one-week course reflection."},
+  {date:"2026-08-18",day:16,zh:"抵達臺灣。",en:"Return to Taiwan."}
 ];
 
 // ============================================================
@@ -1270,19 +1320,26 @@ async function renderHome() {
 }
 
 async function loadStats() {
+  if(!db) return;
   try {
-    // Count diaries
-    const ds = await db.collectionGroup('entries').get();
-    let photoCount = 0;
-    ds.forEach(doc => {
-      const d = doc.data();
-      if(d.photos) photoCount += d.photos.length;
+    // collectionGroup requires special Firestore index — use regular reads as fallback
+    let entryCount = 0, photoCount = 0;
+    const datesSnap = await db.collection('diaries').get();
+    const promises = [];
+    datesSnap.forEach(dateDoc => {
+      promises.push(
+        db.collection('diaries').doc(dateDoc.id).collection('entries').get().then(es => {
+          entryCount += es.size;
+          es.forEach(d => { const data = d.data(); if(data.photos) photoCount += data.photos.length; });
+        }).catch(()=>{})
+      );
     });
+    await Promise.all(promises);
     const e = document.getElementById('stat-entries');
     const p = document.getElementById('stat-photos');
-    if(e) e.textContent = ds.size;
+    if(e) e.textContent = entryCount;
     if(p) p.textContent = photoCount;
-  } catch(e) {}
+  } catch(err) { console.warn('Stats:', err.message); }
 }
 
 // ============================================================
@@ -1411,21 +1468,23 @@ function handleSchedClick(date) {
 // ============================================================
 async function loadAllDiaries() {
   allDiaries = [];
+  if(!db) return allDiaries;
   try {
     const datesSnap = await db.collection('diaries').get();
     const promises = [];
     datesSnap.forEach(dateDoc => {
       const dateStr = dateDoc.id;
       promises.push(
-        db.collection('diaries').doc(dateStr).collection('entries').get().then(entriesSnap => {
-          entriesSnap.forEach(entDoc => {
-            allDiaries.push({id: entDoc.id, date: dateStr, ...entDoc.data()});
-          });
-        })
+        db.collection('diaries').doc(dateStr).collection('entries').get()
+          .then(entriesSnap => {
+            entriesSnap.forEach(entDoc => {
+              allDiaries.push({id: entDoc.id, date: dateStr, ...entDoc.data()});
+            });
+          }).catch(e => console.warn('Diary load error:', dateStr, e.message))
       );
     });
     await Promise.all(promises);
-  } catch(e) { console.error(e); }
+  } catch(e) { console.warn('loadAllDiaries:', e.message); }
   return allDiaries;
 }
 
@@ -2038,18 +2097,31 @@ function updateChatBadge() {
 }
 
 function initChat() {
-  if(cfChatListener) cfChatListener();
-  if(!rtdb) return;
-  
+  if(cfChatListener) {
+    try { rtdb.ref('chat').off('value', cfChatListener); } catch(e) {}
+    cfChatListener = null;
+  }
+  if(!rtdb) { console.warn('rtdb not ready'); return; }
+
   updateCfUserBar();
   wireCfInput();
-  
+
   const chatRef = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
-  cfChatListener = chatRef.on('value', snap => {
-    const msgs = [];
-    snap.forEach(c => msgs.push({id: c.key, ...c.val()}));
-    renderCfMessages(msgs);
-  });
+  const handler = (snap) => {
+    try {
+      const msgs = [];
+      if(snap && typeof snap.forEach === 'function') {
+        snap.forEach(c => {
+          try { const v = c.val(); if(v) msgs.push({id: c.key, ...v}); } catch(e) {}
+        });
+      }
+      renderCfMessages(msgs);
+      // Also update admin live view if open
+      if(isAdmin) renderAdminLiveChat(msgs);
+    } catch(e) { console.warn('Chat render error:', e.message); }
+  };
+  cfChatListener = handler;
+  chatRef.on('value', handler, err => console.warn('Chat listener error:', err.message));
 }
 
 let cfFullscreen = false;
@@ -2353,12 +2425,67 @@ async function uploadAvatar(input) {
 // ============================================================
 // ADMIN
 // ============================================================
+let adminChatLiveListener = null;
+
 async function loadAdminPanel() {
   if(!isAdmin) return;
   loadMemberList();
   loadAdminStats();
   loadAdminChatLog();
   loadAdminDiaries();
+  startAdminLiveChat();
+}
+
+function startAdminLiveChat() {
+  if(!rtdb) return;
+  if(adminChatLiveListener) {
+    try { rtdb.ref('chat').off('value', adminChatLiveListener); } catch(e) {}
+  }
+  const ref = rtdb.ref('chat').orderByChild('timestamp').limitToLast(50);
+  adminChatLiveListener = snap => {
+    const container = document.getElementById('admin-chat-live');
+    if(!container) return;
+    const msgs = [];
+    if(snap && snap.exists()) snap.forEach(c => { if(c.val()) msgs.push({id:c.key,...c.val()}); });
+    if(!msgs.length) {
+      container.innerHTML = '<div class="cf-sys" style="text-align:center;font-size:11px;color:var(--text-muted)">暫無訊息</div>';
+      return;
+    }
+    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
+    container.innerHTML = msgs.map(m => {
+      const isMe = currentUser && m.uid === currentUser.uid;
+      const name = m.userName || '訪客';
+      const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
+      const recalledBadge = m.recalled ? '<span style="background:#e74c3c;color:#fff;font-size:9px;border-radius:4px;padding:1px 5px;margin-left:4px">已收回</span>' : '';
+      const imgHTML = m.imageURL ? `<img src="${m.imageURL}" style="max-width:100px;border-radius:6px;display:block;margin-top:3px">` : '';
+      return `<div style="display:flex;flex-direction:column;align-items:${isMe?'flex-end':'flex-start'};gap:1px">
+        <div style="font-size:10px;color:var(--text-muted);font-weight:700">${esc(name)}${recalledBadge}</div>
+        <div style="background:${isMe?'var(--primary)':'#fff'};color:${isMe?'#fff':'var(--text)'};padding:6px 10px;border-radius:10px;font-size:12px;max-width:240px;word-break:break-word;border:1px solid rgba(0,0,0,.06)">
+          ${m.recalled?'<i style="opacity:.6">已收回</i>':esc(m.text||'')}${imgHTML}
+          <button onclick="cfDeleteMsg('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:10px;opacity:.5;padding:0 2px;color:inherit;margin-left:4px">✕</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted)">${time}</div>
+      </div>`;
+    }).join('');
+    if(atBottom) container.scrollTop = container.scrollHeight;
+  };
+  ref.on('value', adminChatLiveListener, err => console.warn(err));
+}
+
+async function adminSendChat() {
+  if(!isAdmin || !currentUser || !rtdb) return;
+  const input = document.getElementById('admin-chat-input');
+  const text = input?.value.trim();
+  if(!text) return;
+  try {
+    await rtdb.ref('chat').push({
+      uid: currentUser.uid,
+      userName: '🛡 管理員',
+      userPhoto: currentUser.photoURL || '',
+      text, timestamp: Date.now()
+    });
+    if(input) input.value = '';
+  } catch(e) { showToast('發送失敗', 'error'); }
 }
 
 async function loadMemberList() {
@@ -2557,6 +2684,98 @@ function showToast(msg, type='') {
 
 function esc(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+// ============================================================
+// ADMIN LIVE CHAT PANEL
+// ============================================================
+function renderAdminLiveChat(msgs) {
+  const container = document.getElementById('alc-msgs');
+  if(!container) return;
+  const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+  
+  if(!msgs.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px">還沒有聊天訊息</div>';
+    return;
+  }
+  
+  const myUid = currentUser?.uid;
+  let html = '';
+  let lastDate = '';
+  
+  msgs.forEach(msg => {
+    const isMe = myUid && msg.uid === myUid;
+    const ts = msg.timestamp ? new Date(msg.timestamp) : null;
+    const time = ts ? ts.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
+    const dateStr = ts ? ts.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}) : '';
+    if(dateStr && dateStr !== lastDate) {
+      lastDate = dateStr;
+      html += `<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:4px 0">── ${dateStr} ──</div>`;
+    }
+    
+    const name = msg.userName || '訪客';
+    const avatarHTML = msg.userPhoto
+      ? `<img class="alc-avatar" src="${msg.userPhoto}" alt="">`
+      : `<div class="alc-avatar">${name.slice(0,1)}</div>`;
+    
+    let bodyHTML = '';
+    if(msg.recalled) {
+      bodyHTML = `<span class="alc-recalled">⚠️ [已收回] ${esc(msg.text||'')}${msg.imageURL?'[圖片]':''}` +
+        `<button onclick="cfDeleteMsg('${msg.id}')" style="margin-left:8px;background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:1px 8px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif">確認刪除</button></span>`;
+    } else {
+      bodyHTML = esc(msg.text||'')+
+        (msg.imageURL ? `<img class="alc-img" src="${msg.imageURL}" onclick="openLightbox(0,[{url:'${msg.imageURL}',info:''}])">` : '');
+    }
+    
+    const delBtn = `<button onclick="alcDeleteMsg('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-muted);padding:2px 4px;transition:color .15s" title="刪除">🗑</button>`;
+    
+    if(isMe) {
+      html += `<div class="alc-row me">
+        <div>
+          <div class="alc-bubble me">${bodyHTML}</div>
+          <div class="alc-meta" style="text-align:right">${time} ${delBtn}</div>
+        </div>
+      </div>`;
+    } else {
+      html += `<div class="alc-row">
+        ${avatarHTML}
+        <div>
+          <div style="font-size:11px;font-weight:800;color:var(--brown-light);margin-bottom:2px">${esc(name)}</div>
+          <div class="alc-bubble other">${bodyHTML}</div>
+          <div class="alc-meta">${time} ${delBtn}</div>
+        </div>
+      </div>`;
+    }
+  });
+  
+  container.innerHTML = html;
+  if(atBottom) requestAnimationFrame(() => container.scrollTop = container.scrollHeight);
+  
+  // Update avatar
+  if(currentUser) {
+    const av = document.getElementById('alc-my-av');
+    if(av) av.src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'A')}&background=d4650a&color=fff`;
+  }
+}
+
+async function alcSend() {
+  if(!currentUser || !rtdb) return;
+  const input = document.getElementById('alc-input');
+  const text = input?.value.trim();
+  if(!text) return;
+  try {
+    await rtdb.ref('chat').push({
+      uid: currentUser.uid,
+      userName: (sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email) + ' 🛡管',
+      userPhoto: currentUser.photoURL || '',
+      text, timestamp: Date.now()
+    });
+    if(input) input.value = '';
+  } catch(e) { showToast('發送失敗', 'error'); }
+}
+
+async function alcDeleteMsg(msgId) {
+  try { await rtdb.ref('chat/' + msgId).remove(); } catch(e) { showToast('刪除失敗','error'); }
 }
 
 // ============================================================
