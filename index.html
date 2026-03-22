@@ -419,7 +419,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-item" onclick="navigate('gallery')" data-page="gallery"><span class="ni">📷</span><span data-i18n="nav-gallery">相片牆</span></div>
         <div class="nav-section" data-i18n="nav-interact">互動</div>
         <div class="nav-item" onclick="navigate('chat')" data-page="chat"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
-        <div class="nav-item" onclick="navigate('profile')" data-page="profile"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
+        <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile" style="display:none"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
         <div class="nav-item admin-only" onclick="navigate('admin')" data-page="admin" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
       </nav>
       <div class="sidebar-footer">
@@ -609,7 +609,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
           </div>
           <div class="chat-input-area">
             <img id="chat-my-avatar" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">
-            <textarea class="chat-input" id="chat-input" placeholder="輸入訊息... (Enter 送出)" rows="1" onkeydown="chatKeydown(event)"></textarea>
+            <textarea class="chat-input" id="chat-input" placeholder="輸入訊息... (Enter 送出，訪客也可聊天)" rows="1" onkeydown="chatKeydown(event)"></textarea>
             <button class="chat-send" onclick="sendMessage()">➤</button>
           </div>
         </div>
@@ -955,6 +955,8 @@ function handleGuestMode() {
   document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('visible'));
   document.getElementById('nav-write').style.display = 'none';
   document.getElementById('nav-admin') && (document.getElementById('nav-admin').style.display = 'none');
+  const navProfile = document.getElementById('nav-profile');
+  if(navProfile) navProfile.style.display = 'none';
   // Start public features
   startCountdown();
   renderSchedule();
@@ -1026,6 +1028,9 @@ function updateSidebarUser(user) {
   document.getElementById('profile-avatar-big').src = photo;
   document.getElementById('profile-email').value = user.email;
   document.getElementById('sidebar-auth-label').textContent = '登出';
+  // Show profile nav only when logged in
+  const navProfile = document.getElementById('nav-profile');
+  if(navProfile) navProfile.style.display = 'flex';
 }
 
 function toggleAdminUI() {
@@ -1077,7 +1082,10 @@ function navigate(page) {
   if(page === 'diary') { populateDiaryFilters(); renderDiary(); }
   if(page === 'gallery') { populateGalleryFilters(); renderGallery(); }
   if(page === 'write') loadWriteForm();
-  if(page === 'profile') loadProfileForm();
+  if(page === 'profile') {
+    if(!currentUser) { openLoginModal(); navigate('home'); return; }
+    loadProfileForm();
+  }
   if(page === 'admin' && isAdmin) loadAdminPanel();
   
   // Close mobile sidebar
@@ -1911,23 +1919,36 @@ function renderChatMessages(msgs) {
 }
 
 async function sendMessage() {
-  if(!currentUser) { showToast("請先登入才能聊天", "error"); return; }
   const input = document.getElementById('chat-input');
   const text = input?.value.trim();
   if(!text) return;
+
+  // Allow guest chat with a prompt for nickname
+  let userName, userPhoto, uid;
+  if(currentUser) {
+    userName = currentUser.displayName || currentUser.email;
+    userPhoto = currentUser.photoURL || '';
+    uid = currentUser.uid;
+  } else {
+    // Guest: ask for name once, store in sessionStorage
+    let guestName = sessionStorage.getItem('guestName');
+    if(!guestName) {
+      guestName = prompt('請輸入你的暱稱：', '訪客');
+      if(!guestName) return;
+      guestName = guestName.trim().slice(0, 20) || '訪客';
+      sessionStorage.setItem('guestName', guestName);
+    }
+    userName = guestName + ' (訪客)';
+    userPhoto = '';
+    uid = 'guest_' + Math.random().toString(36).slice(2, 8);
+  }
   
   try {
-    await rtdb.ref('chat').push({
-      uid: currentUser.uid,
-      userName: currentUser.displayName || currentUser.email,
-      userPhoto: currentUser.photoURL || '',
-      text,
-      timestamp: Date.now()
-    });
+    await rtdb.ref('chat').push({ uid, userName, userPhoto, text, timestamp: Date.now() });
     input.value = '';
     input.style.height = '';
   } catch(e) {
-    showToast("發送失敗", "error");
+    showToast("發送失敗：" + e.message, "error");
   }
 }
 
