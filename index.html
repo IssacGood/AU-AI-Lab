@@ -867,6 +867,41 @@ textarea.diary-input:focus{border-color:var(--primary)}
 
 <script>
 // ============================================================
+// CORE UTILITIES (must be defined before any async calls)
+// ============================================================
+function showToast(msg, type='') {
+  let container = document.getElementById('toast');
+  if(!container) {
+    container = document.createElement('div');
+    container.id = 'toast';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none';
+    document.body.appendChild(container);
+  }
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function esc(str) {
+  if(str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/\n/g,'<br>');
+}
+
+function exportPDF() {
+  showToast('準備匯出PDF，請稍候...', 'success');
+  setTimeout(() => window.print(), 500);
+}
+
+
+
+// ============================================================
 // ✅ FIREBASE CONFIG
 // ============================================================
 const FIREBASE_CONFIG = {
@@ -2737,6 +2772,7 @@ async function alcSend() {
 async function alcDeleteMsg(msgId) {
   try { await rtdb.ref('chat/' + msgId).remove(); } catch(e) { showToast('刪除失敗','error'); }
 }
+
 
 // ============================================================
 // DOM READY - Wire up UI, start public features
