@@ -361,7 +361,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
 #chat-fab-label{color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;font-family:'Nunito',sans-serif}
 #chat-fab-unread{position:absolute;top:-3px;right:-3px;background:#e74c3c;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;border:2px solid #fff;font-family:'Nunito',sans-serif}
 
-#chat-float{position:fixed;bottom:calc(10% + 80px);right:2.5%;width:340px;max-height:520px;border-radius:20px;background:#fff;border:1px solid rgba(212,101,10,.2);box-shadow:0 12px 48px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;z-index:99998;font-family:'Nunito',sans-serif;transition:all .25s}
+#chat-float{position:fixed;bottom:calc(10% + 80px);right:2.5%;width:340px;border-radius:20px;background:#fff;border:1px solid rgba(212,101,10,.2);box-shadow:0 12px 48px rgba(0,0,0,.2);display:none;flex-direction:column;overflow:hidden;z-index:99998;font-family:'Nunito',sans-serif;transition:height .3s ease,bottom .3s ease}
 #chat-float.cf-open{display:flex;animation:cfIn .25s ease}
 @keyframes cfIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 
@@ -404,28 +404,34 @@ textarea.diary-input:focus{border-color:var(--primary)}
 #cf-guest-bar .cf-gb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cf-gb-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
 
-/* Desktop */
+/* ── Desktop default ── */
 @media(min-width:601px){
-  #chat-float{height:480px}
+  #chat-float{
+    height: min(560px, 65vh);   /* ~65% of viewport, max 560px */
+  }
 }
-/* Mobile: slides up from above the FAB button */
+
+/* ── Mobile: default slides up, top sits at ~25% from top ── */
 @media(max-width:600px){
   #chat-fab{bottom:20px;right:16px;width:58px;height:58px}
   #chat-fab-dot{bottom:calc(20px + 54px);right:calc(16px - 2px)}
   #chat-float{
-    width:100vw;
-    right:0;
-    bottom:98px;          /* sit above the FAB (58px + 20px bottom + 20px gap) */
-    max-height:calc(100dvh - 110px);
-    border-radius:20px 20px 0 0;
-    border-bottom:1px solid rgba(212,101,10,.2)
+    width: 100vw;
+    right: 0;
+    bottom: 0;
+    /* height = 75% of viewport so top edge lands at 25% from top */
+    height: 75dvh;
+    max-height: 75dvh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
   }
-  #chat-float.cf-open{animation:cfInMobile .28s cubic-bezier(.22,1,.36,1)}
-  @keyframes cfInMobile{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  #chat-float.cf-open{animation:cfInMobile .3s cubic-bezier(.22,1,.36,1)}
+  @keyframes cfInMobile{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:translateY(0)}}
+  /* FAB sits on top of chat window visually */
+  #chat-fab{z-index:99999}
 }
 
-
-/* Chat fullscreen mode */
+/* ── Fullscreen mode ── */
 #chat-float.cf-fullscreen{
   width:100vw!important; right:0!important; bottom:0!important;
   height:100dvh!important; max-height:100dvh!important;
@@ -433,10 +439,12 @@ textarea.diary-input:focus{border-color:var(--primary)}
 }
 @media(min-width:601px){
   #chat-float.cf-fullscreen{
-    width:min(680px,96vw)!important;
-    right:2%!important; bottom:0!important;
-    height:96dvh!important; max-height:96dvh!important;
-    border-radius:20px 20px 0 0!important;
+    width: min(720px, 96vw)!important;
+    right: 2%!important;
+    bottom: 0!important;
+    height: 96dvh!important;
+    max-height: 96dvh!important;
+    border-radius: 20px 20px 0 0!important;
   }
 }
 /* Chat image message */
