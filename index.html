@@ -195,7 +195,7 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
 .dc-photos.p3{grid-template-columns:1fr 1fr 1fr}
 .dc-photo{object-fit:cover;width:100%;height:100%;cursor:pointer;transition:opacity .2s}
 .dc-photo:hover{opacity:.85}
-.dc-body{padding:16px 20px;font-size:14px;color:var(--text);line-height:1.7;max-height:120px;overflow:hidden;position:relative}
+.dc-body{padding:12px 20px;font-size:13px;color:var(--text);line-height:1.6;max-height:68px;overflow:hidden;position:relative;background:var(--white)}
 .dc-body.expanded{max-height:none}
 .dc-body::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,#fff);pointer-events:none}
 .dc-body.expanded::after{display:none}
@@ -504,6 +504,14 @@ textarea.diary-input:focus{border-color:var(--primary)}
 .alc-recalled{font-style:italic;opacity:.55;font-size:12px}
 .alc-img{max-width:160px;border-radius:8px;display:block;margin-top:4px;cursor:pointer}
 
+
+
+/* ── Edit Diary Modal ── */
+#edit-diary-modal{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+#edit-diary-inner{background:#fff;border-radius:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3)}
+.edit-diary-hdr{background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:20px 24px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:space-between}
+.edit-diary-hdr h3{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin:0}
+.edit-diary-hdr button{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
 
 </style>
 </head>
@@ -1665,6 +1673,7 @@ function renderDiaryCard(entry, profMap) {
   const photos = entry.photos || [];
   const photoClass = photos.length === 1 ? 'p1' : photos.length === 2 ? 'p2' : photos.length === 3 ? 'p3' : '';
   const canDelete = isAdmin || (currentUser && currentUser.uid === entry.uid);
+  const canEdit   = isAdmin || (currentUser && currentUser.uid === entry.uid && isMember);
   const liked = entry.likes && entry.likes[currentUser?.uid];
   const likeCount = entry.likes ? Object.keys(entry.likes).length : 0;
   const comments = entry.comments || [];
@@ -1677,7 +1686,10 @@ function renderDiaryCard(entry, profMap) {
         <div class="dc-date">${entry.date} ${entry.updatedAt ? '（已更新）':''}</div>
         ${schedText ? `<div class="dc-sched">${schedText}</div>` : ''}
       </div>
-      ${canDelete ? `<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry('${entry.date}','${entry.uid}')" title="刪除">🗑</button>` : ''}
+      <div style="display:flex;gap:4px">
+        ${canEdit   ? `<button class="btn btn-secondary btn-sm btn-icon" onclick="openEditDiary('${entry.date}','${entry.uid}')" title="編輯">✏️</button>` : ''}
+        ${canDelete ? `<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry('${entry.date}','${entry.uid}')" title="刪除">🗑</button>` : ''}
+      </div>
     </div>
     ${photos.length ? `<div class="dc-photos ${photoClass}">${photos.map((p,i)=>`<img class="dc-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox(${i}, ${JSON.stringify(photos).replace(/"/g,"'")})" onerror="this.style.display='none'">`).join('')}</div>` : ''}
     <div class="dc-body" id="dcb-${entry.id}">${esc(entry.content||'')}</div>
@@ -3242,6 +3254,149 @@ function buildMemberCard(p) {
 }
 
 
+
+// ============================================================
+// EDIT DIARY MODAL
+// ============================================================
+let editingEntry = null;
+
+async function openEditDiary(date, uid) {
+  if(!currentUser) return;
+  // Load entry
+  const snap = await db.collection('diaries').doc(date).collection('entries').doc(uid).get();
+  if(!snap.exists) { showToast('找不到日記', 'error'); return; }
+  editingEntry = {date, uid, ...snap.data()};
+
+  // Build modal HTML
+  const modal = document.getElementById('edit-diary-modal');
+  const body  = document.getElementById('edit-diary-body');
+  if(!modal || !body) return;
+
+  const existingPhotos = editingEntry.photos || [];
+  const photoPreviews = existingPhotos.map((url, i) =>
+    '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px">' +
+    '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">' +
+    '<button onclick="removeEditPhoto(' + i + ')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button>' +
+    '</div>'
+  ).join('');
+
+  const sched = (function() {
+    var s = (typeof SCHEDULE !== 'undefined' ? SCHEDULE : []).find(function(x){return x.date===date;});
+    return s ? 'Day ' + s.day + ' · ' + date : date;
+  })();
+
+  body.innerHTML =
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div>' +
+    '<div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">' + sched + '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日記內容</div>' +
+    '<textarea id="edit-diary-text" style="width:100%;min-height:160px;border:2px solid #f5edd8;border-radius:10px;padding:12px;font-family:Nunito,sans-serif;font-size:14px;line-height:1.7;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810" onfocus="this.style.borderColor=\'#d4650a\'" onblur="this.style.borderColor=\'#f5edd8\'">' + (editingEntry.content || '') + '</textarea>' +
+    '</div>' +
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:8px;text-transform:uppercase">照片（最多5張）</div>' +
+    '<div id="edit-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + photoPreviews + '</div>' +
+    '<label style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f5edd8;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;color:#5c3317">' +
+    '📷 新增照片' +
+    '<input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleEditPhotoSelect(this)">' +
+    '</label>' +
+    '<span style="font-size:11px;color:#7a5c46;margin-left:8px">已有 <span id="edit-photo-count">' + existingPhotos.length + '</span> / 5 張</span>' +
+    '</div>';
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditDiary() {
+  const modal = document.getElementById('edit-diary-modal');
+  if(modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  editingEntry = null;
+}
+
+function removeEditPhoto(idx) {
+  if(!editingEntry) return;
+  editingEntry.photos = editingEntry.photos || [];
+  editingEntry.photos.splice(idx, 1);
+  // Re-render previews
+  const container = document.getElementById('edit-photo-previews');
+  if(container) {
+    container.innerHTML = editingEntry.photos.map(function(url, i) {
+      return '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px">' +
+        '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">' +
+        '<button onclick="removeEditPhoto(' + i + ')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button>' +
+        '</div>';
+    }).join('');
+  }
+  var cnt = document.getElementById('edit-photo-count');
+  if(cnt) cnt.textContent = editingEntry.photos.length;
+}
+
+function handleEditPhotoSelect(input) {
+  if(!editingEntry) return;
+  editingEntry.photos = editingEntry.photos || [];
+  var remaining = 5 - editingEntry.photos.length;
+  var files = Array.from(input.files).slice(0, remaining);
+  if(files.length < input.files.length) showToast('最多5張照片', 'error');
+  files.forEach(function(f) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      // Store as pending file upload
+      if(!editingEntry._newPhotos) editingEntry._newPhotos = [];
+      editingEntry._newPhotos.push({file: f, preview: e.target.result});
+      // Add preview
+      var container = document.getElementById('edit-photo-previews');
+      var idx = editingEntry.photos.length + editingEntry._newPhotos.length - 1;
+      if(container) {
+        var div = document.createElement('div');
+        div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px';
+        div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
+        container.appendChild(div);
+      }
+      var cnt = document.getElementById('edit-photo-count');
+      if(cnt) cnt.textContent = editingEntry.photos.length + (editingEntry._newPhotos||[]).length;
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+async function saveEditDiary() {
+  if(!editingEntry || !db) return;
+  var btn = document.getElementById('edit-save-btn');
+  if(btn) { btn.textContent = '⏳ 儲存中...'; btn.disabled = true; }
+
+  try {
+    var text = document.getElementById('edit-diary-text')?.value.trim() || '';
+    var photoURLs = [...(editingEntry.photos || [])];
+
+    // Upload new photos
+    var newPhotos = editingEntry._newPhotos || [];
+    for(var i=0; i<newPhotos.length; i++) {
+      if(btn) btn.textContent = '⏳ 上傳照片 ' + (i+1) + '/' + newPhotos.length + '...';
+      var url = await uploadToCloudinary(newPhotos[i].file);
+      photoURLs.push(url);
+    }
+
+    await db.collection('diaries').doc(editingEntry.date).collection('entries').doc(editingEntry.uid).update({
+      content: text,
+      photos: photoURLs,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showToast('日記已更新 ✅', 'success');
+    closeEditDiary();
+    allDiaries = [];
+    renderDiary();
+  } catch(e) {
+    showToast('儲存失敗: ' + e.message, 'error');
+  } finally {
+    if(btn) { btn.textContent = '💾 儲存修改'; btn.disabled = false; }
+  }
+}
+
+
 // ============================================================
 // DOM READY - Wire up UI, start public features
 // ============================================================
@@ -3316,6 +3471,22 @@ document.addEventListener('DOMContentLoaded', () => {
     <button id="cf-img-btn" onclick="document.getElementById('cf-img-input').click()" title="傳送圖片">🖼</button>
     <input type="file" id="cf-img-input" accept="image/*" multiple>
     <button id="cf-send">➤</button>
+  </div>
+</div>
+
+
+<!-- ── EDIT DIARY MODAL ── -->
+<div id="edit-diary-modal" onclick="if(event.target.id==='edit-diary-modal')closeEditDiary()">
+  <div id="edit-diary-inner">
+    <div class="edit-diary-hdr">
+      <h3>✏️ 編輯日記</h3>
+      <button onclick="closeEditDiary()">✕</button>
+    </div>
+    <div id="edit-diary-body" style="padding:24px"></div>
+    <div style="padding:0 24px 24px;display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeEditDiary()" class="btn btn-secondary">取消</button>
+      <button onclick="saveEditDiary()" id="edit-save-btn" class="btn btn-primary">💾 儲存修改</button>
+    </div>
   </div>
 </div>
 
