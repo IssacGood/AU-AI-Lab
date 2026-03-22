@@ -609,7 +609,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
 
         <!-- 加入桌面快捷按鈕 -->
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-          <button onclick="navigate('install')" style="background:rgba(212,101,10,.12);border:1.5px solid rgba(212,101,10,.3);color:var(--primary-dark);padding:7px 16px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s" onmouseover="this.style.background='var(--primary)';this.style.color='#fff'" onmouseout="this.style.background='rgba(212,101,10,.12)';this.style.color='var(--primary-dark)'">
+          <button onclick="navigate('install')" style="background:rgba(212,101,10,.12);border:1.5px solid rgba(212,101,10,.3);color:var(--primary-dark);padding:7px 16px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s">
             📲 加入手機桌面
           </button>
         </div>
@@ -2804,6 +2804,14 @@ function renderProfilePage() {
               onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'"></textarea>
           </div>
 
+          <!-- Real Name -->
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">真實姓名 <span style="font-size:10px;background:#f5edd8;padding:2px 7px;border-radius:8px;margin-left:4px;font-weight:600">公開頁面顯示王O明格式</span></label>
+            <input id="prof-realname" type="text" placeholder="如：王小明（公開時會自動遮蔽中間字）"
+              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810"
+              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
+          </div>
+
           <!-- Bio -->
           <div style="margin-bottom:14px">
             <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">自我介紹</label>
@@ -2841,6 +2849,7 @@ function renderProfilePage() {
           sv('prof-title',      d.jobTitle);
           sv('prof-expertise',  d.expertise);
           sv('prof-motivation', d.motivation);
+          sv('prof-realname',  d.realName);
           const av = document.getElementById('prof-av');
           if(av && d.photoURL) av.src = d.photoURL;
         }
@@ -2861,7 +2870,8 @@ async function profSave() {
   if (status) status.textContent = '儲存中...';
   try {
     await db.collection('profiles').doc(currentUser.uid).update({
-      nickname: nick, bio, school, jobTitle, expertise, motivation
+      nickname: nick, bio, school, jobTitle, expertise, motivation,
+      realName: gv('prof-realname')
     });
     // Update sidebar name
     const sn = document.getElementById('sidebar-name');
@@ -3043,81 +3053,84 @@ function installSwitchOS(os) {
 
 
 
+
 // ============================================================
 // TEAM / MEMBER INTRO PAGE
 // ============================================================
+function maskName(name) {
+  if(!name || name.length < 2) return name || '';
+  if(name.length === 2) return name[0] + 'O';
+  return name[0] + 'O'.repeat(name.length - 2) + name[name.length - 1];
+}
+
 async function renderTeamPage() {
   const grid = document.getElementById('team-grid');
   if(!grid) return;
   grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);grid-column:1/-1"><div class="loading-spinner"></div></div>';
-
   if(!db) return;
   try {
-    // Load all member UIDs
     const memSnap = await db.collection('members').get();
     const uids = [];
-    memSnap.forEach(d => { if(d.data().uid) uids.push(d.data().uid); else uids.push(d.id); });
-
+    memSnap.forEach(d => {
+      const data = d.data();
+      uids.push(data.uid || d.id);
+    });
     if(!uids.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑‍🏫</div><p>尚無見習成員資料</p></div>';
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑\u200d🏫</div><p>尚無見習成員資料</p></div>';
       return;
     }
-
-    // Load profiles for each member
     const profiles = [];
     await Promise.all(uids.map(uid =>
       db.collection('profiles').doc(uid).get()
         .then(s => { if(s.exists) profiles.push(s.data()); })
-        .catch(()=>{})
+        .catch(() => {})
     ));
-
     if(!profiles.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑‍🏫</div><p>成員尚未填寫個人資料</p></div>';
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑\u200d🏫</div><p>成員尚未填寫個人資料</p></div>';
       return;
     }
-
-    grid.innerHTML = profiles.map(p => {
-      const name   = p.nickname || p.displayName || '見習教師';
-      const photo  = p.photoURL || \`https://ui-avatars.com/api/?name=\${encodeURIComponent(name)}&background=d4650a&color=fff&size=128\`;
-      const school = p.school   || '';
-      const title  = p.jobTitle || '';
-      const expert = p.expertise || '';
-      const motiv  = p.motivation || '';
-      const bio    = p.bio || '';
-
-      const tags = expert ? expert.split(/[，,、]/).slice(0,3).map(t =>
-        \`<span style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700;white-space:nowrap">\${esc(t.trim())}</span>\`
-      ).join('') : '';
-
-      return \`<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.1);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 8px 32px rgba(84,40,10,.2)'" onmouseout="this.style.boxShadow='0 4px 20px rgba(84,40,10,.1)'">
-        <!-- Card header with photo -->
-        <div style="background:linear-gradient(135deg,#3d1f0a,#d4650a);padding:28px 20px;text-align:center">
-          <img src="\${photo}" alt="\${esc(name)}"
-            style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin-bottom:10px;display:block;margin-left:auto;margin-right:auto">
-          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">\${esc(name)}</div>
-          \${title  ? \`<div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:2px">\${esc(title)}</div>\` : ''}
-          \${school ? \`<div style="font-size:12px;color:rgba(255,255,255,.7)">🏫 \${esc(school)}</div>\` : ''}
-        </div>
-        <!-- Card body -->
-        <div style="padding:18px 20px;flex:1;display:flex;flex-direction:column;gap:10px">
-          \${tags ? \`<div style="display:flex;gap:5px;flex-wrap:wrap">\${tags}</div>\` : ''}
-          \${motiv ? \`<div>
-            <div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">參加動機</div>
-            <div style="font-size:13px;color:#2c1810;line-height:1.6">\${esc(motiv)}</div>
-          </div>\` : ''}
-          \${bio ? \`<div>
-            <div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">自我介紹</div>
-            <div style="font-size:13px;color:#2c1810;line-height:1.6">\${esc(bio)}</div>
-          </div>\` : ''}
-          \${!motiv && !bio && !tags ? \`<div style="text-align:center;color:#bbb;font-size:13px;padding:12px 0">尚未填寫介紹</div>\` : ''}
-        </div>
-      </div>\`;
-    }).join('');
-
+    grid.innerHTML = profiles.map(p => buildMemberCard(p)).join('');
   } catch(e) {
-    grid.innerHTML = \`<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">⚠️ \${e.message}</div>\`;
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">⚠️ ' + esc(e.message) + '</div>';
   }
 }
+
+function buildMemberCard(p) {
+  var name   = p.nickname || p.displayName || '見習教師';
+  var masked = p.realName ? maskName(p.realName) : '';
+  var displayName = masked ? masked : name;
+  var photo  = p.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=d4650a&color=fff&size=128');
+  var school = p.school || '';
+  var title  = p.jobTitle || '';
+  var expert = p.expertise || '';
+  var motiv  = p.motivation || '';
+  var bio    = p.bio || '';
+
+  var tagHTML = '';
+  if(expert) {
+    var tags = expert.split(/[，,、]/).slice(0,3);
+    tagHTML = '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">' +
+      tags.map(function(t) {
+        return '<span style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700">' + esc(t.trim()) + '</span>';
+      }).join('') + '</div>';
+  }
+
+  var bodyHTML = tagHTML;
+  if(motiv) bodyHTML += '<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">參加動機</div><div style="font-size:13px;color:#2c1810;line-height:1.6">' + esc(motiv) + '</div></div>';
+  if(bio)   bodyHTML += '<div><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">自我介紹</div><div style="font-size:13px;color:#2c1810;line-height:1.6">' + esc(bio) + '</div></div>';
+  if(!tagHTML && !motiv && !bio) bodyHTML = '<div style="text-align:center;color:#bbb;font-size:13px;padding:12px 0">尚未填寫介紹</div>';
+
+  return '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.1);overflow:hidden;display:flex;flex-direction:column">' +
+    '<div style="background:linear-gradient(135deg,#3d1f0a,#d4650a);padding:28px 20px;text-align:center">' +
+    '<img src="' + photo + '" alt="' + esc(name) + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin:0 auto 10px;display:block">' +
+    '<div style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">' + esc(displayName) + '</div>' +
+    (title  ? '<div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:2px">' + esc(title) + '</div>' : '') +
+    (school ? '<div style="font-size:12px;color:rgba(255,255,255,.7)">🏫 ' + esc(school) + '</div>' : '') +
+    '</div>' +
+    '<div style="padding:18px 20px;flex:1">' + bodyHTML + '</div>' +
+    '</div>';
+}
+
 
 // ============================================================
 // DOM READY - Wire up UI, start public features
