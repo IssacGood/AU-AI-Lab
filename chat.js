@@ -34,8 +34,8 @@ var css = [
   ".cf-time{font-size:10px;opacity:.55;padding:0 4px;white-space:nowrap}",
   /* Action buttons — both recall & delete look like clear circles */
   ".cf-action-btn{width:26px;height:26px;border-radius:50%;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;padding:0;flex-shrink:0;font-family:'Nunito',sans-serif;transition:all .15s}",
-  ".cf-recall-btn{border:2px solid #c4844a;color:#c4844a}",
-  ".cf-recall-btn:hover{background:#c4844a;color:#fff}",
+  ".cf-recall-btn{border:2px solid #D4650A;color:#D4650A;font-size:13px;font-weight:900}",
+  ".cf-recall-btn:hover{background:#D4650A;color:#fff}",
   ".cf-del-btn{border:2px solid #e74c3c;color:#e74c3c}",
   ".cf-del-btn:hover{background:#e74c3c;color:#fff}",
   ".cf-row.me .cf-recall-btn{border-color:rgba(255,255,255,.7);color:rgba(255,255,255,.9)}",
@@ -145,7 +145,7 @@ function cfToggleFullscreen() {
   if (!win) return;
   cfFullscreen = !cfFullscreen;
   win.classList.toggle('cf-fullscreen', cfFullscreen);
-  if (btn) btn.textContent = cfFullscreen ? '&#x7E2E;' : '&#x5168;';
+  if (btn) btn.innerHTML = cfFullscreen ? '&#x7E2E;' : '&#x5168;';
 }
 
 function updateChatBadge() {
