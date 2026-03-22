@@ -2262,7 +2262,10 @@ function renderCfMessages(msgs) {
       container.innerHTML += `<div class="cf-row me" data-msgid="${msg.id}">
         <div class="cf-bubble-wrap" style="align-items:flex-end">
           <div class="cf-bubble me ${recalledClass}">${contentHTML}</div>
-          <div class="cf-time">${time}${actionsHTML}</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:0 2px">
+            ${actionsHTML}
+            <span class="cf-time" style="padding:0">${time}</span>
+          </div>
         </div>
       </div>`;
     } else {
@@ -2271,7 +2274,7 @@ function renderCfMessages(msgs) {
         <div class="cf-bubble-wrap">
           <div class="cf-name">${esc(name)}</div>
           <div class="cf-bubble other ${recalledClass}">${contentHTML}</div>
-          <div class="cf-time">${time}${actionsHTML}</div>
+          <div style="display:flex;align-items:center;gap:6px;padding:0 2px"><span class="cf-time" style="padding:0">${time}</span>${actionsHTML}</div>
         </div>
       </div>`;
     }
