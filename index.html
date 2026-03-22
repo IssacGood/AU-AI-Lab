@@ -1128,6 +1128,13 @@ let allDiaries = [];
 let allGalleryPhotos = [];
 let members = [];
 let chatListener = null;
+let cfChatListener = null;
+let cfChatQuery = null;
+let cfUnreadCount = 0;
+let cfFullscreen = false;
+let _chatWired = false;
+let _isSendingMsg = false;
+let _loadingDiaries = false;
 let lbImages = [];
 let lbIndex = 0;
 let countdownInterval = null;
@@ -1676,9 +1683,6 @@ async function populateDiaryFilters() {
 }
 
 
-let currentView = 'date';
-let currentFilterDate = '';
-let currentFilterPerson = '';
 
 function setView(view) {
   currentView = view;
@@ -2495,6 +2499,405 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 </div>
+<script>
+// ============================================================
+// WRITE DIARY - FORM
+// ============================================================
+function loadWriteForm() {
+  if(!isMember) {
+    document.getElementById('write-member-check').style.display = 'flex';
+    document.getElementById('write-form-wrap').style.display = 'none';
+    return;
+  }
+  document.getElementById('write-member-check').style.display = 'none';
+  document.getElementById('write-form-wrap').style.display = 'block';
+  const sel = document.getElementById('write-date-select');
+  const today = new Date().toISOString().split('T')[0];
+  const weekdays = ['日','一','二','三','四','五','六'];
+  sel.innerHTML = SCHEDULE.map((s,i) => {
+    const d = new Date(s.date + 'T00:00:00');
+    const wd = weekdays[d.getDay()];
+    return `<option value="${s.date}" ${s.date===today?'selected':''}>${s.date}（${wd}）- Day ${s.day}</option>`;
+  }).join('');
+  updateWriteDate();
+  loadExistingEntry(sel.value);
+}
+function updateWriteDate() {
+  const date = document.getElementById('write-date-select')?.value;
+  if(!date) return;
+  const sched = SCHEDULE.find(s=>s.date===date);
+  document.getElementById('write-date-display').textContent = date + ' - Day ' + (sched?.day||'');
+  document.getElementById('write-sched-display').innerHTML = `<span>📅</span><span>${sched?sched.zh:'無行程資訊'}</span>`;
+  loadExistingEntry(date);
+}
+async function loadExistingEntry(date) {
+  if(!currentUser || !date || !db) return;
+  try {
+    const snap = await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).get();
+    if(snap.exists) {
+      const data = snap.data();
+      document.getElementById('diary-text').value = data.content || '';
+      pendingPhotos = (data.photos||[]).map(url => ({url, existing:true}));
+      renderPhotoPreviews();
+    } else {
+      document.getElementById('diary-text').value = '';
+      pendingPhotos = [];
+      renderPhotoPreviews();
+    }
+  } catch(e) {}
+}
+function handlePhotoSelect(input) {
+  const files = Array.from(input.files);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingPhotos.push({file:f, preview:e.target.result, existing:false});
+      renderPhotoPreviews();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+function renderPhotoPreviews() {
+  const container = document.getElementById('photo-previews');
+  if(!container) return;
+  container.innerHTML = pendingPhotos.map((p,i) =>
+    `<div class="photo-preview-item">
+      <img src="${p.existing?p.url:p.preview}" alt="">
+      <button class="remove-photo" onclick="removePhoto(${i})">✕</button>
+    </div>`
+  ).join('');
+}
+function removePhoto(idx) { pendingPhotos.splice(idx,1); renderPhotoPreviews(); }
+
+async function submitDiary() {
+  if(!currentUser) { showToast('請先登入','error'); return; }
+  if(!isMember) {
+    // Live re-check
+    try {
+      const fs = await db.collection('members').doc(currentUser.uid).get();
+      if(fs.exists) { isMember = true; }
+      else {
+        const es = await db.collection('members').where('email','==',currentUser.email).get();
+        if(!es.empty) isMember = true;
+      }
+    } catch(e){}
+    if(!isMember) { showToast('你尚未被加入成員名單，請聯絡管理員 (admin.html)','error'); return; }
+  }
+  const date = document.getElementById('write-date-select')?.value;
+  const content = document.getElementById('diary-text').value.trim();
+  if(!content && pendingPhotos.length===0){ showToast('請輸入日記內容或上傳照片','error'); return; }
+  const btn = document.getElementById('submit-diary-btn');
+  btn.textContent='⏳ 儲存中...'; btn.disabled=true;
+  try {
+    const photoURLs = [];
+    const toUpload = pendingPhotos.filter(p=>!p.existing);
+    const existing = pendingPhotos.filter(p=>p.existing).map(p=>p.url);
+    for(let i=0;i<toUpload.length;i++){
+      btn.textContent=`⏳ 上傳照片 ${i+1}/${toUpload.length}...`;
+      photoURLs.push(await uploadToCloudinary(toUpload[i].file));
+    }
+    photoURLs.push(...existing);
+    const profSnap = await db.collection('profiles').doc(currentUser.uid).get();
+    const prof = profSnap.exists ? profSnap.data() : {};
+    const entry = {
+      uid: currentUser.uid, email: currentUser.email,
+      displayName: prof.nickname||currentUser.displayName||'',
+      photoURL: prof.photoURL||currentUser.photoURL||'',
+      content, photos: photoURLs,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    // Create parent doc first (prevents ghost document)
+    await db.collection('diaries').doc(date).set({
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(), hasEntries: true
+    }, {merge:true});
+    await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).set(entry, {merge:true});
+    showToast('日記已儲存 🎉','success');
+    allDiaries=[]; loadStats();
+    clearWriteForm();
+    setTimeout(() => navigate('diary'), 800);
+  } catch(e) {
+    showToast('儲存失敗: '+e.message,'error');
+    console.error('submitDiary:', e);
+  } finally { btn.textContent='💾 儲存日記'; btn.disabled=false; }
+}
+function clearWriteForm() {
+  document.getElementById('diary-text').value='';
+  pendingPhotos=[]; renderPhotoPreviews();
+}
+
+// ============================================================
+// IMAGE COMPRESSION
+// ============================================================
+async function compressImage(file, maxKB=800) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w=img.width, h=img.height, maxDim=2400;
+        if(w>maxDim||h>maxDim){const r=Math.min(maxDim/w,maxDim/h);w=Math.round(w*r);h=Math.round(h*r);}
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        let q=0.9;
+        const compress=()=>canvas.toBlob(blob=>{
+          if(blob.size>maxKB*1024&&q>0.3){q-=0.1;compress();}else resolve(blob);
+        },'image/jpeg',q);
+        compress();
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ============================================================
+// FLOATING CHAT WIDGET
+// ============================================================
+function chatToggle() {
+  const win = document.getElementById('chat-float');
+  const fab = document.getElementById('chat-fab');
+  const isOpen = win.classList.contains('cf-open');
+  if(isOpen) {
+    win.classList.remove('cf-open');
+    setTimeout(()=>{ win.style.display='none'; }, 250);
+    fab.classList.remove('cf-active');
+  } else {
+    win.style.display='flex';
+    requestAnimationFrame(()=>win.classList.add('cf-open'));
+    fab.classList.add('cf-active');
+    cfUnreadCount = 0;
+    updateChatBadge();
+    initChat();
+    const msgs = document.getElementById('cf-msgs');
+    if(msgs) setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,100);
+  }
+}
+
+function cfSetSize(sz) {
+  const win = document.getElementById('chat-float');
+  if(!win) return;
+  win.classList.remove('cf-sm','cf-md','cf-lg');
+  win.classList.add('cf-' + sz);
+}
+
+function cfToggleFullscreen() {
+  const win = document.getElementById('chat-float');
+  if(!win) return;
+  cfFullscreen = !cfFullscreen;
+  win.classList.toggle('cf-fullscreen', cfFullscreen);
+}
+
+function updateChatBadge() {
+  const dot = document.getElementById('chat-badge-dot');
+  const navBadge = document.getElementById('chat-badge');
+  if(dot) dot.style.display = cfUnreadCount > 0 ? 'block' : 'none';
+  if(navBadge) {
+    navBadge.textContent = cfUnreadCount > 0 ? cfUnreadCount : '';
+    navBadge.style.display = cfUnreadCount > 0 ? 'inline' : 'none';
+  }
+}
+
+function initChat() {
+  if(cfChatListener && cfChatQuery) {
+    try { cfChatQuery.off('value', cfChatListener); } catch(e) {}
+    cfChatListener = null; cfChatQuery = null;
+  }
+  if(!rtdb) { console.warn('rtdb not ready'); return; }
+  updateCfUserBar();
+  cfChatQuery = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
+  const handler = (snap) => {
+    try {
+      const msgs = [];
+      if(snap && typeof snap.forEach==='function') {
+        snap.forEach(c => { try{ const v=c.val(); if(v) msgs.push({id:c.key,...v}); }catch(e){} });
+      }
+      renderCfMessages(msgs);
+    } catch(e) { console.warn('Chat render:', e.message); }
+  };
+  cfChatListener = handler;
+  cfChatQuery.on('value', handler, err => console.warn('Chat listener:', err.message));
+}
+
+function renderCfMessages(msgs) {
+  const container = document.getElementById('cf-msgs');
+  if(!container) return;
+  const myUid = currentUser ? currentUser.uid : sessionStorage.getItem('guestUid');
+  const myGuestUid = sessionStorage.getItem('guestUid');
+  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+  const isOpen = document.getElementById('chat-float')?.classList.contains('cf-open');
+  container.innerHTML = '<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
+  let lastDate = '';
+  msgs.forEach(msg => {
+    const isMe = myUid && (msg.uid===myUid || (myGuestUid && msg.uid===myGuestUid));
+    const d = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    const dateStr = d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+    if(dateStr !== lastDate) {
+      lastDate = dateStr;
+      container.innerHTML += `<div class="cf-date-sep">— ${dateStr} —</div>`;
+    }
+    const time = d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    const avatar = msg.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.userName||'U')}&background=${isMe?'d4650a':'8b5e3c'}&color=fff`;
+    let contentHTML = '';
+    if(msg.recalled) {
+      if(isAdmin) contentHTML = `<span class="cf-recalled-admin"><span class="cf-recalled-badge">已收回</span> ${esc(msg.text||'')}</span>`;
+      else contentHTML = `<span class="cf-recalled">⚠️ 此訊息已收回</span>`;
+    } else if(msg.imageURL) {
+      contentHTML = `<img src="${msg.imageURL}" class="cf-img-msg" onclick="openLightbox(0,[{url:'${msg.imageURL}',info:''}])">`;
+      if(msg.text) contentHTML += '<br>' + esc(msg.text);
+    } else {
+      contentHTML = esc(msg.text||'');
+    }
+    let actions = '';
+    if(isMe && !msg.recalled) {
+      actions = `<button onclick="cfRecallMsg('${msg.id}')" class="cf-action-btn" title="收回訊息">↩ 收回</button>`;
+    }
+    if(isAdmin && !msg.recalled) {
+      actions += ` <button onclick="cfDeleteMsg('${msg.id}')" class="cf-action-btn" style="background:#fff;border-color:#e74c3c;color:#e74c3c">🗑</button>`;
+    }
+    container.innerHTML += `<div class="cf-row ${isMe?'me':''}" data-msgid="${msg.id}">
+      ${!isMe?`<img src="${avatar}" class="cf-av" onerror="this.src='https://ui-avatars.com/api/?name=U&background=8b5e3c&color=fff'">`:''}
+      <div class="cf-bubble-wrap" style="${isMe?'align-items:flex-end':''}">
+        ${!isMe?`<div class="cf-uname">${esc(msg.userName||'')}</div>`:''}
+        <div class="cf-bubble ${isMe?'me':'other'}">${contentHTML}</div>
+        <div style="display:flex;align-items:center;${isMe?'justify-content:flex-end;':''}gap:6px;padding:0 2px">
+          ${isMe?`${actions}<span class="cf-time" style="padding:0">${time}</span>`:
+                 `<span class="cf-time" style="padding:0">${time}</span>${actions}`}
+        </div>
+      </div>
+      ${isMe?`<img src="${currentUser?.photoURL||avatar}" class="cf-av" onerror="this.src='https://ui-avatars.com/api/?name=U&background=d4650a&color=fff'">`:''}
+    </div>`;
+  });
+  if(!isOpen) { cfUnreadCount++; updateChatBadge(); }
+  if(wasAtBottom || isOpen) container.scrollTop = container.scrollHeight;
+}
+
+function updateCfUserBar() {
+  const bar = document.getElementById('cf-guest-bar');
+  const nameEl = document.getElementById('cf-name-display');
+  const avEl = document.getElementById('cf-my-av');
+  if(currentUser) {
+    if(bar) bar.style.display = 'none';
+    if(avEl) avEl.src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'U')}&background=d4650a&color=fff`;
+  } else {
+    if(bar) bar.style.display = 'flex';
+    const gn = sessionStorage.getItem('guestName') || '訪客';
+    if(nameEl) nameEl.textContent = '以「' + gn + '」聊天';
+    if(avEl) avEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(gn)}&background=8b5e3c&color=fff`;
+  }
+}
+
+let _chatWired2 = false;
+function wireCfInput() {
+  if(_chatWired2) return;
+  _chatWired2 = true;
+  const input = document.getElementById('cf-input');
+  const sendBtn = document.getElementById('cf-send');
+  const imgInput = document.getElementById('cf-img-input');
+  if(!input || !sendBtn) return;
+  input.addEventListener('keydown', e => {
+    if(e.isComposing) return;
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cfSendMessage(); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height='auto';
+    input.style.height=Math.min(input.scrollHeight,100)+'px';
+  });
+  sendBtn.onclick = cfSendMessage;
+  if(imgInput) {
+    imgInput.onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      if(!files.length) return;
+      for(const file of files) {
+        const btn = document.getElementById('cf-send');
+        if(btn){btn.textContent='⏳';btn.disabled=true;}
+        try {
+          const url = await uploadToCloudinary(file);
+          let userName, userPhoto, uid;
+          if(currentUser) {
+            userName = sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email;
+            userPhoto = currentUser.photoURL||''; uid = currentUser.uid;
+          } else {
+            const gn = sessionStorage.getItem('guestName')||'訪客';
+            userName=gn+' 👋'; userPhoto='';
+            uid = sessionStorage.getItem('guestUid')||'guest_'+Math.random().toString(36).slice(2,8);
+            sessionStorage.setItem('guestUid',uid);
+          }
+          await rtdb.ref('chat').push({uid, userName, userPhoto, text:'', imageURL:url, timestamp:Date.now()});
+        } catch(err) { showToast('圖片上傳失敗','error'); }
+        finally { const btn=document.getElementById('cf-send'); if(btn){btn.textContent='➤';btn.disabled=false;} }
+      }
+      e.target.value='';
+    };
+  }
+}
+
+async function cfSendMessage() {
+  if(_isSendingMsg) return;
+  const input = document.getElementById('cf-input');
+  const text = input?.value.trim();
+  if(!text || !rtdb) return;
+  _isSendingMsg = true;
+  if(input){ input.value=''; input.style.height=''; }
+  let userName, userPhoto, uid;
+  if(currentUser) {
+    userName = sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email;
+    userPhoto = currentUser.photoURL||''; uid = currentUser.uid;
+  } else {
+    let gn = sessionStorage.getItem('guestName');
+    if(!gn) {
+      gn = prompt('請輸入你的暱稱（訪客）：','');
+      if(gn===null){ _isSendingMsg=false; return; }
+      gn = gn.trim().slice(0,20)||'訪客';
+      sessionStorage.setItem('guestName',gn);
+      updateCfUserBar();
+    }
+    userName=gn+' 👋'; userPhoto='';
+    uid=sessionStorage.getItem('guestUid')||'guest_'+Math.random().toString(36).slice(2,8);
+    sessionStorage.setItem('guestUid',uid);
+  }
+  try {
+    await rtdb.ref('chat').push({uid, userName, userPhoto, text, timestamp:Date.now()});
+  } catch(e) { showToast('發送失敗：'+e.message,'error'); }
+  finally { _isSendingMsg=false; }
+}
+
+async function cfRecallMsg(msgId) {
+  if(!rtdb) return;
+  try {
+    await rtdb.ref('chat/'+msgId).update({recalled:true});
+    showToast('訊息已收回','success');
+  } catch(e){ showToast('收回失敗','error'); }
+}
+
+async function cfDeleteMsg(msgId) {
+  if(!isAdmin||!rtdb) return;
+  try { await rtdb.ref('chat/'+msgId).remove(); }
+  catch(e){ showToast('刪除失敗','error'); }
+}
+
+async function cfChangeGuestName() {
+  const newName = prompt('輸入新暱稱：', sessionStorage.getItem('guestName')||'訪客');
+  if(!newName) return;
+  sessionStorage.setItem('guestName', newName.trim().slice(0,20)||'訪客');
+  updateCfUserBar();
+}
+
+async function clearAllChat() {
+  if(!isAdmin||!rtdb) return;
+  if(!confirm('確定清空所有聊天記錄？')) return;
+  try{ await rtdb.ref('chat').remove(); showToast('聊天已清空','success'); }
+  catch(e){ showToast('清空失敗','error'); }
+}
+
+function openLoginModal() {
+  // Show login screen  
+  document.getElementById('login-screen').style.display='flex';
+}
+
+</script>
 
 </body>
 </html>
