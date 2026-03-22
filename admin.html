@@ -552,7 +552,19 @@ function userRow(p, isAdmin, isMember, memberMap) {
 
   let actionBtn = '';
   if(isAdmin) {
-    actionBtn = `<span style="font-size:12px;color:#f5a623;font-weight:700;padding:6px">最高權限</span>`;
+    const adminIsMember = !!(memberMap[p.uid] || memberMap[(p.email||'').toLowerCase()]);
+    if(adminIsMember) {
+      actionBtn = `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span style="font-size:12px;color:#f5a623;font-weight:700">最高權限</span>
+        <span style="font-size:11px;color:#2d5a27;font-weight:700">✅ 已加入成員</span>
+        <button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">退出成員</button>
+      </div>`;
+    } else {
+      actionBtn = `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span style="font-size:12px;color:#f5a623;font-weight:700">最高權限</span>
+        <button class="btn btn-pri btn-sm" onclick="grantMember('${p.uid}','${(p.email||'').replace(/'/g,"\'")}','${name.replace(/'/g,"\'")}')">加入成員（可寫日記）</button>
+      </div>`;
+    }
   } else if(isMember) {
     actionBtn = `<button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">移除成員</button>`;
   } else {
