@@ -517,6 +517,16 @@ textarea.diary-input:focus{border-color:var(--primary)}
 .edit-diary-hdr h3{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin:0}
 .edit-diary-hdr button{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
 
+
+/* ── Filter pills ── */
+.filter-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #e8ddd4;background:#fff;color:#7a5c46;font-family:'Nunito',sans-serif;transition:all .15s;white-space:nowrap}
+.filter-pill:hover{border-color:#d4650a;color:#d4650a}
+.filter-pill.active{background:#d4650a;border-color:#d4650a;color:#fff}
+.filter-pill.active-person{background:#5c3317;border-color:#5c3317;color:#fff}
+.view-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:transparent;color:#7a5c46;font-family:'Nunito',sans-serif;transition:all .15s}
+.view-pill.active{background:#fff;color:#d4650a;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.view-pill:hover:not(.active){background:rgba(255,255,255,.6)}
+
 </style>
 </head>
 <body>
@@ -694,21 +704,36 @@ textarea.diary-input:focus{border-color:var(--primary)}
           <h2>📓 <span data-i18n="page-diary">每日日記</span></h2>
           <p data-i18n="page-diary-sub">16位見習教師的每日所見所感</p>
         </div>
-        <div class="diary-toolbar">
-          <div class="view-tabs">
-            <div class="view-tab active" onclick="setView('date')" id="vt-date" data-i18n="view-date">📅 照日期</div>
-            <div class="view-tab" onclick="setView('person')" id="vt-person" data-i18n="view-person">👤 照人員</div>
-            <div class="view-tab" onclick="setView('all')" id="vt-all" data-i18n="view-all">📋 全部</div>
+        <!-- Diary filter bar -->
+        <div style="background:#fff;border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(84,40,10,.08)">
+          <!-- Row 1: view mode + sort + export -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <div style="display:flex;gap:4px;background:#f5edd8;border-radius:24px;padding:3px">
+              <button class="view-pill active" id="vt-date" onclick="setView('date')">📅 照日期</button>
+              <button class="view-pill" id="vt-person" onclick="setView('person')">👤 照人員</button>
+              <button class="view-pill" id="vt-all" onclick="setView('all')">📋 全部</button>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+              <select class="filter-select" id="diary-sort" onchange="renderDiary()" style="padding:6px 10px;font-size:12px">
+                <option value="newest">最新優先</option>
+                <option value="oldest">最舊優先</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="exportPDF()">📄 匯出PDF</button>
+            </div>
           </div>
-          <select class="filter-select" id="diary-filter" onchange="applyFilter()">
-            <option value="">-- 選擇篩選 --</option>
-          </select>
-          <select class="filter-select" id="diary-sort" onchange="renderDiary()">
-            <option value="newest">最新優先</option>
-            <option value="oldest">最舊優先</option>
-          </select>
-          <button class="btn btn-secondary btn-sm" onclick="exportPDF()">📄 匯出PDF</button>
+          <!-- Row 2: 日期 pills -->
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📅 日期</div>
+            <div id="diary-date-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
+          <!-- Row 3: 人員 pills -->
+          <div>
+            <div style="font-size:11px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">👤 成員</div>
+            <div id="diary-person-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
         </div>
+        <!-- Hidden selects still used by applyFilter/renderDiary for logic -->
+        <select id="diary-filter" style="display:none"></select>
         <div id="diary-content"><div class="loading-spinner"></div></div>
       </div>
 
@@ -757,14 +782,22 @@ textarea.diary-input:focus{border-color:var(--primary)}
           <h2>📷 <span data-i18n="page-gallery">相片牆</span></h2>
           <p data-i18n="page-gallery-sub">所有見習教師的精彩影像記錄</p>
         </div>
-        <div class="diary-toolbar" style="margin-bottom:20px">
-          <select class="filter-select" id="gallery-filter-date" onchange="renderGallery()">
-            <option value="">所有日期</option>
-          </select>
-          <select class="filter-select" id="gallery-filter-person" onchange="renderGallery()">
-            <option value="">所有成員</option>
-          </select>
+        <!-- Gallery filter bar -->
+        <div style="background:#fff;border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(84,40,10,.08)">
+          <!-- 日期 pills -->
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📅 日期</div>
+            <div id="gallery-date-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
+          <!-- 人員 pills -->
+          <div>
+            <div style="font-size:11px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">👤 成員</div>
+            <div id="gallery-person-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          </div>
         </div>
+        <!-- Hidden selects for logic -->
+        <select id="gallery-filter-date" style="display:none" onchange="renderGallery()"><option value="">所有日期</option></select>
+        <select id="gallery-filter-person" style="display:none" onchange="renderGallery()"><option value="">所有成員</option></select>
         <div class="gallery-grid" id="gallery-content"></div>
       </div>
 
@@ -1568,139 +1601,271 @@ async function loadAllDiaries() {
 // DIARY - UI
 // ============================================================
 async function populateDiaryFilters() {
-  await loadAllDiaries();
-  const filterEl = document.getElementById('diary-filter');
-  
-  if(currentView === 'date') {
-    filterEl.innerHTML = '<option value="">所有日期</option>' +
-      SCHEDULE.map(s => {
-        const d = new Date(s.date);
-        const wd = ['日','一','二','三','四','五','六'][d.getDay()];
-        return `<option value="${s.date}">Day ${s.day} · ${s.date.slice(5)}（${wd}）</option>`;
-      }).join('');
-  } else if(currentView === 'person') {
-    const people = [...new Set(allDiaries.map(d => d.uid))];
-    const profMap = await loadProfiles(people);
-    filterEl.innerHTML = '<option value="">所有成員</option>' +
-      people.map(uid => `<option value="${uid}">${profMap[uid]?.nickname||profMap[uid]?.displayName||uid.slice(0,8)}</option>`).join('');
-  } else {
-    filterEl.innerHTML = '<option value="">所有</option>';
+  if(allDiaries.length === 0) await loadAllDiaries();
+  const profMap = await loadProfiles();
+
+  // Date pills
+  const dates = [...new Set(allDiaries.map(e=>e.date))].sort().reverse();
+  const datePills = document.getElementById('diary-date-pills');
+  let activeDateVal = '';
+  let activePersonVal = '';
+
+  if(datePills) {
+    const allPill = document.createElement('button');
+    allPill.className = 'filter-pill active';
+    allPill.textContent = '全部';
+    allPill.dataset.val = '';
+    allPill.onclick = function() {
+      datePills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      activeDateVal = '';
+      document.getElementById('diary-filter').value = '';
+      renderDiary();
+    };
+    datePills.appendChild(allPill);
+
+    dates.forEach(d => {
+      const sched = SCHEDULE.find(s=>s.date===d);
+      const label = sched ? 'Day ' + sched.day + ' · ' + d.slice(5) : d;
+      const pill = document.createElement('button');
+      pill.className = 'filter-pill';
+      pill.textContent = label;
+      pill.dataset.val = d;
+      pill.onclick = function() {
+        datePills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('diary-filter').value = 'date:' + d;
+        renderDiary();
+      };
+      datePills.appendChild(pill);
+    });
+  }
+
+  // Person pills
+  const uids = [...new Set(allDiaries.map(e=>e.uid))];
+  const personPills = document.getElementById('diary-person-pills');
+  if(personPills) {
+    const allPill = document.createElement('button');
+    allPill.className = 'filter-pill active';
+    allPill.textContent = '所有成員';
+    allPill.dataset.val = '';
+    allPill.onclick = function() {
+      personPills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
+      this.classList.add('active');
+      document.getElementById('diary-filter').value = '';
+      renderDiary();
+    };
+    personPills.appendChild(allPill);
+
+    uids.forEach(uid => {
+      const name = profMap[uid]?.nickname || profMap[uid]?.displayName || uid.slice(0,8);
+      const pill = document.createElement('button');
+      pill.className = 'filter-pill';
+      pill.textContent = name;
+      pill.dataset.val = uid;
+      pill.onclick = function() {
+        // Allow multi-select on person? For now single select
+        personPills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
+        this.classList.add('active-person');
+        document.getElementById('diary-filter').value = 'person:' + uid;
+        renderDiary();
+      };
+      personPills.appendChild(pill);
+    });
   }
 }
 
-async function loadProfiles(uids) {
-  const map = {};
-  const batches = [];
-  for(let i=0;i<uids.length;i+=10) batches.push(uids.slice(i,i+10));
-  for(const batch of batches) {
-    const snaps = await Promise.all(batch.map(uid => db.collection('profiles').doc(uid).get()));
-    snaps.forEach(s => { if(s.exists) map[s.id] = s.data(); });
-  }
-  return map;
-}
+
+let currentView = 'date';
+let currentFilterDate = '';
+let currentFilterPerson = '';
 
 function setView(view) {
   currentView = view;
-  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`vt-${view}`)?.classList.add('active');
-  populateDiaryFilters();
-}
-
-function applyFilter() {
-  const val = document.getElementById('diary-filter').value;
-  if(currentView === 'date') selectedDiaryDate = val;
-  else if(currentView === 'person') selectedDiaryPerson = val;
+  ['date','person','all'].forEach(v => {
+    const btn = document.getElementById('vt-' + v);
+    if(btn) btn.classList.toggle('active', v === view);
+  });
   renderDiary();
 }
+
+function applyFilter() { renderDiary(); }
 
 async function renderDiary() {
   const container = document.getElementById('diary-content');
   if(!container) return;
-  container.innerHTML = '<div class="loading-spinner"></div>';
-  
+  container.innerHTML = '<div class="loading-spinner" style="margin:40px auto"></div>';
+
   if(!allDiaries.length) await loadAllDiaries();
-  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
-  
-  let entries = [...allDiaries];
-  const sort = document.getElementById('diary-sort')?.value || 'newest';
-  
-  // Filter
-  if(currentView === 'date' && selectedDiaryDate) entries = entries.filter(e => e.date === selectedDiaryDate);
-  else if(currentView === 'person' && selectedDiaryPerson) entries = entries.filter(e => e.uid === selectedDiaryPerson);
-  
-  // Sort
-  entries.sort((a,b) => {
-    const ta = a.createdAt?.seconds || 0;
-    const tb = b.createdAt?.seconds || 0;
-    return sort==='newest' ? tb-ta : ta-tb;
+  const profMap = await loadProfiles([...new Set(allDiaries.map(e=>e.uid))]);
+
+  const filterVal = document.getElementById('diary-filter')?.value || '';
+  const sortVal   = document.getElementById('diary-sort')?.value || 'newest';
+
+  // Parse filter
+  let filterDate = '', filterPerson = '';
+  if(filterVal.startsWith('date:'))   filterDate   = filterVal.slice(5);
+  if(filterVal.startsWith('person:')) filterPerson = filterVal.slice(7);
+
+  // Filter entries
+  let entries = allDiaries.filter(e => {
+    if(filterDate   && e.date !== filterDate)   return false;
+    if(filterPerson && e.uid  !== filterPerson) return false;
+    return true;
   });
-  
+
+  // Sort
+  entries = entries.slice().sort((a,b) => {
+    const ta = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
+    const tb = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
+    return sortVal === 'oldest' ? ta - tb : tb - ta;
+  });
+
   if(!entries.length) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">📓</div><h3>${t('no-diary')}</h3></div>`;
+    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:48px;margin-bottom:12px">📓</div><p>這裡還沒有日記記錄</p></div>';
     return;
   }
-  
-  // Group by date if 'date' view
-  let html = '';
-  if(currentView === 'date' && !selectedDiaryDate) {
+
+  if(currentView === 'date') {
+    // Group by date
     const byDate = {};
-    entries.forEach(e => { if(!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
-    const dates = Object.keys(byDate).sort(sort==='newest'?(a,b)=>b.localeCompare(a):(a,b)=>a.localeCompare(b));
-    dates.forEach(date => {
+    entries.forEach(e => { (byDate[e.date] = byDate[e.date]||[]).push(e); });
+    const dates = Object.keys(byDate).sort((a,b) => sortVal==='oldest' ? a.localeCompare(b) : b.localeCompare(a));
+    container.innerHTML = dates.map(date => {
       const sched = SCHEDULE.find(s=>s.date===date);
-      html += `<div style="margin-bottom:28px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          ${sched?`<span class="tag tag-orange">Day ${sched.day}</span>`:''}
-          <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:18px">${date}</h3>
-          <span style="font-size:13px;color:var(--text-muted);font-weight:600">${sched?'Day '+sched.day:''}</span>
-        </div>
-        <div class="diary-grid">${byDate[date].map(e=>renderDiaryCard(e, profMap)).join('')}</div>
-      </div>`;
-    });
+      const schedLabel = sched ? (currentLang==='zh' ? sched.zh : sched.en) : '';
+      const dayTag = sched ? '<span class="day-tag">Day ' + sched.day + '</span>' : '';
+      return '<div class="diary-group">' +
+        '<div class="diary-group-hdr">' + dayTag +
+        '<span class="diary-group-date">' + date + '</span>' +
+        (schedLabel ? '<span class="diary-group-sched">' + esc(schedLabel) + '</span>' : '') +
+        '</div>' +
+        '<div class="diary-cards">' + byDate[date].map(e => renderDiaryCard(e, profMap)).join('') + '</div>' +
+        '</div>';
+    }).join('');
+  } else if(currentView === 'person') {
+    const byPerson = {};
+    entries.forEach(e => { (byPerson[e.uid] = byPerson[e.uid]||[]).push(e); });
+    container.innerHTML = Object.entries(byPerson).map(([uid, ents]) => {
+      const prof = profMap[uid] || {};
+      const name = prof.nickname || prof.displayName || uid.slice(0,8);
+      return '<div class="diary-group">' +
+        '<div class="diary-group-hdr"><span class="day-tag" style="background:#5c3317">👤 ' + esc(name) + '</span></div>' +
+        '<div class="diary-cards">' + ents.map(e => renderDiaryCard(e, profMap)).join('') + '</div>' +
+        '</div>';
+    }).join('');
   } else {
-    html = `<div class="diary-grid">${entries.map(e=>renderDiaryCard(e, profMap)).join('')}</div>`;
+    // All: just a grid
+    container.innerHTML = '<div class="diary-cards">' + entries.map(e => renderDiaryCard(e, profMap)).join('') + '</div>';
   }
-  
-  container.innerHTML = html;
-  
-  // Store gallery photos
-  allGalleryPhotos = [];
-  entries.forEach(e => { if(e.photos) e.photos.forEach(p => allGalleryPhotos.push({url:p, uid:e.uid, date:e.date, name:profMap[e.uid]?.nickname||''})); });
 }
 
+
+
+async function populateGalleryFilters() {
+  if(!allDiaries.length) await loadAllDiaries();
+  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
+
+  const dates = [...new Set(allDiaries.map(d=>d.date))].sort();
+  const uids  = [...new Set(allDiaries.map(d=>d.uid))];
+
+  const buildPills = (containerId, items, selectId, labelFn) => {
+    const container = document.getElementById(containerId);
+    const select    = document.getElementById(selectId);
+    if(!container) return;
+    container.innerHTML = '';
+    const all = document.createElement('button');
+    all.className = 'filter-pill active';
+    all.textContent = '全部';
+    all.onclick = function() {
+      container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
+      this.classList.add('active');
+      if(select) select.value = '';
+      renderGallery();
+    };
+    container.appendChild(all);
+    items.forEach(val => {
+      const pill = document.createElement('button');
+      pill.className = 'filter-pill';
+      pill.textContent = labelFn(val);
+      pill.onclick = function() {
+        container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
+        this.classList.add(containerId.includes('person') ? 'active-person' : 'active');
+        if(select) select.value = val;
+        renderGallery();
+      };
+      container.appendChild(pill);
+    });
+  };
+
+  buildPills('gallery-date-pills', dates, 'gallery-filter-date', d => {
+    const s = SCHEDULE.find(x=>x.date===d);
+    return s ? 'Day ' + s.day + ' · ' + d.slice(5) : d;
+  });
+  buildPills('gallery-person-pills', uids, 'gallery-filter-person', uid =>
+    profMap[uid]?.nickname || profMap[uid]?.displayName || uid.slice(0,8)
+  );
+}
+
+
+async function renderGallery() {
+  const container = document.getElementById('gallery-content');
+  if(!container) return;
+  container.innerHTML = '<div class="loading-spinner" style="margin:40px auto"></div>';
+  if(!allDiaries.length) await loadAllDiaries();
+  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
+  const filterDate   = document.getElementById('gallery-filter-date')?.value   || '';
+  const filterPerson = document.getElementById('gallery-filter-person')?.value || '';
+  let photos = [];
+  allDiaries.forEach(entry => {
+    if(filterDate   && entry.date !== filterDate)   return;
+    if(filterPerson && entry.uid  !== filterPerson) return;
+    (entry.photos||[]).forEach(url => {
+      const name = profMap[entry.uid]?.nickname || profMap[entry.uid]?.displayName || '';
+      photos.push({url, uid:entry.uid, date:entry.date, name});
+    });
+  });
+  allGalleryPhotos = photos;
+  if(!photos.length) {
+    container.innerHTML = '<div class="empty-state"><div class="es-icon">📷</div><h3>還沒有照片</h3></div>';
+    return;
+  }
+  container.innerHTML = photos.map((p,i) =>
+    `<div class="gallery-item" onclick="openLightbox(${i},null,true)">
+      <img src="${p.url}" alt="${esc(p.name)}" loading="lazy">
+      <div class="gi-overlay">${esc(p.name)} · ${p.date}</div>
+    </div>`
+  ).join('');
+}
+
+
+// ── renderDiaryCard ──
 function renderDiaryCard(entry, profMap) {
   const prof = profMap[entry.uid] || {};
-  const name = prof.nickname || prof.displayName || entry.uid.slice(0,8);
+  const name   = prof.nickname || prof.displayName || entry.uid.slice(0,8);
   const avatar = prof.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=d4650a&color=fff`;
-  const sched = SCHEDULE.find(s=>s.date===entry.date);
-  const schedText = sched ? sched[currentLang==='zh'?'zh':'en'].slice(0,50) : '';
   const photos = entry.photos || [];
-  const photoClass = photos.length === 1 ? 'p1' :
-    photos.length === 2 ? 'p2' :
-    photos.length === 3 ? 'p3' :
-    photos.length === 4 ? 'p4' :
-    'p' + Math.min(photos.length, 10);
+  const pLen   = photos.length;
+  const photoClass = pLen===1?'p1':pLen===2?'p2':pLen===3?'p3':pLen===4?'p4':'p' + Math.min(pLen,10);
   const canDelete = isAdmin || (currentUser && currentUser.uid === entry.uid);
   const canEdit   = isAdmin || (currentUser && currentUser.uid === entry.uid && isMember);
-  const liked = entry.likes && entry.likes[currentUser?.uid];
+  const liked     = entry.likes && entry.likes[currentUser?.uid];
   const likeCount = entry.likes ? Object.keys(entry.likes).length : 0;
-  const comments = entry.comments || [];
-  
+  const comments  = entry.comments || [];
   return `<div class="diary-card" id="dc-${entry.id}-${entry.date}">
     <div class="dc-header">
       <img class="dc-avatar" src="${avatar}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=d4650a&color=fff'">
       <div style="flex:1;min-width:0">
         <div class="dc-name">${esc(name)}</div>
         <div class="dc-date">${entry.date} ${entry.updatedAt ? '（已更新）':''}</div>
-
       </div>
       <div style="display:flex;gap:4px">
         ${canEdit   ? `<button class="btn btn-secondary btn-sm btn-icon" onclick="openEditDiary('${entry.date}','${entry.uid}')" title="編輯">✏️</button>` : ''}
         ${canDelete ? `<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry('${entry.date}','${entry.uid}')" title="刪除">🗑</button>` : ''}
       </div>
     </div>
-    ${photos.length ? `<div class="dc-photos ${photoClass}">${photos.map((p,i)=>`<img class="dc-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox(${i}, ${JSON.stringify(photos).replace(/"/g,"'")})" onerror="this.style.display='none'">`).join('')}</div>` : ''}
-    <div class="dc-body" id="dcb-${entry.id}">${esc(entry.content||'')}</div>
+    ${photos.length ? `<div class="dc-photos ${photoClass}">${photos.map((p,i)=>`<img class="dc-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox(${i},${JSON.stringify(photos).replace(/"/g,"'")})" onerror="this.style.display='none'">`).join('')}</div>` : ''}
+    <div class="dc-body" id="dcb-${entry.id}" style="background:#fff">${esc(entry.content||'')}</div>
     <div style="padding:4px 20px"><button onclick="toggleExpand('dcb-${entry.id}')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0">展開全文 ▼</button></div>
     <div class="dc-footer">
       <button class="dc-action ${liked?'liked':''}" onclick="toggleLike('${entry.date}','${entry.uid}')">
@@ -1714,7 +1879,7 @@ function renderDiaryCard(entry, profMap) {
       ${comments.map(c => `<div class="comment-item">
         <img class="comment-avatar" src="${c.userPhoto||`https://ui-avatars.com/api/?name=${encodeURIComponent(c.userName||'U')}&background=e0d0c0&color=5c3317`}" alt="">
         <div class="comment-bubble"><div class="cn">${esc(c.userName||'')}</div>${esc(c.text||'')}</div>
-        ${isAdmin ? `<button onclick="deleteComment('${entry.date}','${entry.uid}',${entry.comments.indexOf(c)})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted)">✕</button>` : ''}
+        ${isAdmin ? `<button onclick="deleteComment('${entry.date}','${entry.uid}',${comments.indexOf(c)})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted)">✕</button>` : ''}
       </div>`).join('')}
       <div class="comment-input-row">
         <input class="comment-input" id="ci-${entry.id}" placeholder="留言..." onkeydown="if(event.key==='Enter')postComment('${entry.date}','${entry.uid}','${entry.id}')">
@@ -1731,372 +1896,72 @@ function toggleExpand(id) {
   const btn = el.nextElementSibling?.querySelector('button');
   if(btn) btn.textContent = el.classList.contains('expanded') ? '收起 ▲' : '展開全文 ▼';
 }
-
 function toggleComments(id) {
   const el = document.getElementById(id);
-  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
 }
-
 async function toggleLike(date, uid) {
-  if(!currentUser) { showToast("請先登入", "error"); return; }
+  if(!currentUser) { showToast('請先登入','error'); return; }
   const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
   try {
     const snap = await ref.get();
     const likes = snap.data()?.likes || {};
     if(likes[currentUser.uid]) delete likes[currentUser.uid];
     else likes[currentUser.uid] = true;
-    await ref.update({ likes });
-    allDiaries = [];
-    renderDiary();
-  } catch(e) { showToast("操作失敗", "error"); }
+    await ref.update({likes});
+    allDiaries = []; renderDiary();
+  } catch(e) { showToast('操作失敗','error'); }
 }
-
 async function postComment(date, uid, entryId) {
-  if(!currentUser) { showToast("請先登入", "error"); return; }
-  const input = document.getElementById(`ci-${entryId}`);
+  if(!currentUser) { showToast('請先登入','error'); return; }
+  const input = document.getElementById('ci-' + entryId);
   const text = input?.value.trim();
   if(!text) return;
   const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
   try {
     const snap = await ref.get();
     const comments = snap.data()?.comments || [];
-    comments.push({
-      uid: currentUser.uid,
-      userName: currentUser.displayName || currentUser.email,
-      userPhoto: currentUser.photoURL || '',
-      text,
-      timestamp: new Date().toISOString()
-    });
-    await ref.update({ comments });
+    comments.push({ uid:currentUser.uid, userName:currentUser.displayName||currentUser.email,
+      userPhoto:currentUser.photoURL||'', text, timestamp: new Date().toISOString() });
+    await ref.update({comments});
     if(input) input.value = '';
-    allDiaries = [];
-    renderDiary();
-    showToast("留言已送出 💬", "success");
-  } catch(e) { showToast("留言失敗", "error"); }
+    allDiaries = []; renderDiary();
+    showToast('留言已送出 💬','success');
+  } catch(e) { showToast('留言失敗','error'); }
 }
-
 async function deleteDiaryEntry(date, uid) {
   if(!confirm('確定要刪除這篇日記嗎？')) return;
   try {
     await db.collection('diaries').doc(date).collection('entries').doc(uid).delete();
-    allDiaries = [];
-    renderDiary();
-    showToast("已刪除日記", "success");
-  } catch(e) { showToast("刪除失敗", "error"); }
+    allDiaries = []; renderDiary();
+    showToast('已刪除日記','success');
+  } catch(e) { showToast('刪除失敗','error'); }
 }
-
 async function deleteComment(date, uid, idx) {
   const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
   try {
     const snap = await ref.get();
     const comments = snap.data()?.comments || [];
-    comments.splice(idx, 1);
-    await ref.update({ comments });
-    allDiaries = [];
-    renderDiary();
+    comments.splice(idx,1);
+    await ref.update({comments});
+    allDiaries = []; renderDiary();
   } catch(e) {}
 }
 
-// ============================================================
-// WRITE DIARY
-// ============================================================
-function loadWriteForm() {
-  if(!isMember) {
-    document.getElementById('write-member-check').style.display = 'flex';
-    document.getElementById('write-form-wrap').style.display = 'none';
-    return;
-  }
-  document.getElementById('write-member-check').style.display = 'none';
-  document.getElementById('write-form-wrap').style.display = 'block';
-  
-  // Populate date select
-  const sel = document.getElementById('write-date-select');
-  const today = new Date().toISOString().split('T')[0];
-  sel.innerHTML = SCHEDULE.map(s => {
-    const d = new Date(s.date);
-    const wdZh = ['日','一','二','三','四','五','六'][d.getDay()];
-    const wdEn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-    const wd = currentLang === 'en' ? wdEn : wdZh;
-    const label = `${s.date}（${wd}）- Day ${s.day}`;
-    return `<option value="${s.date}" ${s.date===today?'selected':''}>${label}</option>`;
-  }).join('');
-  
-  updateWriteDate();
-  loadExistingEntry(sel.value);
-}
-
-function updateWriteDate() {
-  const date = document.getElementById('write-date-select')?.value;
-  if(!date) return;
-  const sched = SCHEDULE.find(s=>s.date===date);
-  document.getElementById('write-date-display').textContent = `${date} - Day ${sched?.day||''}`;
-  document.getElementById('write-sched-display').innerHTML = `<span>📅</span><span>${sched?sched.zh:'無行程資訊'}</span>`;
-  loadExistingEntry(date);
-}
-
-async function loadExistingEntry(date) {
-  if(!currentUser || !date) return;
-  try {
-    const snap = await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).get();
-    if(snap.exists) {
-      const data = snap.data();
-      document.getElementById('diary-text').value = data.content || '';
-      pendingPhotos = (data.photos||[]).map(url => ({url, existing:true}));
-      renderPhotoPreviews();
-    } else {
-      document.getElementById('diary-text').value = '';
-      pendingPhotos = [];
-      renderPhotoPreviews();
-    }
-  } catch(e) {}
-}
-
-function handlePhotoSelect(input) {
-  const files = Array.from(input.files);
-  const remaining = MAX_PHOTOS - pendingPhotos.filter(p=>!p.existing).length - pendingPhotos.filter(p=>p.existing).length;
-  const allowed = Math.min(files.length, remaining);
-  if(files.length > remaining) showToast(`最多只能上傳 ${MAX_PHOTOS} 張照片`, "error");
-  files.slice(0, allowed).forEach(f => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      pendingPhotos.push({file: f, preview: e.target.result, existing: false});
-      renderPhotoPreviews();
-    };
-    reader.readAsDataURL(f);
-  });
-  input.value = '';
-}
-
-function renderPhotoPreviews() {
-  const container = document.getElementById('photo-previews');
-  if(!container) return;
-  container.innerHTML = pendingPhotos.map((p,i) => `
-    <div class="photo-preview-item">
-      <img src="${p.existing ? p.url : p.preview}" alt="">
-      <button class="remove-photo" onclick="removePhoto(${i})">✕</button>
-    </div>
-  `).join('');
-}
-
-function removePhoto(idx) {
-  pendingPhotos.splice(idx, 1);
-  renderPhotoPreviews();
-}
-
-async function submitDiary() {
-  if(!currentUser) { showToast("請先登入", "error"); return; }
-  // Re-verify membership in real-time (in case user just got added)
-  if(!isMember) {
-    // Do a live check before giving up
-    try {
-      const freshSnap = await db.collection('members').doc(currentUser.uid).get();
-      if(freshSnap.exists) { isMember = true; }
-      else {
-        const emailSnap = await db.collection('members').where('email','==',currentUser.email).get();
-        if(!emailSnap.empty) { isMember = true; }
-      }
-    } catch(e) {}
-    if(!isMember) {
-      showToast("你尚未被加入成員名單，請聯絡管理員 (admin.html)", "error");
-      return;
-    }
-  }
-  const date = document.getElementById('write-date-select')?.value;
-  const content = document.getElementById('diary-text').value.trim();
-  if(!content && pendingPhotos.length === 0) { showToast("請輸入日記內容或上傳照片", "error"); return; }
-  
-  const btn = document.getElementById('submit-diary-btn');
-  btn.textContent = '⏳ 儲存中...';
-  btn.disabled = true;
-  
-  try {
-    // Upload new photos via Cloudinary (original quality, 25GB free)
-    const photoURLs = [];
-    const toUpload = pendingPhotos.filter(p=>!p.existing);
-    const existingURLs = pendingPhotos.filter(p=>p.existing).map(p=>p.url);
-    
-    for(let i=0; i<toUpload.length; i++) {
-      btn.textContent = `⏳ 上傳照片 ${i+1}/${toUpload.length}...`;
-      const url = await uploadToCloudinary(toUpload[i].file);
-      photoURLs.push(url);
-    }
-    photoURLs.push(...existingURLs);
-    
-    // Get profile info
-    const profSnap = await db.collection('profiles').doc(currentUser.uid).get();
-    const prof = profSnap.exists ? profSnap.data() : {};
-    
-    const entryData = {
-      uid: currentUser.uid,
-      email: currentUser.email,
-      displayName: prof.nickname || currentUser.displayName || '',
-      photoURL: prof.photoURL || currentUser.photoURL || '',
-      content,
-      photos: photoURLs,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    // CRITICAL: Create parent doc first (prevents Ghost Document trap)
-    await db.collection('diaries').doc(date).set({
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-      hasEntries: true
-    }, { merge: true });
-
-    await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).set(entryData, {merge:true});
-    
-    showToast("日記已儲存 🎉", "success");
-    allDiaries = [];
-    loadStats();
-    // Clear form and go to diary page
-    clearWriteForm();
-    setTimeout(() => navigate('diary'), 800);
-    
-  } catch(e) {
-    showToast("儲存失敗: " + e.message, "error");
-    console.error('submitDiary error:', e);
-    // Show persistent error in button area
-    const btnWrap = btn?.parentElement;
-    if(btnWrap) {
-      const errDiv = document.createElement('div');
-      errDiv.style.cssText = 'color:#e74c3c;font-size:13px;font-weight:700;margin-top:8px;text-align:right';
-      errDiv.textContent = '❌ ' + e.message;
-      btnWrap.appendChild(errDiv);
-      setTimeout(() => errDiv.remove(), 8000);
-    }
-  } finally {
-    btn.textContent = '💾 儲存日記';
-    btn.disabled = false;
-  }
-}
-
-function clearWriteForm() {
-  document.getElementById('diary-text').value = '';
-  pendingPhotos = [];
-  renderPhotoPreviews();
-}
 
 // ============================================================
-// ☁️ CLOUDINARY UPLOAD - 原尺寸上傳，無壓縮，25GB 免費
-// ============================================================
-async function uploadToCloudinary(file) {
-  if(CLOUDINARY_CLOUD === "YOUR_CLOUD_NAME") {
-    // Fallback: use Firebase Storage if Cloudinary not configured
-    return uploadToFirebaseStorage(file);
-  }
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", CLOUDINARY_PRESET);
-  formData.append("folder", "au-ai-lab");
-  
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
-    method: "POST",
-    body: formData
-  });
-  if(!res.ok) throw new Error("Cloudinary upload failed");
-  const data = await res.json();
-  return data.secure_url;
-}
-
-async function uploadToFirebaseStorage(file) {
-  // Fallback Firebase Storage upload (when Cloudinary not set up yet)
-  const path = `photos/${currentUser.uid}/${Date.now()}_${file.name}`;
-  const ref = storage.ref(path);
-  await ref.put(file);
-  return await ref.getDownloadURL();
-}
-
-// Keep for avatar upload only (small files)
-async function compressImage(file, maxKB=200) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w=img.width, h=img.height, maxDim=800;
-        if(w>maxDim||h>maxDim) { const r=Math.min(maxDim/w,maxDim/h); w=Math.round(w*r); h=Math.round(h*r); }
-        canvas.width=w; canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.85);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// ============================================================
-// GALLERY
-// ============================================================
-async function populateGalleryFilters() {
-  if(!allDiaries.length) await loadAllDiaries();
-  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
-  
-  const dateEl = document.getElementById('gallery-filter-date');
-  const personEl = document.getElementById('gallery-filter-person');
-  if(!dateEl || !personEl) return;
-  
-  const dates = [...new Set(allDiaries.map(d=>d.date))].sort();
-  dateEl.innerHTML = '<option value="">所有日期</option>' + dates.map(d => {
-    const sched = SCHEDULE.find(s=>s.date===d);
-    const wd = ['日','一','二','三','四','五','六'][new Date(d).getDay()];
-    const label = sched ? `Day ${sched.day} · ${d.slice(5)}（${wd}）` : `${d}（${wd}）`;
-    return `<option value="${d}">${label}</option>`;
-  }).join('');
-  
-  const people = [...new Set(allDiaries.map(d=>d.uid))];
-  personEl.innerHTML = '<option value="">所有成員</option>' + people.map(uid=>`<option value="${uid}">${profMap[uid]?.nickname||uid.slice(0,8)}</option>`).join('');
-}
-
-async function renderGallery() {
-  const container = document.getElementById('gallery-content');
-  if(!container) return;
-  container.innerHTML = '<div class="loading-spinner"></div>';
-  if(!allDiaries.length) await loadAllDiaries();
-  
-  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
-  const filterDate = document.getElementById('gallery-filter-date')?.value || '';
-  const filterPerson = document.getElementById('gallery-filter-person')?.value || '';
-  
-  let photos = [];
-  allDiaries.forEach(entry => {
-    if(filterDate && entry.date !== filterDate) return;
-    if(filterPerson && entry.uid !== filterPerson) return;
-    (entry.photos||[]).forEach(url => {
-      const name = profMap[entry.uid]?.nickname || profMap[entry.uid]?.displayName || '';
-      photos.push({url, uid:entry.uid, date:entry.date, name});
-    });
-  });
-  
-  allGalleryPhotos = photos;
-  
-  if(!photos.length) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">📷</div><h3>${t('no-photos')}</h3></div>`;
-    return;
-  }
-  
-  container.innerHTML = photos.map((p,i) => `
-    <div class="gallery-item" onclick="openLightbox(${i}, null, true)">
-      <img src="${p.url}" alt="${esc(p.name)}" loading="lazy">
-      <div class="gi-overlay">${esc(p.name)} · ${p.date}</div>
-    </div>
-  `).join('');
-}
-
-// ============================================================
-// LIGHTBOX - keyboard, swipe, scroll, zoom/pan
+// LIGHTBOX with zoom/pan/pinch
 // ============================================================
 let lbTouchStartX = 0, lbTouchStartY = 0;
-let lbZoom = 1, lbPanX = 0, lbPanY = 0;
-let lbPinchStart = 0;
+let lbZoom = 1, lbPanX = 0, lbPanY = 0, lbPinchStart = 0;
 let lbIsDragging = false, lbDragStartX = 0, lbDragStartY = 0;
+let lbDots = null;
 
 function openLightbox(idx, photos, useGallery=false) {
   if(useGallery) {
-    lbImages = allGalleryPhotos.map(p=>({url:p.url, info:`${p.name}  ·  ${p.date}`}));
+    lbImages = allGalleryPhotos.map(p=>({url:p.url, info:`${p.name} · ${p.date}`}));
   } else if(Array.isArray(photos)) {
-    lbImages = photos.map(p => typeof p === 'string' ? {url:p, info:''} : {url:p, info:''});
+    lbImages = photos.map(p=>({url:p, info:''}));
   }
   lbIndex = Math.max(0, Math.min(idx, lbImages.length-1));
   lbZoom = 1; lbPanX = 0; lbPanY = 0;
@@ -2104,43 +1969,30 @@ function openLightbox(idx, photos, useGallery=false) {
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-
 function updateLightbox(animate=true) {
   const img  = document.getElementById('lb-img');
   const info = document.getElementById('lb-info');
-  const dots = document.getElementById('lb-dots');
-  const prev = document.getElementById('lb-prev');
-  const next = document.getElementById('lb-next');
   if(!img) return;
-
   lbZoom = 1; lbPanX = 0; lbPanY = 0;
   applyLbTransform(img);
-
   if(animate) {
-    img.classList.add('fading');
-    setTimeout(() => { img.src = lbImages[lbIndex]?.url || ''; img.classList.remove('fading'); }, 120);
+    img.style.opacity = '0';
+    setTimeout(() => { img.src = lbImages[lbIndex]?.url||''; img.style.opacity='1'; }, 120);
   } else {
     img.src = lbImages[lbIndex]?.url || '';
   }
   if(info) info.textContent = (lbIndex+1) + ' / ' + lbImages.length +
     (lbImages[lbIndex]?.info ? '  ·  ' + lbImages[lbIndex].info : '');
-  if(prev) prev.style.opacity = lbImages.length > 1 ? '1' : '0';
-  if(next) next.style.opacity = lbImages.length > 1 ? '1' : '0';
-  if(dots && lbImages.length <= 12) {
-    dots.innerHTML = lbImages.map((_,i) =>
-      '<div class="lb-dot' + (i===lbIndex?' active':'') + '" onclick="lbGoTo('+i+')"></div>'
-    ).join('');
-  } else if(dots) dots.innerHTML = '';
 }
-
 function applyLbTransform(img) {
   if(!img) img = document.getElementById('lb-img');
-  if(img) img.style.transform = 'scale('+lbZoom+') translate('+lbPanX/lbZoom+'px,'+lbPanY/lbZoom+'px)';
-  img.style.cursor = lbZoom > 1 ? 'grab' : 'zoom-in';
+  if(img) {
+    img.style.transform = `scale(${lbZoom}) translate(${lbPanX/lbZoom}px,${lbPanY/lbZoom}px)`;
+    img.style.cursor = lbZoom > 1 ? 'grab' : 'zoom-in';
+  }
 }
-
 function lbNav(dir) {
-  if(lbZoom > 1) { lbZoom=1; lbPanX=0; lbPanY=0; applyLbTransform(); return; } // reset zoom first
+  if(lbZoom > 1) { lbZoom=1; lbPanX=0; lbPanY=0; applyLbTransform(); return; }
   lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
   updateLightbox(true);
 }
@@ -2150,22 +2002,16 @@ function closeLightbox() {
   document.body.style.overflow = '';
   lbZoom=1; lbPanX=0; lbPanY=0;
 }
-
-const lb = document.getElementById('lightbox');
-if(lb) {
-  // Click backdrop
+document.addEventListener('DOMContentLoaded', () => {
+  const lb = document.getElementById('lightbox');
+  if(!lb) return;
   lb.addEventListener('click', e => { if(e.target.id==='lightbox') closeLightbox(); });
-
-  // Double-click to zoom
   lb.addEventListener('dblclick', e => {
     if(e.target.id==='lb-img') {
       lbZoom = lbZoom > 1 ? 1 : 2.5;
-      lbPanX = 0; lbPanY = 0;
-      applyLbTransform();
+      lbPanX=0; lbPanY=0; applyLbTransform();
     }
   });
-
-  // Mouse drag to pan when zoomed
   lb.addEventListener('mousedown', e => {
     if(e.target.id!=='lb-img' || lbZoom<=1) return;
     lbIsDragging=true; lbDragStartX=e.clientX-lbPanX; lbDragStartY=e.clientY-lbPanY;
@@ -2173,681 +2019,54 @@ if(lb) {
   });
   lb.addEventListener('mousemove', e => {
     if(!lbIsDragging) return;
-    lbPanX=e.clientX-lbDragStartX; lbPanY=e.clientY-lbDragStartY;
-    applyLbTransform();
+    lbPanX=e.clientX-lbDragStartX; lbPanY=e.clientY-lbDragStartY; applyLbTransform();
   });
   lb.addEventListener('mouseup', () => { lbIsDragging=false; applyLbTransform(); });
-  lb.addEventListener('mouseleave', () => { lbIsDragging=false; });
-
-  // Scroll to zoom
   lb.addEventListener('wheel', e => {
     e.preventDefault();
     if(e.target.id==='lb-img' || lbZoom>1) {
-      lbZoom = Math.max(1, Math.min(5, lbZoom + (e.deltaY<0 ? 0.3 : -0.3)));
-      if(lbZoom===1) { lbPanX=0; lbPanY=0; }
-      applyLbTransform();
-    } else {
-      lbNav(e.deltaY>0 ? 1 : -1);
-    }
+      lbZoom = Math.max(1, Math.min(5, lbZoom + (e.deltaY<0?0.3:-0.3)));
+      if(lbZoom===1){lbPanX=0;lbPanY=0;} applyLbTransform();
+    } else { lbNav(e.deltaY>0?1:-1); }
   }, {passive:false});
-
-  // Touch swipe + pinch zoom
   lb.addEventListener('touchstart', e => {
-    if(e.touches.length===1) {
-      lbTouchStartX=e.touches[0].clientX; lbTouchStartY=e.touches[0].clientY;
-    } else if(e.touches.length===2) {
-      lbPinchStart = Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-    }
-  }, {passive:true});
+    if(e.touches.length===1){lbTouchStartX=e.touches[0].clientX; lbTouchStartY=e.touches[0].clientY;}
+    else if(e.touches.length===2) lbPinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  },{passive:true});
   lb.addEventListener('touchmove', e => {
-    if(e.touches.length===2) {
+    if(e.touches.length===2){
       e.preventDefault();
-      const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      lbZoom = Math.max(1, Math.min(5, lbZoom * (dist/lbPinchStart)));
-      lbPinchStart = dist;
-      applyLbTransform();
+      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      lbZoom=Math.max(1,Math.min(5,lbZoom*(dist/lbPinchStart))); lbPinchStart=dist; applyLbTransform();
     }
-  }, {passive:false});
+  },{passive:false});
   lb.addEventListener('touchend', e => {
-    if(e.changedTouches.length===1 && lbZoom===1) {
-      const dx=e.changedTouches[0].clientX-lbTouchStartX;
-      const dy=e.changedTouches[0].clientY-lbTouchStartY;
-      if(Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>50) lbNav(dx<0?1:-1);
-      else if(Math.abs(dy)>80 && Math.abs(dx)<50) closeLightbox();
+    if(e.changedTouches.length===1 && lbZoom===1){
+      const dx=e.changedTouches[0].clientX-lbTouchStartX, dy=e.changedTouches[0].clientY-lbTouchStartY;
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50) lbNav(dx<0?1:-1);
+      else if(Math.abs(dy)>80&&Math.abs(dx)<50) closeLightbox();
     }
-  }, {passive:true});
-}
-
-// Keyboard
+  },{passive:true});
+});
 document.addEventListener('keydown', e => {
   if(!document.getElementById('lightbox')?.classList.contains('open')) return;
   if(e.key==='ArrowLeft')  lbNav(-1);
   else if(e.key==='ArrowRight') lbNav(1);
   else if(e.key==='Escape') closeLightbox();
-  else if(e.key==='+' || e.key==='=') { lbZoom=Math.min(5,lbZoom+0.5); applyLbTransform(); }
-  else if(e.key==='-') { lbZoom=Math.max(1,lbZoom-0.5); if(lbZoom===1){lbPanX=0;lbPanY=0;} applyLbTransform(); }
+  else if(e.key==='+'||e.key==='='){lbZoom=Math.min(5,lbZoom+0.5);applyLbTransform();}
+  else if(e.key==='-'){lbZoom=Math.max(1,lbZoom-0.5);if(lbZoom===1){lbPanX=0;lbPanY=0;}applyLbTransform();}
 });
 
 
 // ============================================================
-// FLOATING CHAT WIDGET
-// ============================================================
-let cfOpen = false;
-let cfFontSize = 13;
-let cfUnreadCount = 0;
-let cfWasOpen = false;
-let cfChatListener = null;
-
-function chatToggle() {
-  cfOpen = !cfOpen;
-  const win = document.getElementById('chat-float');
-  const icon = document.getElementById('chat-fab-icon');
-  const sidebar = document.getElementById('sidebar');
-  if(win) win.classList.toggle('cf-open', cfOpen);
-  if(icon) icon.textContent = cfOpen ? '✕' : '💬';
-  if(cfOpen) {
-    cfUnreadCount = 0;
-    updateChatBadge();
-    // Only auto-focus on desktop; on mobile, wait for user tap to avoid keyboard pop-up
-    const isMobile = window.innerWidth <= 600;
-    if(!isMobile) {
-      setTimeout(() => document.getElementById('cf-input')?.focus(), 250);
-    }
-    if(sidebar?.classList.contains('open')) toggleSidebar();
-  }
-}
-
-function cfSetSize(size) {
-  cfFontSize = size;
-  const msgs = document.getElementById('cf-msgs');
-  if(msgs) msgs.style.fontSize = size + 'px';
-}
-
-function updateChatBadge() {
-  const badge = document.getElementById('chat-fab-unread');
-  const navBadge = document.getElementById('chat-badge');
-  if(badge) {
-    badge.style.display = cfUnreadCount > 0 ? 'flex' : 'none';
-    badge.textContent = cfUnreadCount > 9 ? '9+' : cfUnreadCount;
-  }
-  if(navBadge) {
-    navBadge.style.display = cfUnreadCount > 0 ? 'inline' : 'none';
-    navBadge.textContent = cfUnreadCount;
-  }
-}
-
-let cfChatQuery = null;
-
-function initChat() {
-  if(cfChatListener && cfChatQuery) {
-    try { cfChatQuery.off('value', cfChatListener); } catch(e) {}
-    cfChatListener = null;
-    cfChatQuery = null;
-  }
-  if(!rtdb) { console.warn('rtdb not ready'); return; }
-
-  updateCfUserBar();
-
-  cfChatQuery = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
-  const handler = (snap) => {
-    try {
-      const msgs = [];
-      if(snap && typeof snap.forEach === 'function') {
-        snap.forEach(c => {
-          try { const v = c.val(); if(v) msgs.push({id: c.key, ...v}); } catch(e) {}
-        });
-      }
-      renderCfMessages(msgs);
-    } catch(e) { console.warn('Chat render error:', e.message); }
-  };
-  cfChatListener = handler;
-  cfChatQuery.on('value', handler, err => console.warn('Chat listener error:', err.message));
-}
-
-let cfFullscreen = false;
-
-function cfToggleFullscreen() {
-  cfFullscreen = !cfFullscreen;
-  const win = document.getElementById('chat-float');
-  const btn = document.getElementById('cf-fs-btn');
-  if(win) {
-    win.classList.toggle('cf-fullscreen', cfFullscreen);
-    // Smooth transition
-    win.style.transition = 'width .25s ease, height .25s ease';
-  }
-  if(btn) {
-    btn.textContent = cfFullscreen ? '⊟' : '⛶';
-    btn.title = cfFullscreen ? '縮小' : '放大';
-  }
-  // Scroll to bottom after expand
-  setTimeout(() => {
-    const msgs = document.getElementById('cf-msgs');
-    if(msgs) msgs.scrollTop = msgs.scrollHeight;
-  }, 280);
-}
-
-function renderCfMessages(msgs) {
-  const container = document.getElementById('cf-msgs');
-  if(!container) return;
-  const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-  const prevCount = container.querySelectorAll('.cf-row').length;
-  
-  // Compute inside render so it's always current after login
-  const myUid = currentUser
-    ? currentUser.uid
-    : sessionStorage.getItem('guestUid');
-  const myGuestUid = sessionStorage.getItem('guestUid');
-
-  container.innerHTML = '<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
-  
-  let lastDate = '';
-  msgs.forEach(msg => {
-    const isMe = myUid && (msg.uid === myUid || (myGuestUid && msg.uid === myGuestUid));
-    const ts = msg.timestamp ? new Date(msg.timestamp) : null;
-    const time = ts ? ts.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '';
-    const dateStr = ts ? ts.toLocaleDateString('zh-TW', {month:'numeric', day:'numeric'}) : '';
-    
-    if(dateStr && dateStr !== lastDate) {
-      lastDate = dateStr;
-      container.innerHTML += `<div class="cf-sys">── ${dateStr} ──</div>`;
-    }
-    
-    const name = msg.userName || '訪客';
-    const initials = name.slice(0,2).toUpperCase();
-    const avatarHTML = msg.userPhoto 
-      ? `<img class="cf-av" src="${msg.userPhoto}" alt="">`
-      : `<div class="cf-av-placeholder">${initials}</div>`;
-    
-    // Build message content
-    let contentHTML = '';
-    
-    if(msg.recalled && !isAdmin) {
-      // Non-admin sees recalled message as greyed out
-      contentHTML = `<span class="cf-recalled">🚫 此訊息已收回</span>`;
-    } else if(msg.recalled && isAdmin) {
-      // Admin sees original with recalled badge
-      contentHTML = buildMsgContent(msg) + `<span class="cf-recalled-badge">已收回</span>`;
-    } else {
-      contentHTML = buildMsgContent(msg);
-    }
-    
-    // Action buttons (recall for own, delete for admin)
-    let actions = '';
-    if(isMe && !msg.recalled) {
-      actions = `<button onclick="cfRecallMsg('${msg.id}')" class="cf-action-btn" title="收回訊息">↩ 收回</button>`;
-    }
-    if(isAdmin) {
-      actions += `<button onclick="cfDeleteMsg('${msg.id}')" class="cf-action-btn cf-del-btn" title="刪除">🗑</button>`;
-    }
-    
-    const actionsHTML = actions ? `<div class="cf-actions">${actions}</div>` : '';
-    const recalledClass = (msg.recalled && isAdmin) ? 'cf-recalled-admin' : '';
-    
-    if(isMe) {
-      container.innerHTML += `<div class="cf-row me" data-msgid="${msg.id}">
-        <div class="cf-bubble-wrap" style="align-items:flex-end">
-          <div class="cf-bubble me ${recalledClass}">${contentHTML}</div>
-          <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:0 2px">
-            ${actionsHTML}
-            <span class="cf-time" style="padding:0">${time}</span>
-          </div>
-        </div>
-      </div>`;
-    } else {
-      container.innerHTML += `<div class="cf-row" data-msgid="${msg.id}">
-        ${avatarHTML}
-        <div class="cf-bubble-wrap">
-          <div class="cf-name">${esc(name)}</div>
-          <div class="cf-bubble other ${recalledClass}">${contentHTML}</div>
-          <div style="display:flex;align-items:center;gap:6px;padding:0 2px"><span class="cf-time" style="padding:0">${time}</span>${actionsHTML}</div>
-        </div>
-      </div>`;
-    }
-  });
-  
-  const newCount = container.querySelectorAll('.cf-row').length;
-  if(!cfOpen && newCount > prevCount) {
-    cfUnreadCount += newCount - prevCount;
-    updateChatBadge();
-  }
-  if(atBottom || msgs.length <= 3) {
-    requestAnimationFrame(() => container.scrollTop = container.scrollHeight);
-  }
-}
-
-function buildMsgContent(msg) {
-  let html = '';
-  if(msg.text) html += esc(msg.text);
-  if(msg.imageURL) {
-    html += `<img class="cf-img-msg" src="${msg.imageURL}" alt="圖片" onclick="openLightbox(0, [{url:'${msg.imageURL}',info:''}])">`;
-  }
-  return html || '';
-}
-
-async function cfRecallMsg(msgId) {
-  if(!confirm('確定要收回這則訊息嗎？其他人將看不到內容，管理員仍可查閱。')) return;
-  try {
-    await rtdb.ref('chat/' + msgId).update({ recalled: true, recalledAt: Date.now() });
-    showToast('訊息已收回，管理員審核後將刪除', 'success');
-  } catch(e) { showToast('收回失敗', 'error'); }
-}
-
-function updateCfUserBar() {
-  const guestBar = document.getElementById('cf-guest-bar');
-  const guestNameDisplay = document.getElementById('cf-guest-name-display');
-  const myAv = document.getElementById('cf-my-av');
-  
-  if(currentUser) {
-    if(guestBar) guestBar.style.display = 'none';
-    if(myAv) myAv.src = currentUser.photoURL || 
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'U')}&background=d4650a&color=fff`;
-  } else {
-    if(guestBar) guestBar.style.display = 'flex';
-    const guestName = sessionStorage.getItem('guestName');
-    if(guestNameDisplay) guestNameDisplay.textContent = guestName ? `以「${guestName}」聊天` : '以訪客身分聊天';
-    if(myAv) {
-      const n = guestName || '??';
-      myAv.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=8b5e3c&color=fff`;
-    }
-  }
-}
-
-let _chatWired = false;
-let _isSendingMsg = false; // prevents duplicate sends
-function wireCfInput() {
-  if(_chatWired) return;
-  _chatWired = true;
-  const input = document.getElementById('cf-input');
-  const sendBtn = document.getElementById('cf-send');
-  const imgInput = document.getElementById('cf-img-input');
-  if(!input || !sendBtn) return;
-  
-  input.addEventListener('keydown', e => {
-    if(e.isComposing) return; // ignore IME composition (Chinese input)
-    if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); cfSendMessage(); }
-  });
-  input.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
-  });
-  sendBtn.onclick = cfSendMessage;
-  
-  // Image upload handler
-  if(imgInput) {
-    imgInput.onchange = async (e) => {
-      const files = Array.from(e.target.files);
-      if(!files.length) return;
-      
-      let userName, userPhoto, uid;
-      if(currentUser) {
-        userName = sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email;
-        userPhoto = currentUser.photoURL || '';
-        uid = currentUser.uid;
-      } else {
-        let guestName = sessionStorage.getItem('guestName');
-        if(!guestName) {
-          guestName = prompt('請輸入你的暱稱（訪客）：', '') || '訪客';
-          guestName = guestName.trim().slice(0,20);
-          sessionStorage.setItem('guestName', guestName);
-          updateCfUserBar();
-        }
-        userName = guestName + ' 👋';
-        userPhoto = '';
-        uid = sessionStorage.getItem('guestUid') || 'guest_' + Math.random().toString(36).slice(2,8);
-        sessionStorage.setItem('guestUid', uid);
-      }
-      
-      for(const file of files.slice(0,4)) {
-        try {
-          showToast('圖片上傳中...', 'success');
-          // Upload to Cloudinary
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('upload_preset', CLOUDINARY_PRESET);
-          formData.append('folder', 'au-ai-lab/chat');
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:formData });
-          if(!res.ok) throw new Error('上傳失敗');
-          const data = await res.json();
-          await rtdb.ref('chat').push({ uid, userName, userPhoto, text:'', imageURL: data.secure_url, timestamp: Date.now() });
-          showToast('圖片已傳送 🖼', 'success');
-        } catch(err) {
-          showToast('圖片上傳失敗: ' + err.message, 'error');
-        }
-      }
-      imgInput.value = '';
-    };
-  }
-}
-
-async function cfSendMessage() {
-  const input = document.getElementById('cf-input');
-  const text = input?.value.trim();
-  if(!text || !rtdb) return;
-  
-  let userName, userPhoto, uid;
-  
-  if(currentUser) {
-    // Try to get saved nickname from profile
-    userName = currentUser.displayName || currentUser.email;
-    userPhoto = currentUser.photoURL || '';
-    uid = currentUser.uid;
-    // Use stored nickname if available
-    const saved = sessionStorage.getItem('profileNickname');
-    if(saved) userName = saved;
-  } else {
-    let guestName = sessionStorage.getItem('guestName');
-    if(!guestName) {
-      guestName = prompt('請輸入你的暱稱（訪客）：', '');
-      if(guestName === null) return;
-      guestName = guestName.trim().slice(0, 20) || '訪客';
-      sessionStorage.setItem('guestName', guestName);
-      updateCfUserBar();
-    }
-    userName = guestName + ' 👋';
-    userPhoto = '';
-    uid = sessionStorage.getItem('guestUid') || 'guest_' + Math.random().toString(36).slice(2, 8);
-    sessionStorage.setItem('guestUid', uid);
-  }
-  
-  try {
-    await rtdb.ref('chat').push({ uid, userName, userPhoto, text, timestamp: Date.now() });
-    if(input) { input.value = ''; input.style.height = ''; }
-  } catch(e) {
-    showToast("發送失敗：" + e.message, "error");
-  }
-}
-
-function cfChangeGuestName() {
-  const newName = prompt('更改你的暱稱：', sessionStorage.getItem('guestName') || '');
-  if(newName === null) return;
-  const name = newName.trim().slice(0, 20) || '訪客';
-  sessionStorage.setItem('guestName', name);
-  sessionStorage.removeItem('guestUid'); // new uid on name change
-  updateCfUserBar();
-}
-
-async function cfDeleteMsg(msgId) {
-  if(!isAdmin) return;
-  try { await rtdb.ref('chat/' + msgId).remove(); } catch(e) {}
-}
-
-async function clearAllChat() {
-  if(!isAdmin || !confirm('確定要清空所有聊天紀錄嗎？')) return;
-  try { await rtdb.ref('chat').remove(); showToast("聊天紀錄已清空", "success"); } catch(e) {}
-}
-
-// Keep old deleteChat alias for admin panel
-async function deleteChat(msgId) { return cfDeleteMsg(msgId); }
-
-// ============================================================
-// PROFILE
-// ============================================================
-
-
-
-// ============================================================
-// ADMIN
-// ============================================================
-let adminChatLiveListener = null;
-
-
-function startAdminLiveChat() {
-  if(!rtdb) return;
-  if(adminChatLiveListener) {
-    try { rtdb.ref('chat').off('value', adminChatLiveListener); } catch(e) {}
-  }
-  const ref = rtdb.ref('chat').orderByChild('timestamp').limitToLast(50);
-  adminChatLiveListener = snap => {
-    const container = document.getElementById('admin-chat-live');
-    if(!container) return;
-    const msgs = [];
-    if(snap && snap.exists()) snap.forEach(c => { if(c.val()) msgs.push({id:c.key,...c.val()}); });
-    if(!msgs.length) {
-      container.innerHTML = '<div class="cf-sys" style="text-align:center;font-size:11px;color:var(--text-muted)">暫無訊息</div>';
-      return;
-    }
-    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 60;
-    container.innerHTML = msgs.map(m => {
-      const isMe = currentUser && m.uid === currentUser.uid;
-      const name = m.userName || '訪客';
-      const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
-      const recalledBadge = m.recalled ? '<span style="background:#e74c3c;color:#fff;font-size:9px;border-radius:4px;padding:1px 5px;margin-left:4px">已收回</span>' : '';
-      const imgHTML = m.imageURL ? `<img src="${m.imageURL}" style="max-width:100px;border-radius:6px;display:block;margin-top:3px">` : '';
-      return `<div style="display:flex;flex-direction:column;align-items:${isMe?'flex-end':'flex-start'};gap:1px">
-        <div style="font-size:10px;color:var(--text-muted);font-weight:700">${esc(name)}${recalledBadge}</div>
-        <div style="background:${isMe?'var(--primary)':'#fff'};color:${isMe?'#fff':'var(--text)'};padding:6px 10px;border-radius:10px;font-size:12px;max-width:240px;word-break:break-word;border:1px solid rgba(0,0,0,.06)">
-          ${m.recalled?'<i style="opacity:.6">已收回</i>':esc(m.text||'')}${imgHTML}
-          <button onclick="cfDeleteMsg('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:10px;opacity:.5;padding:0 2px;color:inherit;margin-left:4px">✕</button>
-        </div>
-        <div style="font-size:10px;color:var(--text-muted)">${time}</div>
-      </div>`;
-    }).join('');
-    if(atBottom) container.scrollTop = container.scrollHeight;
-  };
-  ref.on('value', adminChatLiveListener, err => console.warn(err));
-}
-
-
-async function loadMemberList() {
-  const container = document.getElementById('member-list');
-  if(!container) return;
-  try {
-    const snap = await db.collection('members').get();
-    members = [];
-    snap.forEach(d => members.push({id:d.id, ...d.data()}));
-    document.getElementById('member-count-badge').textContent = members.length + ' 人';
-    container.innerHTML = members.length ? members.map(m => `
-      <div class="member-item">
-        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(m.displayName||m.email||'U')}&background=d4650a&color=fff" alt="">
-        <div class="mi-info">
-          <div class="mi-name">${esc(m.displayName||m.email||m.id)}</div>
-          <div class="mi-email">${esc(m.email||m.id)}</div>
-        </div>
-        <button class="btn btn-danger btn-sm" onclick="removeMember('${m.id}')">移除</button>
-      </div>
-    `).join('') : '<div class="empty-state" style="padding:20px"><p>尚未綁定任何成員</p></div>';
-  } catch(e) { container.innerHTML = '<p style="color:red">載入失敗</p>'; }
-}
-
-async function addMember() {
-  const email = document.getElementById('add-member-email').value.trim();
-  const name = document.getElementById('add-member-name').value.trim();
-  if(!email) { showToast("請輸入 Email", "error"); return; }
-  
-  try {
-    // Use email as ID (URL encoded)
-    const id = email.replace(/[.#$[\]]/g,'_');
-    await db.collection('members').doc(id).set({
-      email, displayName: name || email,
-      addedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      addedBy: currentUser.uid
-    });
-    document.getElementById('add-member-email').value = '';
-    document.getElementById('add-member-name').value = '';
-    showToast(`已綁定 ${email} 為成員 ✅`, "success");
-    loadMemberList();
-  } catch(e) { showToast("新增失敗: " + e.message, "error"); }
-}
-
-async function removeMember(id) {
-  if(!confirm('確定要移除此成員嗎？')) return;
-  try {
-    await db.collection('members').doc(id).delete();
-    showToast("已移除成員", "success");
-    loadMemberList();
-  } catch(e) { showToast("移除失敗", "error"); }
-}
-
-async function loadAdminStats() {
-  const container = document.getElementById('admin-stats');
-  if(!container) return;
-  container.innerHTML = '<div class="loading-spinner"></div>';
-  try {
-    let entryCount=0, photos=0, comments=0, likes=0;
-    const datesSnap = await db.collection('diaries').get();
-    const ps = [];
-    datesSnap.forEach(dateDoc => {
-      ps.push(db.collection('diaries').doc(dateDoc.id).collection('entries').get().then(es => {
-        entryCount += es.size;
-        es.forEach(d => {
-          const data = d.data();
-          photos += (data.photos||[]).length;
-          comments += (data.comments||[]).length;
-          likes += Object.keys(data.likes||{}).length;
-        });
-      }).catch(()=>{}));
-    });
-    await Promise.all(ps);
-    let chatCount = 0;
-    if(rtdb) {
-      const chatSnap = await rtdb.ref('chat').once('value');
-      chatCount = chatSnap.numChildren();
-    }
-    const membersSnap = await db.collection('members').get().catch(()=>({size:0}));
-    container.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="stat-card"><div class="stat-num">${membersSnap.size||0}</div><div class="stat-label">已綁定成員</div></div>
-        <div class="stat-card"><div class="stat-num">${entryCount}</div><div class="stat-label">篇日記</div></div>
-        <div class="stat-card"><div class="stat-num">${photos}</div><div class="stat-label">張照片</div></div>
-        <div class="stat-card"><div class="stat-num">${comments}</div><div class="stat-label">則留言</div></div>
-        <div class="stat-card"><div class="stat-num">${likes}</div><div class="stat-label">個按讚</div></div>
-        <div class="stat-card"><div class="stat-num">${chatCount}</div><div class="stat-label">聊天訊息</div></div>
-      </div>`;
-  } catch(e) {
-    container.innerHTML = `<div style="color:#e74c3c;padding:12px;font-size:13px">⚠️ 載入失敗：${e.message}</div>`;
-  }
-}
-
-async function loadAdminChatLog() {
-  const container = document.getElementById('admin-chat-list');
-  if(!container) return;
-  try {
-    const snap = await rtdb.ref('chat').orderByChild('timestamp').limitToLast(200).once('value');
-    const msgs = [];
-    snap.forEach(c => msgs.push({id:c.key, ...c.val()}));
-    if(!msgs.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">無聊天記錄</p>'; return; }
-    
-    container.innerHTML = `
-      <div id="admin-bulk-bar">
-        <span id="admin-sel-count" style="font-weight:800;font-size:13px;color:var(--brown)">已選 0 則</span>
-        <button class="btn btn-danger btn-sm" onclick="adminBulkDelete()">🗑 批量刪除</button>
-        <button class="btn btn-secondary btn-sm" onclick="adminSelectAll()">全選</button>
-        <button class="btn btn-secondary btn-sm" onclick="adminClearSelect()">取消</button>
-      </div>
-      ${msgs.reverse().map(m => {
-        const isRecalled = m.recalled ? '⚠️' : '';
-        const recalledStyle = m.recalled ? 'background:rgba(231,76,60,.06);border-left:3px solid #e74c3c;' : '';
-        const imgHTML = m.imageURL ? `<img src="${m.imageURL}" style="max-width:120px;max-height:80px;border-radius:8px;margin-top:4px;display:block">` : '';
-        const recalledBadge = m.recalled ? '<span style="background:#e74c3c;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px">已收回</span>' : '';
-        return `<div class="admin-msg-row" data-id="${m.id}" style="display:flex;align-items:flex-start;gap:10px;padding:8px 6px;border-bottom:1px solid var(--cream-dark);${recalledStyle}">
-          <input type="checkbox" class="admin-msg-cb" onchange="adminUpdateSelCount()">
-          <div style="flex:1;min-width:0">
-            <span style="font-weight:700;font-size:13px">${esc(m.userName||'')}</span>
-            ${recalledBadge}
-            <span style="color:var(--text-muted);font-size:11px;margin-left:8px">${m.timestamp?new Date(m.timestamp).toLocaleString('zh-TW'):''}</span>
-            <div style="font-size:13px;color:var(--text);margin-top:2px;word-break:break-word">${isRecalled} ${esc(m.text||'')}${imgHTML}</div>
-            ${m.recalled && m.recalledAt ? `<div style="font-size:11px;color:#e74c3c;margin-top:2px">收回時間：${new Date(m.recalledAt).toLocaleString('zh-TW')}</div>` : ''}
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="adminDeleteSingle('${m.id}',this)">刪除</button>
-        </div>`;
-      }).join('')}
-    `;
-    // Show bulk bar
-    document.getElementById('admin-bulk-bar').style.display = 'flex';
-  } catch(e) { container.innerHTML = '<p>載入失敗：' + e.message + '</p>'; }
-}
-
-function adminUpdateSelCount() {
-  const checked = document.querySelectorAll('.admin-msg-cb:checked').length;
-  const el = document.getElementById('admin-sel-count');
-  if(el) el.textContent = `已選 ${checked} 則`;
-}
-
-function adminSelectAll() {
-  document.querySelectorAll('.admin-msg-cb').forEach(cb => cb.checked = true);
-  adminUpdateSelCount();
-}
-
-function adminClearSelect() {
-  document.querySelectorAll('.admin-msg-cb').forEach(cb => cb.checked = false);
-  adminUpdateSelCount();
-}
-
-async function adminBulkDelete() {
-  const rows = document.querySelectorAll('.admin-msg-row');
-  const toDelete = [];
-  rows.forEach(row => {
-    const cb = row.querySelector('.admin-msg-cb');
-    if(cb && cb.checked) toDelete.push(row.dataset.id);
-  });
-  if(!toDelete.length) { showToast('請先勾選要刪除的訊息', 'error'); return; }
-  if(!confirm(`確定要刪除選取的 ${toDelete.length} 則訊息嗎？`)) return;
-  
-  try {
-    const updates = {};
-    toDelete.forEach(id => updates['chat/' + id] = null);
-    await rtdb.ref().update(updates);
-    showToast(`已刪除 ${toDelete.length} 則訊息 ✅`, 'success');
-    loadAdminChatLog();
-  } catch(e) { showToast('刪除失敗：' + e.message, 'error'); }
-}
-
-async function adminDeleteSingle(msgId, btn) {
-  try {
-    await rtdb.ref('chat/' + msgId).remove();
-    btn?.closest('.admin-msg-row')?.remove();
-    showToast('已刪除', 'success');
-  } catch(e) { showToast('刪除失敗', 'error'); }
-}
-
-async function loadAdminDiaries() {
-  const container = document.getElementById('admin-diary-list');
-  if(!container) return;
-  container.innerHTML = '<div class="loading-spinner"></div>';
-  try {
-    await loadAllDiaries();
-    const uids = [...new Set(allDiaries.map(d=>d.uid))];
-    const profMap = uids.length ? await loadProfiles(uids) : {};
-    if(!allDiaries.length) {
-      container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">目前沒有任何日記</p>';
-      return;
-    }
-    const schedLabel = (date) => { const s = SCHEDULE.find(x=>x.date===date); return s ? `Day ${s.day}` : ''; };
-    container.innerHTML = allDiaries
-      .sort((a,b) => a.date.localeCompare(b.date))
-      .map(e => `
-      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--cream-dark)">
-        <div style="flex:1;min-width:0">
-          <span style="font-weight:700;font-size:13px">${esc(profMap[e.uid]?.nickname||profMap[e.uid]?.displayName||e.uid.slice(0,8))}</span>
-          <span style="background:var(--cream-dark);border-radius:6px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px;color:var(--brown-light)">${schedLabel(e.date)}</span>
-          <span style="color:var(--text-muted);font-size:11px;margin-left:6px">${e.date}</span>
-          <div style="font-size:13px;color:var(--text-muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((e.content||'').slice(0,80))}${(e.content||'').length>80?'...':''}</div>
-          <div style="font-size:12px;color:var(--primary);margin-top:2px">${(e.photos||[]).length} 張照片 · ${(e.comments||[]).length} 則留言 · ${Object.keys(e.likes||{}).length} 個讚</div>
-        </div>
-        <button class="btn btn-danger btn-sm" onclick="deleteDiaryEntry('${e.date}','${e.uid}');this.parentElement.remove()">刪除</button>
-      </div>`).join('');
-  } catch(err) {
-    container.innerHTML = `<div style="color:#e74c3c;padding:12px;font-size:13px">⚠️ ${err.message}</div>`;
-  }
-}
-
-
-
-
-
-
-// ============================================================
-// PROFILE PAGE - renders directly into DOM
+// PROFILE PAGE - rendered via JS
 // ============================================================
 function renderProfilePage() {
   const target = document.getElementById('profile-render-target');
-  if (!target) { console.error('profile-render-target not found'); return; }
-  if (!currentUser) { openLoginModal(); return; }
-
+  if(!target) { console.error('profile-render-target not found'); return; }
+  if(!currentUser) { openLoginModal(); return; }
   const u = currentUser;
-  const photo = u.photoURL ||
-    'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.displayName || 'U') + '&background=d4650a&color=fff';
-
+  const photo = u.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.displayName||'U') + '&background=d4650a&color=fff';
   target.innerHTML = `
     <div style="padding:32px 0;font-family:'Nunito',sans-serif">
       <div style="margin-bottom:24px">
@@ -2856,173 +2075,118 @@ function renderProfilePage() {
       </div>
       <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);max-width:600px">
         <div style="padding:32px 36px">
-
-          <!-- Avatar -->
           <div style="text-align:center;margin-bottom:32px">
             <div style="position:relative;display:inline-block">
-              <img id="prof-av" src="${photo}"
-                style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block">
-              <label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px" title="更換頭像">📷</label>
+              <img id="prof-av" src="${photo}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block">
+              <label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px">📷</label>
               <input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)">
             </div>
             <div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點 📷 更換頭像</div>
           </div>
-
-          <!-- Row 1: 暱稱 full width -->
-          <div style="margin-bottom:20px">
+          <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">暱稱 / 顯示名稱</label>
-            <input id="prof-nickname" type="text" placeholder="你的暱稱"
-              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
-              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+            <input id="prof-nickname" type="text" placeholder="你的暱稱" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
           </div>
-
-          <!-- Row 2: 服務學校 + 職稱 side by side -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
             <div>
               <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">服務學校</label>
-              <input id="prof-school" type="text" placeholder="如：高雄市○○國小"
-                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
-                onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+              <input id="prof-school" type="text" placeholder="如：高雄市○○國小" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">職稱</label>
-              <input id="prof-title" type="text" placeholder="如：教師、組長、主任"
-                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
-                onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+              <input id="prof-title" type="text" placeholder="如：教師、組長、主任" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
             </div>
           </div>
-
-          <!-- Row 3: 專長領域 full width -->
-          <div style="margin-bottom:20px">
+          <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">專長領域</label>
-            <input id="prof-expertise" type="text" placeholder="如：AI教育、STEAM、UDL（用逗號分隔）"
-              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
-              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+            <input id="prof-expertise" type="text" placeholder="如：AI教育、STEAM、UDL（用逗號分隔）" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
           </div>
-
-          <!-- Row 4: 參加動機 textarea -->
-          <div style="margin-bottom:20px">
+          <div style="margin-bottom:16px">
             <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">參加動機與期待</label>
-            <textarea id="prof-motivation" placeholder="分享你參加這次澳洲冒險的動機與期待..." rows="3"
-              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6"
-              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
+            <textarea id="prof-motivation" placeholder="分享你參加這次澳洲冒險的動機與期待..." rows="3" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
           </div>
-
-          <!-- Row 5: 真實姓名 + Email side by side -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
             <div>
-              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">
-                真實姓名
-                <span style="font-size:10px;background:#f5edd8;padding:2px 6px;border-radius:6px;margin-left:4px;font-weight:600;text-transform:none">公開顯示王O明</span>
-              </label>
-              <input id="prof-realname" type="text" placeholder="如：王小明"
-                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
-                onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">真實姓名 <span style="font-size:10px;background:#f5edd8;padding:2px 6px;border-radius:6px;font-weight:600;text-transform:none">公開顯示王O明</span></label>
+              <input id="prof-realname" type="text" placeholder="如：王小明" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Email</label>
-              <input type="text" value="${u.email || ''}" disabled
-                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;color:#aaa;background:#f5f5f3;box-sizing:border-box">
+              <input type="text" value="${u.email||''}" disabled style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;color:#aaa;background:#f5f5f3;box-sizing:border-box">
             </div>
           </div>
-
-          <!-- Row 6: 自我介紹 -->
           <div style="margin-bottom:28px">
             <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">自我介紹</label>
-            <textarea id="prof-bio" placeholder="簡短介紹自己..." rows="3"
-              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6"
-              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
+            <textarea id="prof-bio" placeholder="簡短介紹自己..." rows="3" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
           </div>
-
-          <button onclick="profSave()"
-            style="width:100%;padding:13px;background:#d4650a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:background .2s"
-            onmouseover="this.style.background='#a84d08'" onmouseout="this.style.background='#d4650a'">
-            💾 儲存個人資料
-          </button>
+          <button onclick="profSave()" style="width:100%;padding:13px;background:#d4650a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif" onmouseover="this.style.background='#a84d08'" onmouseout="this.style.background='#d4650a'">💾 儲存個人資料</button>
           <div id="prof-status" style="text-align:center;margin-top:12px;font-size:13px;font-weight:600;min-height:20px"></div>
         </div>
       </div>
     </div>`;
-
-  if (db && u) {
-    db.collection('profiles').doc(u.uid).get()
-      .then(snap => {
-        if (snap.exists) {
-          const d = snap.data();
-          const sv = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
-          sv('prof-nickname',   d.nickname);
-          sv('prof-bio',        d.bio);
-          sv('prof-school',     d.school);
-          sv('prof-title',      d.jobTitle);
-          sv('prof-expertise',  d.expertise);
-          sv('prof-motivation', d.motivation);
-          sv('prof-realname',   d.realName);
-          const av = document.getElementById('prof-av');
-          if(av && d.photoURL) av.src = d.photoURL;
-        }
-      }).catch(e => console.warn('Profile load:', e.message));
+  if(db && u) {
+    db.collection('profiles').doc(u.uid).get().then(snap => {
+      if(snap.exists) {
+        const d = snap.data();
+        const sv = (id,val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
+        sv('prof-nickname', d.nickname); sv('prof-bio', d.bio); sv('prof-school', d.school);
+        sv('prof-title', d.jobTitle); sv('prof-expertise', d.expertise);
+        sv('prof-motivation', d.motivation); sv('prof-realname', d.realName);
+        const av = document.getElementById('prof-av');
+        if(av && d.photoURL) av.src = d.photoURL;
+      }
+    }).catch(e => console.warn('Profile load:', e.message));
   }
 }
 
 async function profSave() {
-  if (!currentUser || !db) return;
+  if(!currentUser || !db) return;
   const gv = id => document.getElementById(id)?.value.trim() || '';
-  const nick       = gv('prof-nickname');
-  const bio        = gv('prof-bio');
-  const school     = gv('prof-school');
-  const jobTitle   = gv('prof-title');
-  const expertise  = gv('prof-expertise');
-  const motivation = gv('prof-motivation');
   const status = document.getElementById('prof-status');
-  if (status) status.textContent = '儲存中...';
+  if(status) status.textContent = '儲存中...';
   try {
     await db.collection('profiles').doc(currentUser.uid).update({
-      nickname: nick, bio, school, jobTitle, expertise, motivation,
-      realName: gv('prof-realname')
+      nickname: gv('prof-nickname'), bio: gv('prof-bio'), school: gv('prof-school'),
+      jobTitle: gv('prof-title'), expertise: gv('prof-expertise'),
+      motivation: gv('prof-motivation'), realName: gv('prof-realname')
     });
-    // Update sidebar name
     const sn = document.getElementById('sidebar-name');
-    if (sn && nick) sn.textContent = nick;
-    sessionStorage.setItem('profileNickname', nick);
-    if (status) { status.textContent = '✅ 儲存成功！'; status.style.color = '#2d5a27'; }
-    setTimeout(() => { if (status) status.textContent = ''; }, 2500);
-    showToast('個人資料已儲存 ✨', 'success');
-  } catch (e) {
-    if (status) { status.textContent = '❌ ' + e.message; status.style.color = '#c0392b'; }
+    if(sn && gv('prof-nickname')) sn.textContent = gv('prof-nickname');
+    sessionStorage.setItem('profileNickname', gv('prof-nickname'));
+    if(status){status.textContent='✅ 儲存成功！';status.style.color='#2d5a27';}
+    setTimeout(()=>{if(status)status.textContent='';},2500);
+    showToast('個人資料已儲存 ✨','success');
+  } catch(e) {
+    if(status){status.textContent='❌ '+e.message;status.style.color='#c0392b';}
   }
 }
 
 async function profUploadAvatar(input) {
-  if (!input.files[0] || !currentUser) return;
+  if(!input.files[0] || !currentUser) return;
   const file = input.files[0];
   const status = document.getElementById('prof-status');
-  if (status) status.textContent = '上傳頭像中...';
+  if(status) status.textContent = '上傳頭像中...';
   try {
     const blob = await compressImage(file, 200);
     const ref  = storage.ref('avatars/' + currentUser.uid + '/avatar.jpg');
     await ref.put(blob);
     const url  = await ref.getDownloadURL();
-    await db.collection('profiles').doc(currentUser.uid).update({ photoURL: url });
-    // Update everywhere
-    const av = document.getElementById('prof-av');
-    if (av) av.src = url;
-    const sb = document.getElementById('sidebar-avatar');
-    if (sb) sb.src = url;
-    const ta = document.getElementById('topbar-avatar');
-    if (ta) ta.src = url;
-    const ca = document.getElementById('cf-my-av');
-    if (ca) ca.src = url;
-    if (status) { status.textContent = '✅ 頭像已更新！'; status.style.color = '#2d5a27'; }
-    setTimeout(() => { if (status) status.textContent = ''; }, 2500);
-    showToast('頭像已更新 📷', 'success');
-  } catch (e) {
-    if (status) { status.textContent = '❌ ' + e.message; status.style.color = '#c0392b'; }
-    showToast('上傳失敗: ' + e.message, 'error');
+    await db.collection('profiles').doc(currentUser.uid).update({photoURL: url});
+    ['prof-av','sidebar-avatar','topbar-avatar','cf-my-av'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.src = url;
+    });
+    if(status){status.textContent='✅ 頭像已更新！';status.style.color='#2d5a27';}
+    setTimeout(()=>{if(status)status.textContent='';},2500);
+    showToast('頭像已更新 📷','success');
+  } catch(e) {
+    if(status){status.textContent='❌ '+e.message;status.style.color='#c0392b';}
+    showToast('上傳失敗: '+e.message,'error');
   }
 }
 
+
 // ============================================================
-// ADMIN PAGE - renders directly into DOM  
+// ADMIN PAGE - rendered via JS
 // ============================================================
 function renderAdminPage() {
   const target = document.getElementById('admin-render-target');
@@ -3031,138 +2195,21 @@ function renderAdminPage() {
     target.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#7a5c46"><div style="font-size:48px;margin-bottom:12px">🔒</div><p>僅管理員可見</p></div>';
     return;
   }
-
-  target.innerHTML = `
-    <div style="font-family:'Nunito',sans-serif">
-      <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <h2 style="font-family:'Playfair Display',serif;font-size:28px;color:#5c3317">⚙️ 管理後台</h2>
-        <span style="font-size:12px;color:#7a5c46;background:#f5edd8;padding:4px 12px;border-radius:20px;font-weight:700">${["issac1120","gmail.com"].join("@")}</span>
-      </div>
-
-      <!-- Stats grid -->
-      <div id="admin-stats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:24px">
-        <div style="background:#fff;border-radius:14px;padding:18px;text-align:center;box-shadow:0 4px 16px rgba(84,40,10,.1);border-top:4px solid #d4650a">
-          <div style="font-size:28px;font-weight:900;color:#d4650a;font-family:'Playfair Display',serif" id="stat-members-val">…</div>
-          <div style="font-size:11px;color:#7a5c46;font-weight:700;margin-top:4px;text-transform:uppercase">成員</div>
-        </div>
-        <div style="background:#fff;border-radius:14px;padding:18px;text-align:center;box-shadow:0 4px 16px rgba(84,40,10,.1);border-top:4px solid #d4650a">
-          <div style="font-size:28px;font-weight:900;color:#d4650a;font-family:'Playfair Display',serif" id="stat-entries-val">…</div>
-          <div style="font-size:11px;color:#7a5c46;font-weight:700;margin-top:4px;text-transform:uppercase">日記</div>
-        </div>
-        <div style="background:#fff;border-radius:14px;padding:18px;text-align:center;box-shadow:0 4px 16px rgba(84,40,10,.1);border-top:4px solid #d4650a">
-          <div style="font-size:28px;font-weight:900;color:#d4650a;font-family:'Playfair Display',serif" id="stat-photos-val">…</div>
-          <div style="font-size:11px;color:#7a5c46;font-weight:700;margin-top:4px;text-transform:uppercase">照片</div>
-        </div>
-        <div style="background:#fff;border-radius:14px;padding:18px;text-align:center;box-shadow:0 4px 16px rgba(84,40,10,.1);border-top:4px solid #d4650a">
-          <div style="font-size:28px;font-weight:900;color:#d4650a;font-family:'Playfair Display',serif" id="stat-chat-val">…</div>
-          <div style="font-size:11px;color:#7a5c46;font-weight:700;margin-top:4px;text-transform:uppercase">聊天</div>
-        </div>
-      </div>
-
-      <!-- Member management -->
-      <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);overflow:hidden;margin-bottom:20px">
-        <div style="padding:18px 22px;border-bottom:1px solid #f5edd8;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-weight:800;font-size:15px;color:#2c1810">👥 成員管理</span>
-          <span id="member-count-badge" style="background:rgba(212,101,10,.12);color:#a84d08;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800">0 人</span>
-        </div>
-        <div style="padding:20px 22px">
-          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-            <input id="add-member-email" placeholder="輸入成員 Email" 
-              style="flex:1;min-width:200px;padding:9px 14px;border:2px solid #f5edd8;border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
-            <input id="add-member-name" placeholder="顯示名稱" 
-              style="width:150px;padding:9px 14px;border:2px solid #f5edd8;border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
-            <button onclick="addMember()" style="padding:9px 20px;background:#d4650a;color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;font-size:13px">＋ 新增</button>
-          </div>
-          <div id="member-list">
-            <div style="text-align:center;color:#7a5c46;font-size:13px;padding:16px">🔄 載入成員中...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Chat management -->
-      <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);overflow:hidden;margin-bottom:20px">
-        <div style="padding:18px 22px;border-bottom:1px solid #f5edd8;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-          <span style="font-weight:800;font-size:15px;color:#2c1810">💬 聊天管理</span>
-          <div style="display:flex;gap:8px">
-            <button onclick="loadAdminChatLog()" style="padding:6px 14px;background:#f5edd8;border:none;border-radius:8px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:#5c3317">🔄 重整</button>
-            <button onclick="clearAllChat()" style="padding:6px 14px;background:#e74c3c;border:none;border-radius:8px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;color:#fff">🗑 清空</button>
-          </div>
-        </div>
-        <div id="admin-chat-list" style="max-height:400px;overflow-y:auto;padding:16px">
-          <div style="text-align:center;color:#7a5c46;font-size:13px;padding:16px">🔄 載入中...</div>
-        </div>
-      </div>
-
-      <!-- Diary management -->
-      <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);overflow:hidden">
-        <div style="padding:18px 22px;border-bottom:1px solid #f5edd8">
-          <span style="font-weight:800;font-size:15px;color:#2c1810">📓 日記管理</span>
-        </div>
-        <div id="admin-diary-list" style="max-height:480px;overflow-y:auto;padding:16px">
-          <div style="text-align:center;color:#7a5c46;font-size:13px;padding:16px">🔄 載入中...</div>
-        </div>
-      </div>
-    </div>`;
-
-  // Load stats
-  loadAdminStatsInline();
-  loadMemberList();
-  loadAdminChatLog();
-  loadAdminDiaries();
-  startAdminLiveChat();
+  target.innerHTML = `<div style="font-family:'Nunito',sans-serif">
+    <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <h2 style="font-family:'Playfair Display',serif;font-size:28px;color:#5c3317">⚙️ 管理後台</h2>
+      <a href="admin.html" target="_blank" class="btn btn-primary">開啟完整後台 →</a>
+    </div>
+    <div style="background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(84,40,10,.12);padding:20px;text-align:center;color:#7a5c46">
+      <div style="font-size:48px;margin-bottom:12px">⚙️</div>
+      <p style="font-size:15px;font-weight:700">請使用完整管理後台</p>
+      <p style="font-size:13px;margin-top:8px">成員管理、聊天管理、日記管理、航班設定都在獨立的 admin.html 頁面</p>
+    </div>
+  </div>`;
 }
-
-async function loadAdminStatsInline() {
-  try {
-    let entryCount=0, photos=0;
-    const datesSnap = await db.collection('diaries').get();
-    const ps = [];
-    datesSnap.forEach(d => {
-      ps.push(db.collection('diaries').doc(d.id).collection('entries').get().then(es => {
-        entryCount += es.size;
-        es.forEach(e => { const data = e.data(); photos += (data.photos||[]).length; });
-      }).catch(()=>{}));
-    });
-    await Promise.all(ps);
-    const membSnap = await db.collection('members').get().catch(()=>({size:0}));
-    let chatCount = 0;
-    if(rtdb) { const cs = await rtdb.ref('chat').once('value'); chatCount = cs.numChildren(); }
-    
-    const sv = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-    sv('stat-members-val', membSnap.size||0);
-    sv('stat-entries-val', entryCount);
-    sv('stat-photos-val', photos);
-    sv('stat-chat-val', chatCount);
-  } catch(e) { console.warn('Admin stats:', e.message); }
-}
-
-
-
-function installSwitchOS(os) {
-  const ios = document.getElementById('install-ios');
-  const android = document.getElementById('install-android');
-  const btnIos = document.getElementById('itab-ios');
-  const btnAndroid = document.getElementById('itab-android');
-  if(os === 'ios') {
-    if(ios) ios.style.display = 'block';
-    if(android) android.style.display = 'none';
-    if(btnIos) { btnIos.style.background = 'var(--primary)'; btnIos.style.color = '#fff'; btnIos.style.borderColor = 'var(--primary)'; }
-    if(btnAndroid) { btnAndroid.style.background = 'transparent'; btnAndroid.style.color = 'var(--text-muted)'; btnAndroid.style.borderColor = 'var(--cream-dark)'; }
-  } else {
-    if(ios) ios.style.display = 'none';
-    if(android) android.style.display = 'block';
-    if(btnAndroid) { btnAndroid.style.background = 'var(--primary)'; btnAndroid.style.color = '#fff'; btnAndroid.style.borderColor = 'var(--primary)'; }
-    if(btnIos) { btnIos.style.background = 'transparent'; btnIos.style.color = 'var(--text-muted)'; btnIos.style.borderColor = 'var(--cream-dark)'; }
-  }
-}
-
-
-
 
 // ============================================================
-// TEAM / MEMBER INTRO PAGE
+// TEAM PAGE - member intro cards
 // ============================================================
 function maskName(name) {
   if(!name || name.length < 2) return name || '';
@@ -3177,83 +2224,67 @@ async function renderTeamPage() {
   if(!db) return;
   try {
     const memSnap = await db.collection('members').get();
-    const memberUids   = new Set();
+    const memberUids = new Set();
     const memberEmails = new Set();
     memSnap.forEach(d => {
       const data = d.data();
-      if(data.uid)   memberUids.add(data.uid);
+      if(data.uid) memberUids.add(data.uid);
       if(data.email) memberEmails.add(data.email.toLowerCase());
       if(d.id && d.id.length > 10 && !d.id.includes('_')) memberUids.add(d.id);
     });
-
     if(!memberUids.size && !memberEmails.size) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">&#x1F9D1;&#x200D;&#x1F3EB;</div><p>尚無見習成員資料</p></div>';
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑‍🏫</div><p>尚無見習成員資料</p></div>';
       return;
     }
-
     const profiles = [];
     const seenUids = new Set();
-
-    // Load by UID
     await Promise.all([...memberUids].map(uid =>
       db.collection('profiles').doc(uid).get()
-        .then(s => { if(s.exists && !seenUids.has(s.id)) { seenUids.add(s.id); profiles.push(s.data()); } })
-        .catch(() => {})
+        .then(s => { if(s.exists && !seenUids.has(s.id)){ seenUids.add(s.id); profiles.push(s.data()); }})
+        .catch(()=>{})
     ));
-
-    // Load by email if any email-only members
     if(memberEmails.size > 0) {
-      const allProfs = await db.collection('profiles').get().catch(() => null);
-      if(allProfs) {
-        allProfs.forEach(d => {
-          const data = d.data();
-          if(!seenUids.has(d.id) && data.email && memberEmails.has(data.email.toLowerCase())) {
-            seenUids.add(d.id);
-            profiles.push(data);
-          }
-        });
-      }
+      const allProfs = await db.collection('profiles').get().catch(()=>null);
+      if(allProfs) allProfs.forEach(d => {
+        const data = d.data();
+        if(!seenUids.has(d.id) && data.email && memberEmails.has(data.email.toLowerCase())) {
+          seenUids.add(d.id); profiles.push(data);
+        }
+      });
     }
-
     if(!profiles.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">&#x1F9D1;&#x200D;&#x1F3EB;</div><p>成員尚未填寫個人資料</p></div>';
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px">🧑‍🏫</div><p>成員尚未填寫個人資料</p></div>';
       return;
     }
     grid.innerHTML = profiles.map(p => buildMemberCard(p)).join('');
   } catch(e) {
-    console.error('renderTeamPage:', e);
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">&#x26A0;&#xFE0F; ' + esc(e.message) + '<br><small>請確認 Firestore 規則：members 和 profiles 允許 read: if true</small></div>';
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">⚠️ ' + esc(e.message) + '<br><small>請確認 Firestore 規則：members 和 profiles 允許 read: if true</small></div>';
   }
 }
 
 function buildMemberCard(p) {
-  var name   = p.nickname || p.displayName || '見習教師';
-  var masked = p.realName ? maskName(p.realName) : '';
-  var displayName = masked ? masked : name;
-  var photo  = p.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=d4650a&color=fff&size=128');
-  var school = p.school || '';
-  var title  = p.jobTitle || '';
-  var expert = p.expertise || '';
-  var motiv  = p.motivation || '';
-  var bio    = p.bio || '';
-
-  var tagHTML = '';
+  const name   = p.nickname || p.displayName || '見習教師';
+  const masked = p.realName ? maskName(p.realName) : '';
+  const displayName = masked ? masked : name;
+  const photo  = p.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=d4650a&color=fff&size=128');
+  const school = p.school || '';
+  const title  = p.jobTitle || '';
+  const expert = p.expertise || '';
+  const motiv  = p.motivation || '';
+  const bio    = p.bio || '';
+  let tagHTML = '';
   if(expert) {
-    var tags = expert.split(/[，,、]/).slice(0,3);
+    const tags = expert.split(/[，,、]/).slice(0,3);
     tagHTML = '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">' +
-      tags.map(function(t) {
-        return '<span style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700">' + esc(t.trim()) + '</span>';
-      }).join('') + '</div>';
+      tags.map(t => '<span style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700">' + esc(t.trim()) + '</span>').join('') + '</div>';
   }
-
-  var bodyHTML = tagHTML;
+  let bodyHTML = tagHTML;
   if(motiv) bodyHTML += '<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">參加動機</div><div style="font-size:13px;color:#2c1810;line-height:1.6">' + esc(motiv) + '</div></div>';
   if(bio)   bodyHTML += '<div><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">自我介紹</div><div style="font-size:13px;color:#2c1810;line-height:1.6">' + esc(bio) + '</div></div>';
   if(!tagHTML && !motiv && !bio) bodyHTML = '<div style="text-align:center;color:#bbb;font-size:13px;padding:12px 0">尚未填寫介紹</div>';
-
   return '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.1);overflow:hidden;display:flex;flex-direction:column">' +
     '<div style="background:linear-gradient(135deg,#3d1f0a,#d4650a);padding:28px 20px;text-align:center">' +
-    '<img src="' + photo + '" alt="' + esc(name) + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin:0 auto 10px;display:block">' +
+    '<img src="' + photo + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin:0 auto 10px;display:block">' +
     '<div style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">' + esc(displayName) + '</div>' +
     (title  ? '<div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:2px">' + esc(title) + '</div>' : '') +
     (school ? '<div style="font-size:12px;color:rgba(255,255,255,.7)">🏫 ' + esc(school) + '</div>' : '') +
@@ -3262,208 +2293,162 @@ function buildMemberCard(p) {
     '</div>';
 }
 
-
+// ============================================================
+// INSTALL PAGE
+// ============================================================
+function installSwitchOS(os) {
+  const ios = document.getElementById('install-ios');
+  const android = document.getElementById('install-android');
+  const btnIos = document.getElementById('itab-ios');
+  const btnAndroid = document.getElementById('itab-android');
+  if(os === 'ios') {
+    if(ios) ios.style.display = 'block';
+    if(android) android.style.display = 'none';
+    if(btnIos){btnIos.style.background='var(--primary)';btnIos.style.color='#fff';btnIos.style.borderColor='var(--primary)';}
+    if(btnAndroid){btnAndroid.style.background='transparent';btnAndroid.style.color='var(--text-muted)';btnAndroid.style.borderColor='var(--cream-dark)';}
+  } else {
+    if(ios) ios.style.display = 'none';
+    if(android) android.style.display = 'block';
+    if(btnAndroid){btnAndroid.style.background='var(--primary)';btnAndroid.style.color='#fff';btnAndroid.style.borderColor='var(--primary)';}
+    if(btnIos){btnIos.style.background='transparent';btnIos.style.color='var(--text-muted)';btnIos.style.borderColor='var(--cream-dark)';}
+  }
+}
 
 // ============================================================
 // EDIT DIARY MODAL
 // ============================================================
 let editingEntry = null;
-
 async function openEditDiary(date, uid) {
   if(!currentUser) return;
-  // Load entry
   const snap = await db.collection('diaries').doc(date).collection('entries').doc(uid).get();
-  if(!snap.exists) { showToast('找不到日記', 'error'); return; }
+  if(!snap.exists) { showToast('找不到日記','error'); return; }
   editingEntry = {date, uid, ...snap.data()};
-
-  // Build modal HTML
   const modal = document.getElementById('edit-diary-modal');
   const body  = document.getElementById('edit-diary-body');
   if(!modal || !body) return;
-
   const existingPhotos = editingEntry.photos || [];
-  const photoPreviews = existingPhotos.map((url, i) =>
-    '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px">' +
-    '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">' +
-    '<button onclick="removeEditPhoto(' + i + ')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button>' +
-    '</div>'
-  ).join('');
-
-  const sched = (function() {
-    var s = (typeof SCHEDULE !== 'undefined' ? SCHEDULE : []).find(function(x){return x.date===date;});
-    return s ? 'Day ' + s.day + ' · ' + date : date;
-  })();
-
+  const sched = SCHEDULE.find(s=>s.date===date);
+  const schedLabel = sched ? 'Day ' + sched.day + ' · ' + date : date;
   body.innerHTML =
-    '<div style="margin-bottom:14px">' +
-    '<div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div>' +
-    '<div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">' + sched + '</div>' +
-    '</div>' +
-    '<div style="margin-bottom:14px">' +
-    '<div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日記內容</div>' +
-    '<textarea id="edit-diary-text" style="width:100%;min-height:160px;border:2px solid #f5edd8;border-radius:10px;padding:12px;font-family:Nunito,sans-serif;font-size:14px;line-height:1.7;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810" onfocus="this.style.borderColor=\'#d4650a\'" onblur="this.style.borderColor=\'#f5edd8\'">' + (editingEntry.content || '') + '</textarea>' +
-    '</div>' +
-    '<div style="margin-bottom:14px">' +
-    '<div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:8px;text-transform:uppercase">照片（最多5張）</div>' +
-    '<div id="edit-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' + photoPreviews + '</div>' +
-    '<label style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f5edd8;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;color:#5c3317">' +
-    '📷 新增照片' +
-    '<input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleEditPhotoSelect(this)">' +
-    '</label>' +
-    '<span style="font-size:11px;color:#7a5c46;margin-left:8px">已有 <span id="edit-photo-count">' + existingPhotos.length + '</span> / 5 張</span>' +
-    '</div>';
-
+    '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div>' +
+    '<div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">' + esc(schedLabel) + '</div></div>' +
+    '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日記內容</div>' +
+    '<textarea id="edit-diary-text" style="width:100%;min-height:160px;border:2px solid #f5edd8;border-radius:10px;padding:12px;font-family:Nunito,sans-serif;font-size:14px;line-height:1.7;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810">' + esc(editingEntry.content||'') + '</textarea></div>' +
+    '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:8px;text-transform:uppercase">照片（原始 Cloudinary · 不限張數）</div>' +
+    '<div id="edit-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' +
+    existingPhotos.map((url,i) => '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>').join('') +
+    '</div><label style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f5edd8;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;color:#5c3317">📷 新增照片<input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleEditPhotoSelect(this)"></label>' +
+    '<span style="font-size:11px;color:#7a5c46;margin-left:8px">已有 <span id="edit-photo-count">'+existingPhotos.length+'</span> 張</span></div>';
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-
 function closeEditDiary() {
   const modal = document.getElementById('edit-diary-modal');
   if(modal) modal.style.display = 'none';
   document.body.style.overflow = '';
   editingEntry = null;
 }
-
 function removeEditPhoto(idx) {
   if(!editingEntry) return;
   editingEntry.photos = editingEntry.photos || [];
   editingEntry.photos.splice(idx, 1);
-  // Re-render previews
   const container = document.getElementById('edit-photo-previews');
-  if(container) {
-    container.innerHTML = editingEntry.photos.map(function(url, i) {
-      return '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px">' +
-        '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover">' +
-        '<button onclick="removeEditPhoto(' + i + ')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button>' +
-        '</div>';
-    }).join('');
-  }
-  var cnt = document.getElementById('edit-photo-count');
+  if(container) container.innerHTML = editingEntry.photos.map((url,i) =>
+    '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>'
+  ).join('');
+  const cnt = document.getElementById('edit-photo-count');
   if(cnt) cnt.textContent = editingEntry.photos.length;
 }
-
 function handleEditPhotoSelect(input) {
   if(!editingEntry) return;
   editingEntry.photos = editingEntry.photos || [];
-  var remaining = 20 - editingEntry.photos.length;
-  var files = Array.from(input.files).slice(0, remaining);
-  if(files.length < input.files.length) showToast('照片已達上限', 'error');
-  files.forEach(function(f) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      // Store as pending file upload
+  const files = Array.from(input.files).slice(0, 20 - editingEntry.photos.length);
+  files.forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
       if(!editingEntry._newPhotos) editingEntry._newPhotos = [];
-      editingEntry._newPhotos.push({file: f, preview: e.target.result});
-      // Add preview
-      var container = document.getElementById('edit-photo-previews');
-      var idx = editingEntry.photos.length + editingEntry._newPhotos.length - 1;
+      editingEntry._newPhotos.push({file:f, preview:e.target.result});
+      const container = document.getElementById('edit-photo-previews');
       if(container) {
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px';
-        div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
+        div.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
         container.appendChild(div);
       }
-      var cnt = document.getElementById('edit-photo-count');
+      const cnt = document.getElementById('edit-photo-count');
       if(cnt) cnt.textContent = editingEntry.photos.length + (editingEntry._newPhotos||[]).length;
     };
     reader.readAsDataURL(f);
   });
   input.value = '';
 }
-
 async function saveEditDiary() {
   if(!editingEntry || !db) return;
-  var btn = document.getElementById('edit-save-btn');
-  if(btn) { btn.textContent = '⏳ 儲存中...'; btn.disabled = true; }
-
+  const btn = document.getElementById('edit-save-btn');
+  if(btn){btn.textContent='⏳ 儲存中...';btn.disabled=true;}
   try {
-    var text = document.getElementById('edit-diary-text')?.value.trim() || '';
-    var photoURLs = [...(editingEntry.photos || [])];
-
-    // Upload new photos
-    var newPhotos = editingEntry._newPhotos || [];
-    for(var i=0; i<newPhotos.length; i++) {
-      if(btn) btn.textContent = '⏳ 上傳照片 ' + (i+1) + '/' + newPhotos.length + '...';
-      var url = await uploadToCloudinary(newPhotos[i].file);
+    const text = document.getElementById('edit-diary-text')?.value.trim() || '';
+    const photoURLs = [...(editingEntry.photos||[])];
+    const newPhotos = editingEntry._newPhotos || [];
+    for(let i=0; i<newPhotos.length; i++) {
+      if(btn) btn.textContent = '⏳ 上傳照片 '+(i+1)+'/'+newPhotos.length+'...';
+      const url = await uploadToCloudinary(newPhotos[i].file);
       photoURLs.push(url);
     }
-
     await db.collection('diaries').doc(editingEntry.date).collection('entries').doc(editingEntry.uid).update({
-      content: text,
-      photos: photoURLs,
+      content: text, photos: photoURLs,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
-    showToast('日記已更新 ✅', 'success');
+    showToast('日記已更新 ✅','success');
     closeEditDiary();
-    allDiaries = [];
-    renderDiary();
-  } catch(e) {
-    showToast('儲存失敗: ' + e.message, 'error');
-  } finally {
-    if(btn) { btn.textContent = '💾 儲存修改'; btn.disabled = false; }
-  }
+    allDiaries = []; renderDiary();
+  } catch(e) { showToast('儲存失敗: '+e.message,'error'); }
+  finally { if(btn){btn.textContent='💾 儲存修改';btn.disabled=false;} }
 }
 
 
 // ============================================================
-// DOM READY - Wire up UI, start public features
+// DOM READY
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Wire up Google login button in modal
-  const loginBtn = document.getElementById('google-login-btn');
-  if(loginBtn) loginBtn.onclick = signInWithGoogle;
-
-  // Close modal when clicking backdrop
-  const modal = document.getElementById('login-modal');
-  if(modal) modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
-
-  // Start public features immediately (no login needed)
+  wireCfInput();  // wire once only
   startCountdown();
   renderSchedule();
   loadFlightInfo();
   loadStats();
   navigate('home');
-  wireCfInput();  // wire once only - prevents duplicate event listeners
   initChat();
 });
+
 </script>
 
-<!-- ═══════════════════════════════════════
-     FLOATING CHAT WIDGET
-═══════════════════════════════════════ -->
-<!-- Online dot -->
-<span id="chat-fab-dot"></span>
+<!-- FLOATING CHAT WIDGET -->
+<div id="chat-fab" onclick="chatToggle()" title="聊天">
+  <span id="chat-fab-icon">💬</span><span id="chat-fab-label" class="fab-label">聊天</span>
+  <span id="chat-badge-dot" class="chat-badge-dot" style="display:none"></span>
+</div>
 
-<!-- FAB Button -->
-<button id="chat-fab" onclick="chatToggle()" title="即時聊天室">
-  <div id="chat-fab-unread"></div>
-  <span id="chat-fab-icon">💬</span>
-  <span id="chat-fab-label">聊天</span>
-</button>
-
-<!-- Float Window -->
 <div id="chat-float">
   <!-- Header -->
-  <div id="cf-hdr">
-    <div id="cf-hdr-av">🦘</div>
-    <div id="cf-hdr-info">
-      <div id="cf-hdr-name">澳洲冒險・即時聊天</div>
-      <div id="cf-hdr-status"><span class="cf-live-dot"></span>&nbsp;LIVE・與16位見習教師即時互動</div>
+  <div class="cf-header">
+    <img id="cf-logo-av" src="https://ui-avatars.com/api/?name=🦘&background=d4650a&color=fff" class="cf-logo-av">
+    <div class="cf-header-info">
+      <div class="cf-header-title">澳洲冒險・即...</div>
+      <div class="cf-header-sub"><span class="cf-live-dot"></span> LIVE・與16位見習教師即時互動</div>
     </div>
-    <div class="cf-hdr-actions">
-      <button class="cf-size-btn" onclick="cfSetSize(12)">小</button>
-      <button class="cf-size-btn" onclick="cfSetSize(14)">中</button>
-      <button class="cf-size-btn" onclick="cfSetSize(16)">大</button>
-      <button class="cf-icon-btn" id="cf-fs-btn" onclick="cfToggleFullscreen()" title="放大">⛶</button>
-      <button class="cf-icon-btn" onclick="chatToggle()" title="關閉">✕</button>
+    <div class="cf-header-actions">
+      <button class="cf-hbtn" onclick="cfSetSize('sm')" title="小">小</button>
+      <button class="cf-hbtn" onclick="cfSetSize('md')" title="中">中</button>
+      <button class="cf-hbtn" onclick="cfSetSize('lg')" title="大">大</button>
+      <button class="cf-hbtn" onclick="cfToggleFullscreen()" title="全螢幕">⛶</button>
+      <button class="cf-hbtn" onclick="chatToggle()" title="關閉">✕</button>
     </div>
   </div>
 
-  <!-- Guest name bar (shown when not logged in) -->
-  <div id="cf-guest-bar" style="display:none">
-    <span>👋</span>
-    <span class="cf-gb-name" id="cf-guest-name-display">以訪客身分聊天</span>
+  <!-- Guest bar -->
+  <div id="cf-guest-bar" class="cf-guest-bar" style="display:none">
+    <span class="cf-gb-icon">👋</span>
+    <span id="cf-name-display" class="cf-gb-name">以訪客身分聊天</span>
     <button class="cf-gb-btn" onclick="cfChangeGuestName()">改名</button>
     <button class="cf-gb-btn" style="background:var(--green)" onclick="openLoginModal()">登入</button>
   </div>
@@ -3483,8 +2468,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-
-<!-- ── EDIT DIARY MODAL ── -->
+<!-- EDIT DIARY MODAL -->
 <div id="edit-diary-modal" onclick="if(event.target.id==='edit-diary-modal')closeEditDiary()">
   <div id="edit-diary-inner">
     <div class="edit-diary-hdr">
