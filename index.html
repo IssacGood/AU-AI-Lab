@@ -352,21 +352,19 @@ textarea.diary-input:focus{border-color:var(--primary)}
 </head>
 <body>
 
-<!-- ========== LOGIN ========== -->
-<div id="login-screen">
-  <div class="login-bg">
-    <span>🦘</span><span>✈️</span><span>🌏</span><span>🏫</span><span>🤖</span>
-  </div>
-  <div class="login-card">
+<!-- ========== LOGIN MODAL ========== -->
+<div id="login-modal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)">
+  <div class="login-card" style="position:relative">
+    <button onclick="document.getElementById('login-modal').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)">✕</button>
     <div class="login-stamp">🦘</div>
     <h1>澳洲冒險<br>AI教室實驗室</h1>
     <p class="sub">I-8-29 青年百億海外圓夢基金計畫<br>Australia Adventure: AI Classroom Lab</p>
     <div class="login-dates">📅 2025年8月3日 ─ 8月18日 │ 雪梨 × 墨爾本</div>
-    <button class="btn-google" onclick="signInWithGoogle()">
+    <button class="btn-google" id="google-login-btn">
       <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       使用 Google 帳號登入
     </button>
-    <p class="login-note" id="login-note">所有人均可登入查看日誌與即時聊天<br>已綁定成員可編輯上傳每日日記</p>
+    <p class="login-note">訪客可自由瀏覽日誌與相片<br>登入後可參與聊天・已綁定成員可撰寫日記</p>
   </div>
 </div>
 
@@ -384,7 +382,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
 </div>
 
 <!-- ========== MAIN APP ========== -->
-<div id="app">
+<div id="app" style="display:block">
   <div class="app-layout">
 
     <!-- TOPBAR (mobile) -->
@@ -404,11 +402,11 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <h2 data-i18n="site-title">澳洲冒險：AI教室實驗室</h2>
         <div class="logo-sub">2025 / 8.3 → 8.18</div>
       </div>
-      <div class="sidebar-user">
-        <img id="sidebar-avatar" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" alt="">
+      <div class="sidebar-user" id="sidebar-user-area" style="cursor:pointer" onclick="handleAuthBtn()">
+        <img id="sidebar-avatar" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" alt="">
         <div>
-          <div class="u-name" id="sidebar-name">載入中...</div>
-          <div class="u-role" id="sidebar-role">訪客</div>
+          <div class="u-name" id="sidebar-name">訪客瀏覽中</div>
+          <div class="u-role" id="sidebar-role">點此登入</div>
         </div>
       </div>
       <nav class="sidebar-nav">
@@ -429,7 +427,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
           <div class="lang-btn active" id="lang-zh" onclick="setLang('zh')">中文</div>
           <div class="lang-btn" id="lang-en" onclick="setLang('en')">EN</div>
         </div>
-        <button class="btn-logout" onclick="signOut()">🚪 <span data-i18n="logout">登出</span></button>
+        <button class="btn-logout" id="sidebar-auth-btn" onclick="handleAuthBtn()">🔑 <span id="sidebar-auth-label">登入</span></button>
       </div>
     </div>
 
@@ -888,96 +886,134 @@ let chatListener = null;
 let lbImages = [];
 let lbIndex = 0;
 let countdownInterval = null;
+let firebaseReady = false;
 
 // ============================================================
-// INIT FIREBASE
+// INIT FIREBASE - runs immediately when script loads
 // ============================================================
-function initFirebase() {
+(function initFirebase() {
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
     storage = firebase.storage();
     rtdb = firebase.database();
     auth = firebase.auth();
+    firebaseReady = true;
 
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        onLogin(user);
+        handleUserLogin(user);
       } else {
         currentUser = null;
-        showLoginScreen();
+        handleGuestMode();
       }
     });
   } catch(e) {
     console.error("Firebase init error:", e);
-    showToast("Firebase 初始化失敗，請確認設定", "error");
   }
-}
+})();
 
 // ============================================================
-// AUTH
+// AUTH - all functions global scope
 // ============================================================
-async function signInWithGoogle() {
+function signInWithGoogle() {
+  if(!firebaseReady) { showToast("Firebase 初始化中，請稍候", "error"); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    await auth.signInWithPopup(provider);
-  } catch(e) {
-    showToast("登入失敗: " + e.message, "error");
+  auth.signInWithPopup(provider).catch(e => showToast("登入失敗: " + e.message, "error"));
+}
+
+function handleAuthBtn() {
+  if(currentUser) {
+    if(confirm("確定要登出嗎？")) doSignOut();
+  } else {
+    openLoginModal();
   }
 }
 
-async function signOut() {
-  await auth.signOut();
-  showLoginScreen();
+function openLoginModal() {
+  const m = document.getElementById('login-modal');
+  if(m) { m.style.display = 'flex'; }
 }
 
-function showLoginScreen() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-  if(countdownInterval) clearInterval(countdownInterval);
-  if(chatListener) chatListener();
+function doSignOut() {
+  auth.signOut().then(() => {
+    currentUser = null;
+    isMember = false;
+    isAdmin = false;
+    handleGuestMode();
+    showToast("已登出", "success");
+  });
 }
 
-async function onLogin(user) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+// Guest mode - app fully visible, editing disabled
+function handleGuestMode() {
+  document.getElementById('sidebar-avatar').src = 'https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff';
+  document.getElementById('sidebar-name').textContent = '訪客瀏覽中';
+  document.getElementById('sidebar-role').textContent = '點此登入';
+  document.getElementById('sidebar-auth-label').textContent = '登入';
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('visible'));
+  document.getElementById('nav-write').style.display = 'none';
+  document.getElementById('nav-admin') && (document.getElementById('nav-admin').style.display = 'none');
+  // Start public features
+  startCountdown();
+  renderSchedule();
+  loadFlightInfo();
+  loadStats();
+  if(!countdownInterval) startCountdown();
+}
+
+async function handleUserLogin(user) {
+  // Close login modal
+  const modal = document.getElementById('login-modal');
+  if(modal) modal.style.display = 'none';
 
   isAdmin = user.email === ADMIN_EMAIL;
-  
-  // Check membership
+
+  // Check membership by UID first, then by email
   try {
     const snap = await db.collection('members').doc(user.uid).get();
-    isMember = snap.exists || isAdmin;
-  } catch(e) {
-    isMember = isAdmin;
-  }
+    if(snap.exists) {
+      isMember = true;
+    } else {
+      const emailSnap = await db.collection('members').where('email','==',user.email).get();
+      if(!emailSnap.empty) {
+        // Auto-register UID
+        await db.collection('members').doc(user.uid).set({
+          email: user.email,
+          displayName: user.displayName || user.email,
+          photoURL: user.photoURL || '',
+          addedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true});
+        isMember = true;
+      } else {
+        isMember = isAdmin;
+      }
+    }
+  } catch(e) { isMember = isAdmin; }
 
   // Ensure profile doc
-  const profRef = db.collection('profiles').doc(user.uid);
-  const profSnap = await profRef.get();
-  if(!profSnap.exists) {
-    await profRef.set({
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName || '',
-      photoURL: user.photoURL || '',
-      nickname: user.displayName || '',
-      bio: '',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
+  try {
+    const profRef = db.collection('profiles').doc(user.uid);
+    const profSnap = await profRef.get();
+    if(!profSnap.exists) {
+      await profRef.set({
+        uid: user.uid, email: user.email,
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        nickname: user.displayName || '',
+        bio: '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch(e) {}
 
   updateSidebarUser(user);
   toggleAdminUI();
   setupWriteNav();
-  startCountdown();
-  renderSchedule();
-  renderHome();
-  loadFlightInfo();
-  navigate('home');
   initChat();
   loadStats();
+  showToast(`歡迎回來，${user.displayName || user.email}！`, "success");
 }
 
 function updateSidebarUser(user) {
@@ -989,6 +1025,7 @@ function updateSidebarUser(user) {
   document.getElementById('sidebar-role').textContent = isAdmin ? t('role-admin') : isMember ? t('role-member') : t('role-visitor');
   document.getElementById('profile-avatar-big').src = photo;
   document.getElementById('profile-email').value = user.email;
+  document.getElementById('sidebar-auth-label').textContent = '登出';
 }
 
 function toggleAdminUI() {
@@ -2103,51 +2140,25 @@ function esc(str) {
 }
 
 // ============================================================
-// MEMBER CHECK (by email)
+// DOM READY - Wire up UI, start public features
 // ============================================================
-// This listener is called when user logs in
-// Member matching is by UID; admin must bind by searching email 
-// To support email-based binding: when user logs in, also check by email
-async function checkMembershipByEmail(email) {
-  try {
-    const snap = await db.collection('members').where('email','==',email).get();
-    if(!snap.empty && currentUser) {
-      // Auto-register UID in members
-      await db.collection('members').doc(currentUser.uid).set({
-        email,
-        displayName: currentUser.displayName || email,
-        photoURL: currentUser.photoURL || '',
-        addedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, {merge:true});
-      return true;
-    }
-  } catch(e) {}
-  return false;
-}
+document.addEventListener('DOMContentLoaded', () => {
+  // Wire up Google login button in modal
+  const loginBtn = document.getElementById('google-login-btn');
+  if(loginBtn) loginBtn.onclick = signInWithGoogle;
 
-// Override onLogin to also check by email
-const _onLogin = onLogin;
-window.onLogin = async function(user) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  // Close modal when clicking backdrop
+  const modal = document.getElementById('login-modal');
+  if(modal) modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
 
-  isAdmin = user.email === ADMIN_EMAIL;
-  
-  try {
-    const snap = await db.collection('members').doc(user.uid).get();
-    if(snap.exists) { isMember = true; }
-    else {
-      const byEmail = await checkMembershipByEmail(user.email);
-      isMember = byEmail || isAdmin;
-    }
-  } catch(e) { isMember = isAdmin; }
-
-  const profRef = db.collection('profiles').doc(user.uid);
-  const profSnap = await profRef.get();
-  if(!profSnap.exists) {
-    await profRef.set({
-      uid: user.uid, email: user.email,
-      displayName: user.displayName || '',
-      photoURL: user.photoURL || '',
-      nickname: user.displayName || '',
-      bio: '', createdAt: firebase.fire
+  // Start public features immediately (no login needed)
+  startCountdown();
+  renderSchedule();
+  loadFlightInfo();
+  loadStats();
+  navigate('home');
+  initChat();
+});
+</script>
+</body>
+</html>
