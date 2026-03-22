@@ -1042,6 +1042,11 @@ function fmtDate(dateStr) {
   if(!dateStr) return dateStr;
   return dateStr + '（' + weekday(dateStr) + '）';
 }
+function fmtShort(dateStr) {
+  // Returns "08-05（三）" for pill labels
+  if(!dateStr) return dateStr;
+  return dateStr.slice(5) + '（' + weekday(dateStr) + '）';
+}
 
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
@@ -1352,7 +1357,7 @@ async function populateDiaryFilters(){
       el.appendChild(pill);
     });
   }
-  buildPills('diary-date-pills',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+d.slice(5):d;},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'date:'+val:'';renderDiary();});
+  buildPills('diary-date-pills',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+fmtShort(d):d;},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'date:'+val:'';renderDiary();});
   buildPills('diary-person-pills',uids,function(uid){return profMap[uid]?profMap[uid].nickname||profMap[uid].displayName||uid.slice(0,8):uid.slice(0,8);},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'person:'+val:'';renderDiary();});
 }
 
@@ -1374,7 +1379,7 @@ async function populateGalleryFilters(){
       c.appendChild(p);
     });
   }
-  build('gallery-date-pills','gallery-filter-date',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+d.slice(5):d;});
+  build('gallery-date-pills','gallery-filter-date',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+fmtShort(d)d;});
   build('gallery-person-pills','gallery-filter-person',uids,function(uid){return profMap[uid]?profMap[uid].nickname||profMap[uid].displayName||uid.slice(0,8):uid.slice(0,8);});
 }
 
