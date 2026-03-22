@@ -125,6 +125,13 @@ body{font-family:'Nunito',sans-serif;background:#f0ede8;color:#2c1810;min-height
   .stats-row{grid-template-columns:repeat(2,1fr)}
   .input-row{flex-direction:column}
 }
+
+/* ── Sub-tabs ── */
+.stab{padding:8px 18px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--cream2);color:var(--muted);background:transparent;transition:all .2s}
+.stab:hover{border-color:var(--pri);color:var(--pri)}
+.stab-active{background:var(--pri);border-color:var(--pri);color:#fff}
+.stab-active:hover{background:var(--pri-dark)}
+
 </style>
 </head>
 <body>
@@ -199,27 +206,58 @@ body{font-family:'Nunito',sans-serif;background:#f0ede8;color:#2c1810;min-height
 
     <!-- ===== MEMBERS TAB ===== -->
     <div class="section active" id="tab-members">
-      <div class="card">
-        <div class="card-hdr">
-          <h3>👥 使用者管理</h3>
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <span id="member-badge" style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800">0 位成員</span>
-            <span id="user-badge" style="background:rgba(92,51,23,.08);color:#5c3317;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700">0 位訪客</span>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button id="st-all"   class="stab stab-active" onclick="switchSubTab('all')">👁 所有登入者</button>
+        <button id="st-mem"   class="stab" onclick="switchSubTab('mem')">✅ 成員 <span id="mem-cnt" style="background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0/16</span></button>
+        <button id="st-admin" class="stab" onclick="switchSubTab('admin')">👑 管理員 <span id="admin-cnt" style="background:rgba(255,255,255,.3);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0</span></button>
+      </div>
+
+      <!-- 所有登入者 -->
+      <div id="stab-all">
+        <div class="card">
+          <div class="card-hdr">
+            <h3>👁 所有登入者</h3>
             <button class="btn btn-sec btn-sm" onclick="loadMembers()">🔄 重整</button>
           </div>
-        </div>
-        <div class="card-body">
-          <div class="input-row">
-            <input class="input" id="m-email" placeholder="成員 Gmail">
-            <input class="input" id="m-name" placeholder="顯示名稱" style="max-width:180px">
-            <button class="btn btn-pri" onclick="addMember()">＋ 新增成員</button>
+          <div class="card-body">
+            <div id="all-users-list"><div class="loading-msg"><div class="spinner"></div>載入中...</div></div>
           </div>
-          <div id="member-list"><div class="loading-msg"><div class="spinner"></div>載入成員...</div></div>
         </div>
       </div>
+
+      <!-- 成員管理 -->
+      <div id="stab-mem" style="display:none">
+        <div class="card">
+          <div class="card-hdr">
+            <h3>✅ 成員管理</h3>
+            <span id="member-badge" style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800">0 / 16</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">最多 16 位成員可以撰寫日記與上傳照片。點「所有登入者」可將人加入成員。</p>
+            <div id="member-list"><div class="loading-msg"><div class="spinner"></div>載入中...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 管理員 -->
+      <div id="stab-admin" style="display:none">
+        <div class="card">
+          <div class="card-hdr">
+            <h3>👑 管理員</h3>
+            <span id="admin-badge" style="background:rgba(245,166,35,.15);color:#9a6c00;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800">0 位</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:14px">管理員擁有最高權限，自動包含成員資格。</p>
+            <div id="admin-list"><div class="loading-msg"><div class="spinner"></div>載入中...</div></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- ===== CHAT TAB ===== -->
+<!-- ===== CHAT TAB ===== -->
     <div class="section" id="tab-chat">
       <div class="card">
         <div class="card-hdr">
@@ -320,6 +358,12 @@ rtdb = firebase.database();
 auth = firebase.auth();
 
 // ── UTILITIES ──
+function maskName(name) {
+  if(!name || name.length < 2) return name || '';
+  if(name.length === 2) return name[0] + 'O';
+  return name[0] + 'O'.repeat(name.length - 2) + name[name.length - 1];
+}
+
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
 
 function toast(msg, type=''){
@@ -367,6 +411,7 @@ auth.onAuthStateChanged(user => {
   loadStats();
   loadMembers();
   loadChat();
+  switchSubTab('all');
 });
 
 // ── TABS ──
@@ -410,110 +455,179 @@ async function loadStats() {
 }
 
 // ── MEMBERS ──
-// Show ALL logged-in users (from profiles) + member status overlay
+// Show ALL logged-in profiles, then members, then admins
+
+function switchSubTab(name) {
+  ['all','mem','admin'].forEach(t => {
+    document.getElementById('stab-' + t).style.display = t === name ? 'block' : 'none';
+    const btn = document.getElementById('st-' + t);
+    if(btn) btn.classList.toggle('stab-active', t === name);
+  });
+}
+
 async function loadMembers() {
-  const el = document.getElementById('member-list');
-  const badge = document.getElementById('member-badge');
-  if(!el) return;
-  el.innerHTML = '<div class="loading-msg"><div class="spinner"></div>載入使用者...</div>';
+  // Load both profiles and members collections in parallel
+  let profiles = [], memberMap = {}, adminEmails = new Set([ADMIN]);
 
   try {
-    // Load all profiles (everyone who logged in)
-    const [profilesSnap, membersSnap] = await Promise.all([
+    const [profSnap, memSnap] = await Promise.all([
       db.collection('profiles').get(),
       db.collection('members').get()
     ]);
 
-    // Build member set: by uid and by email
-    const memberUIDs = new Set();
-    const memberEmails = new Set();
-    membersSnap.forEach(d => {
-      memberUIDs.add(d.id);
-      if(d.data().email) memberEmails.add(d.data().email.toLowerCase());
+    profSnap.forEach(d => profiles.push({uid: d.id, ...d.data()}));
+
+    memSnap.forEach(d => {
+      const data = d.data();
+      // Index by both UID and email
+      memberMap[d.id] = data;
+      if(data.email) memberMap[data.email.toLowerCase()] = data;
     });
-
-    const memberCount = memberUIDs.size;
-    badge.textContent = memberCount + ' 位成員';
-
-    if(!profilesSnap.size) {
-      el.innerHTML = '<div class="loading-msg">尚無任何使用者登入過</div>';
-      return;
-    }
-
-    // Sort: admin first, then members, then others
-    const profiles = [];
-    profilesSnap.forEach(d => profiles.push({uid: d.id, ...d.data()}));
-    profiles.sort((a, b) => {
-      const aIsAdmin = a.email === ADMIN;
-      const bIsAdmin = b.email === ADMIN;
-      const aIsMember = memberUIDs.has(a.uid) || memberEmails.has((a.email||'').toLowerCase());
-      const bIsMember = memberUIDs.has(b.uid) || memberEmails.has((b.email||'').toLowerCase());
-      if(aIsAdmin !== bIsAdmin) return aIsAdmin ? -1 : 1;
-      if(aIsMember !== bIsMember) return aIsMember ? -1 : 1;
-      return (a.nickname||a.displayName||'').localeCompare(b.nickname||b.displayName||'');
-    });
-
-    // Update guest badge
-    const guestCnt = profiles.filter(p => p.email !== ADMIN && !memberUIDs.has(p.uid) && !memberEmails.has((p.email||'').toLowerCase())).length;
-    const userBadge = document.getElementById('user-badge');
-    if(userBadge) userBadge.textContent = guestCnt + ' 位訪客';
-
-    el.innerHTML = profiles.map(p => {
-      const isAdmin = p.email === ADMIN;
-      const isMember = memberUIDs.has(p.uid) || memberEmails.has((p.email||'').toLowerCase());
-      const name = p.nickname || p.displayName || p.email || p.uid.slice(0,8);
-      const initials = name.slice(0,2).toUpperCase();
-      const photo = p.photoURL;
-      const avatarHTML = photo
-        ? `<img src="${photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid ${isAdmin?'#f5a623':isMember?'#d4650a':'#ddd'}">`
-        : `<div class="member-avatar" style="background:${isAdmin?'#f5a623':isMember?'#d4650a':'#bbb'};color:${isAdmin||isMember?'#fff':'#666'}">${initials}</div>`;
-
-      // Role badge
-      let roleBadge = '';
-      if(isAdmin) {
-        roleBadge = `<span style="background:#f5a623;color:#1a0f05;font-size:10px;font-weight:800;border-radius:10px;padding:2px 8px;margin-left:6px">👑 管理員</span>`;
-      } else if(isMember) {
-        roleBadge = `<span style="background:#d4650a;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 8px;margin-left:6px">✅ 成員</span>`;
-      } else {
-        roleBadge = `<span style="background:#e0e0e0;color:#666;font-size:10px;font-weight:800;border-radius:10px;padding:2px 8px;margin-left:6px">👁 訪客</span>`;
-      }
-
-      // Action button
-      let actionBtn = '';
-      if(isAdmin) {
-        actionBtn = `<span style="font-size:12px;color:#f5a623;font-weight:700;padding:6px 10px">最高權限</span>`;
-      } else if(isMember) {
-        actionBtn = `<button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">移除成員</button>`;
-      } else {
-        actionBtn = `<button class="btn btn-pri btn-sm" onclick="grantMember('${p.uid}','${(p.email||'').replace(/'/g,"\'")}','${name.replace(/'/g,"\'")}')">設為成員</button>`;
-      }
-
-      // Last login
-      const lastSeen = p.lastLogin ? new Date(p.lastLogin.seconds*1000).toLocaleDateString('zh-TW') : '';
-
-      return `<div class="member-item" id="user-row-${p.uid}">
-        ${avatarHTML}
-        <div class="member-info">
-          <div class="member-name">${esc(name)}${roleBadge}</div>
-          <div class="member-email">${esc(p.email||p.uid.slice(0,12))}${lastSeen?` · ${lastSeen}`:''}</div>
-        </div>
-        ${actionBtn}
-      </div>`;
-    }).join('');
   } catch(e) {
-    el.innerHTML = `<div class="loading-msg" style="color:#e74c3c">⚠️ ${esc(e.message)}</div>`;
+    ['all-users-list','member-list','admin-list'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = `<div class="loading-msg" style="color:#e74c3c">⚠️ ${esc(e.message)}</div>`;
+    });
+    return;
   }
+
+  const isMem   = p => !!(memberMap[p.uid] || memberMap[(p.email||'').toLowerCase()]);
+  const isAdm   = p => p.email === ADMIN;
+  const members = profiles.filter(p => !isAdm(p) && isMem(p));
+  const admins  = profiles.filter(p => isAdm(p));
+  const guests  = profiles.filter(p => !isAdm(p) && !isMem(p));
+
+  // Update counters
+  const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  setEl('mem-cnt',   `${members.length}/16`);
+  setEl('admin-cnt', admins.length);
+  setEl('member-badge', `${members.length} / 16`);
+  setEl('admin-badge',  `${admins.length} 位`);
+  const mb = document.getElementById('member-count-badge');
+  if(mb) mb.textContent = members.length + ' 位成員';
+
+  // ── ALL USERS LIST ──
+  const allEl = document.getElementById('all-users-list');
+  if(allEl) {
+    const sorted = [...admins, ...members, ...guests];
+    if(!sorted.length) { allEl.innerHTML = '<div class="loading-msg">尚無任何登入記錄</div>'; }
+    else allEl.innerHTML = sorted.map(p => userRow(p, isAdm(p), isMem(p), memberMap)).join('');
+  }
+
+  // ── MEMBERS LIST ──
+  const memEl = document.getElementById('member-list');
+  if(memEl) {
+    if(!members.length) memEl.innerHTML = '<div class="loading-msg">尚無成員，到「所有登入者」分頁新增</div>';
+    else memEl.innerHTML = members.map(p => memberDetailRow(p, memberMap)).join('');
+  }
+
+  // ── ADMIN LIST ──
+  const admEl = document.getElementById('admin-list');
+  if(admEl) {
+    admEl.innerHTML = admins.map(p => `
+      <div class="member-item">
+        ${p.photoURL ? `<img src="${p.photoURL}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #f5a623">` : `<div class="member-avatar" style="background:#f5a623;color:#1a0f05">${(p.nickname||p.displayName||'A').slice(0,2).toUpperCase()}</div>`}
+        <div class="member-info">
+          <div class="member-name">${esc(p.nickname||p.displayName||p.email)} <span style="background:#f5a623;color:#1a0f05;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px;margin-left:4px">👑 管理員</span></div>
+          <div class="member-email">${esc(p.email||'')} · 自動擁有成員權限</div>
+        </div>
+        <span style="font-size:12px;color:#f5a623;font-weight:700">最高權限</span>
+      </div>`).join('') || '<div class="loading-msg">無管理員記錄</div>';
+  }
+}
+
+function userRow(p, isAdmin, isMember, memberMap) {
+  const name = p.nickname || p.displayName || p.email || p.uid.slice(0,8);
+  const photo = p.photoURL;
+  const avatarHTML = photo
+    ? `<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${isAdmin?'#f5a623':isMember?'#d4650a':'#ddd'}">`
+    : `<div class="member-avatar" style="background:${isAdmin?'#f5a623':isMember?'#d4650a':'#ccc'};color:${isAdmin||isMember?'#fff':'#666'}">${name.slice(0,2).toUpperCase()}</div>`;
+
+  let badge = '';
+  if(isAdmin)  badge = `<span style="background:#f5a623;color:#1a0f05;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px;margin-left:4px">👑 管理員</span>`;
+  else if(isMember) badge = `<span style="background:#d4650a;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px;margin-left:4px">✅ 成員</span>`;
+  else badge = `<span style="background:#e8e8e8;color:#888;font-size:10px;font-weight:700;border-radius:10px;padding:1px 8px;margin-left:4px">👁 訪客</span>`;
+
+  const last = p.lastLogin ? new Date(p.lastLogin.seconds*1000).toLocaleDateString('zh-TW') : '';
+
+  let actionBtn = '';
+  if(isAdmin) {
+    actionBtn = `<span style="font-size:12px;color:#f5a623;font-weight:700;padding:6px">最高權限</span>`;
+  } else if(isMember) {
+    actionBtn = `<button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">移除成員</button>`;
+  } else {
+    const disabled = Object.values({}).length >= 16 ? 'disabled title="成員已滿16人"' : '';
+    actionBtn = `<button class="btn btn-pri btn-sm" onclick="grantMember('${p.uid}','${(p.email||'').replace(/'/g,"\'")}','${name.replace(/'/g,"\'")}')">設為成員</button>`;
+  }
+
+  return `<div class="member-item" id="user-row-${p.uid}">
+    ${avatarHTML}
+    <div class="member-info">
+      <div class="member-name">${esc(name)}${badge}</div>
+      <div class="member-email">${esc(p.email||p.uid.slice(0,12))}${last ? ` · 最後登入 ${last}` : ''}</div>
+    </div>
+    ${actionBtn}
+  </div>`;
+}
+
+function memberDetailRow(p, memberMap) {
+  const memData = memberMap[p.uid] || memberMap[(p.email||'').toLowerCase()] || {};
+  const name = p.nickname || p.displayName || p.email || p.uid.slice(0,8);
+  const realName = memData.realName || '';
+  const photo = p.photoURL;
+  const avatarHTML = photo
+    ? `<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #d4650a">`
+    : `<div class="member-avatar">${name.slice(0,2).toUpperCase()}</div>`;
+
+  return `<div class="member-item" style="flex-wrap:wrap;align-items:flex-start;gap:12px" id="mem-row-${p.uid}">
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+      ${avatarHTML}
+      <div class="member-info">
+        <div class="member-name">${esc(name)} <span style="background:#d4650a;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px">✅ 成員</span></div>
+        <div class="member-email">${esc(p.email||'')}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="nick-${p.uid}" value="${esc(name)}" placeholder="暱稱"
+        style="width:120px;padding:6px 10px;border:1.5px solid #f5edd8;border-radius:8px;font-size:13px;font-family:'Nunito',sans-serif;outline:none"
+        onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
+      <input id="real-${p.uid}" value="${esc(realName)}" placeholder="真實姓名（僅管理員可見）"
+        style="width:150px;padding:6px 10px;border:1.5px solid #f5edd8;border-radius:8px;font-size:13px;font-family:'Nunito',sans-serif;outline:none"
+        onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
+      <button class="btn btn-sec btn-sm" onclick="saveMemberInfo('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">💾 儲存</button>
+      <button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">移除</button>
+    </div>
+  </div>`;
+}
+
+async function saveMemberInfo(uid, email) {
+  const nick    = document.getElementById('nick-' + uid)?.value.trim();
+  const realName = document.getElementById('real-' + uid)?.value.trim();
+  const id = memberMap_uid_to_docid(uid, email);
+  try {
+    // Update member doc with realName
+    await db.collection('members').doc(id).update({ realName: realName || '', displayName: nick || '' });
+    // Update profile nickname too
+    if(nick) await db.collection('profiles').doc(uid).update({ nickname: nick }).catch(()=>{});
+    toast('已儲存 ✅', 'success');
+    loadMembers();
+  } catch(e) { toast('儲存失敗: ' + e.message, 'error'); }
+}
+
+function memberMap_uid_to_docid(uid, email) {
+  // Member docs can be stored by UID or by email-encoded ID
+  return uid; // grantMember uses uid as docId
 }
 
 async function grantMember(uid, email, displayName) {
   try {
-    const id = uid; // use UID as doc ID for instant lookup
-    await db.collection('members').doc(id).set({
+    await db.collection('members').doc(uid).set({
       uid, email, displayName,
       addedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      addedBy: currentUser.uid
+      addedBy: currentUser.uid,
+      realName: ''
     });
-    toast(`✅ 已設定 ${displayName} 為成員`, 'success');
+    toast(`✅ 已將 ${displayName} 設為成員`, 'success');
     loadMembers();
     loadStats();
   } catch(e) { toast('失敗: ' + e.message, 'error'); }
@@ -522,34 +636,33 @@ async function grantMember(uid, email, displayName) {
 async function removeMemberByUID(uid, email) {
   if(!confirm('確定移除此成員的編輯權限？')) return;
   try {
-    // Remove by UID doc
     await db.collection('members').doc(uid).delete().catch(()=>{});
-    // Also remove by email-based doc if exists
     if(email) {
       const emailId = email.replace(/[.#$[\]]/g,'_');
       await db.collection('members').doc(emailId).delete().catch(()=>{});
     }
-    toast('已移除成員權限', 'success');
+    toast('已移除成員', 'success');
     loadMembers();
     loadStats();
   } catch(e) { toast('失敗: ' + e.message, 'error'); }
 }
 
 async function addMember() {
-  // Manual add by email (for users who haven't logged in yet)
-  const email = document.getElementById('m-email').value.trim();
-  const name  = document.getElementById('m-name').value.trim();
+  const email = document.getElementById('m-email')?.value.trim();
+  const name  = document.getElementById('m-name')?.value.trim();
   if(!email) { toast('請輸入 Email', 'error'); return; }
   const id = email.replace(/[.#$[\]]/g,'_');
   try {
     await db.collection('members').doc(id).set({
-      email, displayName: name||email,
+      email, displayName: name||email, realName: '',
       addedAt: firebase.firestore.FieldValue.serverTimestamp(),
       addedBy: currentUser.uid
     });
-    document.getElementById('m-email').value = '';
-    document.getElementById('m-name').value  = '';
-    toast('已預先綁定 ' + email + ' ✅（此人登入後即可編輯）', 'success');
+    const emailEl = document.getElementById('m-email');
+    const nameEl  = document.getElementById('m-name');
+    if(emailEl) emailEl.value = '';
+    if(nameEl)  nameEl.value  = '';
+    toast('已新增 ' + email + ' ✅', 'success');
     loadMembers();
     loadStats();
   } catch(e) { toast('失敗: ' + e.message, 'error'); }
