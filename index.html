@@ -429,20 +429,23 @@ textarea.diary-input:focus{border-color:var(--primary)}
   @keyframes cfInMobile{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 }
 
-/* ── Fullscreen mode ── */
+/* ── Fullscreen mode: expand up from corner like xbot ── */
 #chat-float.cf-fullscreen{
-  width:100vw!important; right:0!important; bottom:0!important;
-  height:100dvh!important; max-height:100dvh!important;
-  border-radius:0!important; border:none!important;
+  /* Mobile: full screen */
+  width:calc(100vw - 16px)!important;
+  right:8px!important;
+  bottom:calc(10% + 80px)!important;
+  height:calc(90dvh - 80px)!important;
+  max-height:calc(90dvh - 80px)!important;
+  border-radius:16px!important;
 }
-@media(min-width:701px){
+@media(min-width:601px){
   #chat-float.cf-fullscreen{
-    width:min(760px,98vw)!important;
-    right:1%!important;
-    bottom:0!important;
-    height:96dvh!important;
-    max-height:96dvh!important;
-    border-radius:16px 16px 0 0!important;
+    /* Desktop: taller and wider, anchored above FAB */
+    width:min(680px,88vw)!important;
+    height:calc(88vh - 80px)!important;
+    max-height:none!important;
+    border-radius:16px!important;
   }
 }
 /* Chat image message */
@@ -682,7 +685,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
           <h2>✏️ <span data-i18n="page-write">寫今日日記</span></h2>
         </div>
         <div id="write-member-check" class="member-only-msg" style="display:none">
-          🔒 只有已綁定的見習成員才能撰寫日記。請聯絡管理員 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="244d5757454715151614644349454d480a474b49">[email&#160;protected]</a> 申請加入。
+          🔒 只有已綁定的見習成員才能撰寫日記。請聯絡管理員 issac1120@gmail.com 申請加入。
         </div>
         <div class="write-card" id="write-form-wrap">
           <div class="write-header">
@@ -786,7 +789,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
       <div class="page" id="page-admin">
         <div class="page-header">
           <h2>⚙️ <span>管理後台</span></h2>
-          <p>僅管理員 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5039232331336161626010373d31393c7e333f3d">[email&#160;protected]</a> 可見</p>
+          <p>僅管理員 issac1120@gmail.com 可見</p>
         </div>
         <div class="admin-grid">
           <!-- Member management -->
@@ -2174,7 +2177,6 @@ function initChat() {
       }
       renderCfMessages(msgs);
       // Also update admin live view if open
-      if(isAdmin) renderAdminLiveChat(msgs);
     } catch(e) { console.warn('Chat render error:', e.message); }
   };
   cfChatListener = handler;
@@ -2187,9 +2189,20 @@ function cfToggleFullscreen() {
   cfFullscreen = !cfFullscreen;
   const win = document.getElementById('chat-float');
   const btn = document.getElementById('cf-fs-btn');
-  if(win) win.classList.toggle('cf-fullscreen', cfFullscreen);
-  if(btn) btn.textContent = cfFullscreen ? '⊡' : '⛶';
-  if(btn) btn.title = cfFullscreen ? '縮小' : '放大';
+  if(win) {
+    win.classList.toggle('cf-fullscreen', cfFullscreen);
+    // Smooth transition
+    win.style.transition = 'width .25s ease, height .25s ease';
+  }
+  if(btn) {
+    btn.textContent = cfFullscreen ? '⊟' : '⛶';
+    btn.title = cfFullscreen ? '縮小' : '放大';
+  }
+  // Scroll to bottom after expand
+  setTimeout(() => {
+    const msgs = document.getElementById('cf-msgs');
+    if(msgs) msgs.scrollTop = msgs.scrollHeight;
+  }, 280);
 }
 
 function renderCfMessages(msgs) {
