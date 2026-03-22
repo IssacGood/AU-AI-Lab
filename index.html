@@ -587,6 +587,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-item" onclick="navigate('write')" data-page="write" id="nav-write" style="display:none"><span class="ni">✏️</span><span data-i18n="nav-write">寫今日日記</span></div>
         <div class="nav-item" onclick="navigate('gallery')" data-page="gallery"><span class="ni">📷</span><span data-i18n="nav-gallery">相片牆</span></div>
         <div class="nav-section" data-i18n="nav-interact">互動</div>
+        <div class="nav-item" onclick="navigate('install')" data-page="install"><span class="ni">📲</span><span>加入桌面</span></div>
         <div class="nav-item" onclick="chatToggle()" id="nav-chat-item"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
         <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile" style="display:none"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
         <div class="nav-item admin-only" onclick="window.open('admin.html','_blank')" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
@@ -617,6 +618,12 @@ textarea.diary-input:focus{border-color:var(--primary)}
           </div>
         </div>
 
+        <!-- 加入桌面快捷按鈕 -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <button onclick="navigate('install')" style="background:rgba(212,101,10,.12);border:1.5px solid rgba(212,101,10,.3);color:var(--primary-dark);padding:7px 16px;border-radius:20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s" onmouseover="this.style.background='var(--primary)';this.style.color='#fff'" onmouseout="this.style.background='rgba(212,101,10,.12)';this.style.color='var(--primary-dark)'">
+            📲 加入手機桌面
+          </button>
+        </div>
         <div class="stats-grid" id="stats-grid">
           <div class="stat-card"><div class="stat-num">16</div><div class="stat-label" data-i18n="stat-members">名見習教師</div></div>
           <div class="stat-card"><div class="stat-num">16</div><div class="stat-label" data-i18n="stat-days">天探索旅程</div></div>
@@ -669,64 +676,6 @@ textarea.diary-input:focus{border-color:var(--primary)}
           </div>
         </div>
       </div>
-
-          <!-- ── ADD TO HOME SCREEN ── -->
-          <div class="pwa-section" id="pwa-guide">
-            <h3>📲 加入手機桌面</h3>
-            <p class="pwa-sub">將此網頁加入手機首頁，下次一鍵進入，就像 App 一樣方便！</p>
-            <div class="pwa-tabs">
-              <button class="pwa-tab active" onclick="pwaSwitchOS('ios',this)">🍎 iPhone / iPad</button>
-              <button class="pwa-tab" onclick="pwaSwitchOS('android',this)">🤖 Android</button>
-            </div>
-
-            <!-- iOS Steps -->
-            <div class="pwa-steps active" id="pwa-ios">
-              <div class="pwa-step">
-                <span class="pwa-step-icon">🌐</span>
-                <div class="pwa-step-text">用 <strong>Safari</strong> 瀏覽器開啟此網頁（非 Chrome / Line 內建）</div>
-              </div>
-              <div class="pwa-step">
-                <div class="pwa-step-num">1</div>
-                <div class="pwa-step-text">點選下方工具列中間的 <strong>分享按鈕</strong>（方塊加箭頭 ⬆️ 圖示）</div>
-              </div>
-              <div class="pwa-step">
-                <div class="pwa-step-num">2</div>
-                <div class="pwa-step-text">在選單中向下滑，找到並點擊 <strong>「加入主畫面」</strong></div>
-              </div>
-              <div class="pwa-step">
-                <div class="pwa-step-num">3</div>
-                <div class="pwa-step-text">名稱可修改為「澳洲冒險」，點右上角 <strong>「新增」</strong> 完成 ✅</div>
-              </div>
-              <div class="pwa-step">
-                <span class="pwa-step-icon">🦘</span>
-                <div class="pwa-step-text">回到主畫面，就能看到澳洲冒險的圖示了！</div>
-              </div>
-            </div>
-
-            <!-- Android Steps -->
-            <div class="pwa-steps" id="pwa-android">
-              <div class="pwa-step">
-                <span class="pwa-step-icon">🌐</span>
-                <div class="pwa-step-text">用 <strong>Chrome</strong> 瀏覽器開啟此網頁</div>
-              </div>
-              <div class="pwa-step">
-                <div class="pwa-step-num">1</div>
-                <div class="pwa-step-text">點右上角的 <strong>三點選單 ⋮</strong></div>
-              </div>
-              <div class="pwa-step">
-                <div class="pwa-step-num">2</div>
-                <div class="pwa-step-text">選擇 <strong>「新增至主畫面」</strong> 或 <strong>「安裝應用程式」</strong></div>
-              </div>
-              <div class="pwa-step">
-                <div class="pwa-step-num">3</div>
-                <div class="pwa-step-text">點 <strong>「新增」</strong> 確認，完成 ✅</div>
-              </div>
-              <div class="pwa-step">
-                <span class="pwa-step-icon">🦘</span>
-                <div class="pwa-step-text">回到桌面，就能看到澳洲冒險的捷徑圖示了！</div>
-              </div>
-            </div>
-          </div>
 
 
       <!-- ====== SCHEDULE ====== -->
@@ -816,6 +765,79 @@ textarea.diary-input:focus{border-color:var(--primary)}
           </select>
         </div>
         <div class="gallery-grid" id="gallery-content"></div>
+      </div>
+
+
+      <!-- ====== INSTALL ====== -->
+      <div class="page" id="page-install">
+        <div class="page-header">
+          <h2>📲 <span>加入手機桌面</span></h2>
+          <p>將此網頁儲存到手機主畫面，下次一鍵進入，就像 App 一樣方便！</p>
+        </div>
+
+        <!-- OS Tabs -->
+        <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+          <button id="itab-ios" onclick="installSwitchOS('ios')"
+            style="padding:10px 24px;border-radius:24px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;border:2px solid var(--primary);background:var(--primary);color:#fff;transition:all .2s">
+            🍎 iPhone / iPad
+          </button>
+          <button id="itab-android" onclick="installSwitchOS('android')"
+            style="padding:10px 24px;border-radius:24px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;border:2px solid var(--cream-dark);background:transparent;color:var(--text-muted);transition:all .2s">
+            🤖 Android
+          </button>
+        </div>
+
+        <!-- iOS -->
+        <div id="install-ios">
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌐</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">用 Safari 開啟</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">必須用 <strong style="color:var(--primary)">Safari</strong> 瀏覽器開啟此網頁，Chrome 或 LINE 內建瀏覽器不支援此功能</div></div>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">點分享按鈕</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">點下方工具列中間的 <strong style="color:var(--primary)">分享按鈕</strong>（方塊加箭頭 ⬆️ 圖示）</div></div>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">選「加入主畫面」</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">在選單中向下滑，找到並點擊 <strong style="color:var(--primary)">「加入主畫面」</strong></div></div>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">確認新增</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">名稱可改為「澳洲冒險」，點右上角 <strong style="color:var(--primary)">「新增」</strong> 完成 ✅</div></div>
+            </div>
+            <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:var(--radius);padding:18px 22px;display:flex;gap:14px;align-items:center;color:#fff">
+              <span style="font-size:32px">🦘</span>
+              <div><div style="font-weight:800;font-size:14px;margin-bottom:2px">完成！</div><div style="font-size:13px;opacity:.9">回到主畫面，就能看到澳洲冒險的圖示了！下次直接點就能進來。</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Android -->
+        <div id="install-android" style="display:none">
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌐</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">用 Chrome 開啟</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">必須用 <strong style="color:var(--primary)">Chrome</strong> 瀏覽器開啟此網頁</div></div>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">點右上角選單</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">點右上角的 <strong style="color:var(--primary)">三點選單 ⋮</strong></div></div>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">新增至主畫面</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">選擇 <strong style="color:var(--primary)">「新增至主畫面」</strong> 或 <strong style="color:var(--primary)">「安裝應用程式」</strong></div></div>
+            </div>
+            <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+              <div><div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:4px">確認新增</div><div style="font-size:13px;color:var(--text-muted);line-height:1.6">點 <strong style="color:var(--primary)">「新增」</strong> 確認 ✅</div></div>
+            </div>
+            <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:var(--radius);padding:18px 22px;display:flex;gap:14px;align-items:center;color:#fff">
+              <span style="font-size:32px">🦘</span>
+              <div><div style="font-weight:800;font-size:14px;margin-bottom:2px">完成！</div><div style="font-size:13px;opacity:.9">回到桌面，就能看到澳洲冒險的捷徑圖示了！</div></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ====== CHAT ====== -->
@@ -2990,6 +3012,25 @@ async function loadAdminStatsInline() {
   } catch(e) { console.warn('Admin stats:', e.message); }
 }
 
+
+
+function installSwitchOS(os) {
+  const ios = document.getElementById('install-ios');
+  const android = document.getElementById('install-android');
+  const btnIos = document.getElementById('itab-ios');
+  const btnAndroid = document.getElementById('itab-android');
+  if(os === 'ios') {
+    if(ios) ios.style.display = 'block';
+    if(android) android.style.display = 'none';
+    if(btnIos) { btnIos.style.background = 'var(--primary)'; btnIos.style.color = '#fff'; btnIos.style.borderColor = 'var(--primary)'; }
+    if(btnAndroid) { btnAndroid.style.background = 'transparent'; btnAndroid.style.color = 'var(--text-muted)'; btnAndroid.style.borderColor = 'var(--cream-dark)'; }
+  } else {
+    if(ios) ios.style.display = 'none';
+    if(android) android.style.display = 'block';
+    if(btnAndroid) { btnAndroid.style.background = 'var(--primary)'; btnAndroid.style.color = '#fff'; btnAndroid.style.borderColor = 'var(--primary)'; }
+    if(btnIos) { btnIos.style.background = 'transparent'; btnIos.style.color = 'var(--text-muted)'; btnIos.style.borderColor = 'var(--cream-dark)'; }
+  }
+}
 
 function pwaSwitchOS(os, btn) {
   document.querySelectorAll('.pwa-tab').forEach(t => t.classList.remove('active'));
