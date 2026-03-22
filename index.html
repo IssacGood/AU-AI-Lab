@@ -2151,16 +2151,19 @@ function updateChatBadge() {
   }
 }
 
+let cfChatQuery = null;
+
 function initChat() {
-  if(cfChatListener) {
-    try { rtdb.ref('chat').off('value', cfChatListener); } catch(e) {}
+  if(cfChatListener && cfChatQuery) {
+    try { cfChatQuery.off('value', cfChatListener); } catch(e) {}
     cfChatListener = null;
+    cfChatQuery = null;
   }
   if(!rtdb) { console.warn('rtdb not ready'); return; }
 
   updateCfUserBar();
 
-  const chatRef = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
+  cfChatQuery = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
   const handler = (snap) => {
     try {
       const msgs = [];
@@ -2170,11 +2173,10 @@ function initChat() {
         });
       }
       renderCfMessages(msgs);
-      // Also update admin live view if open
     } catch(e) { console.warn('Chat render error:', e.message); }
   };
   cfChatListener = handler;
-  chatRef.on('value', handler, err => console.warn('Chat listener error:', err.message));
+  cfChatQuery.on('value', handler, err => console.warn('Chat listener error:', err.message));
 }
 
 let cfFullscreen = false;
@@ -2319,6 +2321,7 @@ function updateCfUserBar() {
 }
 
 let _chatWired = false;
+let _isSendingMsg = false; // prevents duplicate sends
 function wireCfInput() {
   if(_chatWired) return;
   _chatWired = true;
@@ -2328,6 +2331,7 @@ function wireCfInput() {
   if(!input || !sendBtn) return;
   
   input.addEventListener('keydown', e => {
+    if(e.isComposing) return; // ignore IME composition (Chinese input)
     if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); cfSendMessage(); }
   });
   input.addEventListener('input', () => {
