@@ -579,6 +579,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
       使用 Google 帳號登入
     </button>
     <p style="margin-top:20px;font-size:12px;color:var(--text-muted);line-height:1.5">所有人均可登入查看日誌與即時聊天<br>已綁定成員可編輯上傳每日日記</p>
+    <button onclick="dismissLogin()" style="margin-top:12px;background:none;border:none;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:underline">以訪客身分瀏覽 →</button>
   </div>
 </div>
 
@@ -1045,6 +1046,15 @@ async function compressImage(file, maxKB) {
 }
 function exportPDF(){ showToast('準備匯出PDF，請稍後...','success'); setTimeout(function(){window.print();},500); }
 function openLoginModal(){ document.getElementById('login-screen').style.display='flex'; }
+function dismissLogin(){
+  document.getElementById('login-screen').style.display='none';
+  // Make sure app is visible
+  var app=document.getElementById('app');
+  if(app&&app.style.display==='none'){
+    app.style.display='block';
+    handleGuestView();
+  }
+}
 
 // ─────────────────────────────────────────────
 // FIREBASE INIT
@@ -1054,19 +1064,48 @@ function openLoginModal(){ document.getElementById('login-screen').style.display
   db=firebase.firestore(); rtdb=firebase.database(); storage=firebase.storage(); auth=firebase.auth();
   auth.onAuthStateChanged(function(user){
     if(user){currentUser=user;handleUserLogin(user);}
-    else{currentUser=null;showLoginScreen();}
+    else{currentUser=null;handleGuestView();}
   });
 })();
 
 function showLoginScreen(){
+  // Show login as overlay - app stays underneath
   document.getElementById('login-screen').style.display='flex';
-  document.getElementById('app').style.display='none';
-  if(countdownInterval) clearInterval(countdownInterval);
 }
 function signInWithGoogle(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){showToast('登入失敗: '+e.message,'error');}); }
 function handleAuthBtn(){ if(currentUser) doSignOut(); else signInWithGoogle(); }
-function doSignOut(){ auth.signOut(); }
+function doSignOut(){
+  auth.signOut().then(function(){
+    currentUser=null; isMember=false; isAdmin=false;
+    updateSidebarUserGuest();
+    setupWriteNav();
+    toggleAdminUI();
+    showToast('已登出','success');
+  });
+}
 function handleGuestMode(){}
+
+function handleGuestView(){
+  // Guests see the full app - no forced login
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  isAdmin=false; isMember=false; currentUser=null;
+  updateSidebarUserGuest();
+  setupWriteNav();      // hides write nav
+  toggleAdminUI();      // hides admin nav
+  startCountdown();
+  renderSchedule();
+  loadFlightInfo();
+  loadStats();
+  navigate('home');
+}
+
+function updateSidebarUserGuest(){
+  var photo='https://ui-avatars.com/api/?name=訪客&background=8b5e3c&color=fff';
+  ['sidebar-avatar','topbar-avatar','cf-my-av'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=photo;});
+  var sn=document.getElementById('sidebar-name'); if(sn) sn.textContent='訪客';
+  var sr=document.getElementById('sidebar-role'); if(sr) sr.textContent='訪客模式';
+}
 
 async function handleUserLogin(user){
   document.getElementById('login-screen').style.display='none';
