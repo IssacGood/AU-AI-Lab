@@ -565,6 +565,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-section" data-i18n="nav-main">主要</div>
         <div class="nav-item active" onclick="navigate('home')" data-page="home"><span class="ni">🏠</span><span data-i18n="nav-home">首頁</span></div>
         <div class="nav-item" onclick="navigate('schedule')" data-page="schedule"><span class="ni">📅</span><span data-i18n="nav-schedule">行程表</span></div>
+        <div class="nav-item" onclick="navigate('orgs')" data-page="orgs"><span class="ni">🏛️</span><span>機構介紹</span></div>
         <div class="nav-section" data-i18n="nav-diary">日誌</div>
         <div class="nav-item" onclick="navigate('diary')" data-page="diary"><span class="ni">📓</span><span data-i18n="nav-diary-all">每日日記</span></div>
         <div class="nav-item" onclick="navigate('write')" data-page="write" id="nav-write" style="display:none"><span class="ni">✏️</span><span data-i18n="nav-write">寫今日日記</span></div>
@@ -574,7 +575,6 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-item" onclick="navigate('install')" data-page="install"><span class="ni">📲</span><span>加入桌面</span></div>
         <div class="nav-item" onclick="chatToggle()" id="nav-chat-item"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
         <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
-        <div class="nav-item" onclick="navigate('orgs')" data-page="orgs"><span class="ni">🏛️</span><span>機構介紹</span></div>
         <div class="nav-item admin-only" onclick="window.open('admin.html','_blank')" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
       </nav>
       <div class="sidebar-footer">
@@ -735,7 +735,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
             <label class="form-label" data-i18n="label-diary-content">日記內容</label>
             <textarea class="diary-input" id="diary-text" data-i18n-placeholder="placeholder-diary" placeholder="今天我們去了... 我最印象深刻的是..."></textarea>
             <label class="form-label" style="margin-top:16px" data-i18n="label-photos">上傳照片（Cloudinary · 無限制）</label>
-            <div class="photo-upload-area" id="photo-drop-area" onclick="document.getElementById('photo-file-input').click()">
+            <div class="photo-upload-area" id="photo-drop-area" onclick="document.getElementById('photo-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--primary)';this.style.background='var(--cream)'" ondragleave="this.style.borderColor='';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';handlePhotoSelect({files:event.dataTransfer.files})">
               <div class="upload-icon">📸</div>
               <p data-i18n="upload-hint">點擊或拖曳照片到這裡</p>
               <small data-i18n="upload-hint2">原尺寸上傳至 Cloudinary · 不限張數</small>
@@ -1033,6 +1033,16 @@ function showToast(msg, type) {
   c.appendChild(el);
   setTimeout(function(){ el.remove(); }, 3500);
 }
+function weekday(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  return ['日','一','二','三','四','五','六'][d.getDay()];
+}
+function fmtDate(dateStr) {
+  // Returns "2026-08-03（一）"
+  if(!dateStr) return dateStr;
+  return dateStr + '（' + weekday(dateStr) + '）';
+}
+
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
 }
@@ -1426,7 +1436,7 @@ function renderDiaryCard(entry, profMap){
   return '<div class="diary-card" id="dc-'+entry.id+'-'+entry.date+'">'
     +'<div class="dc-header">'
     +'<img class="dc-avatar" src="'+avatar+'" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=d4650a&color=fff\'">'
-    +'<div style="flex:1;min-width:0"><div class="dc-name">'+esc(name)+'</div><div class="dc-date">'+entry.date+(entry.updatedAt?' （已更新）':'')+'</div></div>'
+    +'<div style="flex:1;min-width:0"><div class="dc-name">'+esc(name)+'</div><div class="dc-date">'+fmtDate(entry.date)+(entry.updatedAt?' （已更新）':'')+'</div></div>'
     +'<div style="display:flex;gap:4px">'
     +(canEdit?'<button class="btn btn-secondary btn-sm btn-icon" onclick="openEditDiary(\''+entry.date+'\',\''+entry.uid+'\')" title="編輯">✏️</button>':'')
     +(canDelete?'<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry(\''+entry.date+'\',\''+entry.uid+'\')" title="刪除">🗑</button>':'')
@@ -1487,7 +1497,7 @@ async function renderGallery(){
   });
   allGalleryPhotos=photos;
   if(!photos.length){container.innerHTML='<div class="empty-state"><div class="es-icon">📷</div><h3>還沒有照片</h3></div>';return;}
-  container.innerHTML=photos.map(function(p,i){return '<div class="gallery-item" onclick="openLightbox('+i+',null,true)"><img src="'+p.url+'" alt="'+esc(p.name)+'" loading="lazy"><div class="gi-overlay">'+esc(p.name)+' · '+p.date+'</div></div>';}).join('');
+  container.innerHTML=photos.map(function(p,i){return '<div class="gallery-item" onclick="openLightbox('+i+',null,true)"><img src="'+p.url+'" alt="'+esc(p.name)+'" loading="lazy"><div class="gi-overlay">'+esc(p.name)+' · '+fmtDate(p.date)+'</div></div>';}).join('');
 }
 
 // ─────────────────────────────────────────────
@@ -1505,7 +1515,7 @@ function loadWriteForm(){
 function updateWriteDate(){
   var date=document.getElementById('write-date-select')?document.getElementById('write-date-select').value:null;if(!date)return;
   var s=SCHEDULE.find(function(x){return x.date===date;});
-  document.getElementById('write-date-display').textContent=date+' - Day '+(s?s.day:'');
+  document.getElementById('write-date-display').textContent=fmtDate(date)+' - Day '+(s?s.day:'');
   document.getElementById('write-sched-display').innerHTML='<span>📅</span><span>'+(s?s.zh:'無行程資訊')+'</span>';
   loadExistingEntry(date);
 }
@@ -1702,7 +1712,7 @@ async function openEditDiary(date,uid){
   var modal=document.getElementById('edit-diary-modal'),body=document.getElementById('edit-diary-body');
   if(!modal||!body)return;
   var ep=editingEntry.photos||[],sched=SCHEDULE.find(function(s){return s.date===date;});
-  body.innerHTML='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div><div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">'+(sched?'Day '+sched.day+' · '+date:date)+'</div></div>'
+  body.innerHTML='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div><div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">'+(sched?'Day '+sched.day+' · '+fmtDate(date):fmtDate(date))+'</div></div>'
     +'<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日記內容</div><textarea id="edit-diary-text" style="width:100%;min-height:160px;border:2px solid #f5edd8;border-radius:10px;padding:12px;font-family:Nunito,sans-serif;font-size:14px;line-height:1.7;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810">'+esc(editingEntry.content||'')+'</textarea></div>'
     +'<div><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:8px;text-transform:uppercase">照片（不限張數）</div>'
     +'<div id="edit-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+ep.map(function(url,i){return '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>';}).join('')+'</div>'
