@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理後台 ⚙️ 澳洲冒險 AI教室實驗室</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#f0ede8;color:#2c1810;min-height:100vh}
+:root{
+  --pri:#d4650a;--pri-dark:#a84d08;--brown:#5c3317;
+  --cream:#fef9ef;--cream2:#f5edd8;--white:#fff;
+  --text:#2c1810;--muted:#7a5c46;--radius:14px;
+  --shadow:0 4px 20px rgba(84,40,10,.12);
+}
+/* ── TOPBAR ── */
+#topbar{background:linear-gradient(90deg,#3d1f0a,#1a0f05);color:#fff;height:56px;display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+#topbar .logo{font-family:'Playfair Display',serif;font-size:16px;color:#f5a623;font-weight:700}
+#topbar .back{color:rgba(255,255,255,.6);font-size:13px;font-weight:700;text-decoration:none;padding:6px 14px;border:1px solid rgba(255,255,255,.2);border-radius:20px;transition:all .2s}
+#topbar .back:hover{background:rgba(255,255,255,.1);color:#fff}
+#topbar .user-info{margin-left:auto;display:flex;align-items:center;gap:10px}
+#topbar .user-info img{width:32px;height:32px;border-radius:50%;border:2px solid var(--pri)}
+#topbar .user-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.85)}
+#topbar .badge-admin{background:var(--pri);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.5px}
+#btn-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;transition:all .2s}
+#btn-logout:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* ── LAYOUT ── */
+#main{max-width:1100px;margin:0 auto;padding:28px 20px}
+
+/* ── CARDS ── */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.card-hdr{padding:16px 22px;border-bottom:1px solid var(--cream2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-hdr h3{font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-body{padding:20px 22px}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:var(--white);border-radius:var(--radius);padding:18px;text-align:center;box-shadow:var(--shadow);border-top:4px solid var(--pri)}
+.stat .n{font-size:32px;font-weight:900;color:var(--pri);font-family:'Playfair Display',serif;line-height:1}
+.stat .l{font-size:11px;color:var(--muted);font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border:none;transition:all .2s}
+.btn-pri{background:var(--pri);color:#fff}.btn-pri:hover{background:var(--pri-dark)}
+.btn-sec{background:var(--cream2);color:var(--brown)}.btn-sec:hover{background:var(--brown);color:#fff}
+.btn-red{background:#e74c3c;color:#fff}.btn-red:hover{background:#c0392b}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+/* ── FORMS ── */
+.input{width:100%;padding:9px 13px;border:2px solid var(--cream2);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;color:var(--text);background:var(--white);transition:border-color .2s}
+.input:focus{border-color:var(--pri)}
+.input-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.input-row .input{flex:1;min-width:160px}
+
+/* ── MEMBER LIST ── */
+.member-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--cream2)}
+.member-item:last-child{border-bottom:none}
+.member-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--cream2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--pri)}
+.member-info{flex:1;min-width:0}
+.member-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.member-email{font-size:12px;color:var(--muted)}
+
+/* ── CHAT LOG ── */
+.chat-log-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--cream2)}
+.chat-log-item:last-child{border-bottom:none}
+.chat-log-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--pri);flex-shrink:0;margin-top:2px}
+.chat-log-body{flex:1;min-width:0}
+.chat-log-name{font-weight:700;font-size:13px;color:var(--text)}
+.chat-log-time{font-size:11px;color:var(--muted);margin-left:8px}
+.chat-log-text{font-size:13px;color:var(--text);margin-top:3px;word-break:break-word}
+.chat-log-recalled{font-style:italic;color:var(--muted);font-size:12px}
+.recalled-badge{background:#e74c3c;color:#fff;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;margin-left:6px}
+
+/* ── DIARY LOG ── */
+.diary-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--cream2)}
+.diary-item:last-child{border-bottom:none}
+.diary-tag{background:var(--cream2);border-radius:6px;font-size:11px;font-weight:800;padding:2px 8px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--cream2);border-radius:10px;padding:3px;gap:2px;margin-bottom:20px}
+.tab{flex:1;text-align:center;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted);transition:all .2s}
+.tab.active{background:var(--white);color:var(--pri);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px}
+.toast-item{background:var(--brown);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;animation:tin .3s ease;box-shadow:var(--shadow)}
+.toast-item.success{background:#2d5a27}
+.toast-item.error{background:#c0392b}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1a0f05,#3d1f0a);display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:var(--cream);border-radius:20px;padding:44px 36px;max-width:380px;width:90%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.4)}
+.login-icon{font-size:48px;margin-bottom:16px}
+.login-box h2{font-family:'Playfair Display',serif;font-size:24px;color:var(--brown);margin-bottom:6px}
+.login-box p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:var(--white);border:2px solid var(--cream2);border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.btn-google:hover{background:var(--pri);color:#fff;border-color:var(--pri)}
+
+/* ── ACCESS DENIED ── */
+#denied{display:none;position:fixed;inset:0;background:linear-gradient(135deg,#1a0f05,#3d1f0a);align-items:center;justify-content:center;z-index:1000}
+.denied-box{background:var(--cream);border-radius:20px;padding:44px 36px;max-width:380px;width:90%;text-align:center}
+
+/* ── SECTION TABS ── */
+.section{display:none}.section.active{display:block}
+
+/* ── LOADING ── */
+.spinner{width:36px;height:36px;border:4px solid var(--cream2);border-top-color:var(--pri);border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{text-align:center;padding:28px;color:var(--muted);font-size:13px;font-weight:600}
+
+/* ── BULK BAR ── */
+#bulk-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(212,101,10,.08);border-radius:10px;margin-bottom:12px;flex-wrap:wrap}
+#bulk-bar span{font-weight:800;font-size:13px;color:var(--brown)}
+
+@media(max-width:600px){
+  #main{padding:16px 12px}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .input-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-icon">⚙️</div>
+    <h2>管理後台</h2>
+    <p>澳洲冒險 AI教室實驗室<br>僅限管理員登入使用</p>
+    <button class="btn-google" id="login-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      使用 Google 登入
+    </button>
+  </div>
+</div>
+
+<!-- ACCESS DENIED -->
+<div id="denied">
+  <div class="denied-box">
+    <div style="font-size:48px;margin-bottom:16px">🚫</div>
+    <h2 style="font-family:'Playfair Display',serif;color:var(--brown);margin-bottom:8px">無權限</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">此頁面僅限管理員使用</p>
+    <a href="index.html" class="btn btn-pri" style="text-decoration:none;display:inline-flex">← 回到首頁</a>
+    <div style="margin-top:12px">
+      <button id="denied-logout" class="btn btn-sec btn-sm">登出並重試</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MAIN APP (hidden until auth) -->
+<div id="app" style="display:none">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <span class="logo">🦘 澳洲冒險 AI教室實驗室</span>
+    <a href="index.html" class="back">← 回到網站</a>
+    <div class="user-info">
+      <img id="top-avatar" src="" alt="">
+      <span class="user-name" id="top-name"></span>
+      <span class="badge-admin">管理員</span>
+      <button class="btn" id="btn-logout">登出</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat"><div class="n" id="s-members">…</div><div class="l">已綁定成員</div></div>
+      <div class="stat"><div class="n" id="s-entries">…</div><div class="l">篇日記</div></div>
+      <div class="stat"><div class="n" id="s-photos">…</div><div class="l">張照片</div></div>
+      <div class="stat"><div class="n" id="s-chat">…</div><div class="l">聊天訊息</div></div>
+      <div class="stat"><div class="n" id="s-comments">…</div><div class="l">則留言</div></div>
+      <div class="stat"><div class="n" id="s-likes">…</div><div class="l">個按讚</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('members')">👥 成員</div>
+      <div class="tab" onclick="switchTab('chat')">💬 聊天</div>
+      <div class="tab" onclick="switchTab('diary')">📓 日記</div>
+      <div class="tab" onclick="switchTab('flights')">✈️ 航班</div>
+    </div>
+
+    <!-- ===== MEMBERS TAB ===== -->
+    <div class="section active" id="tab-members">
+      <div class="card">
+        <div class="card-hdr">
+          <h3>👥 成員管理</h3>
+          <span id="member-badge" style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800">0 人</span>
+        </div>
+        <div class="card-body">
+          <div class="input-row">
+            <input class="input" id="m-email" placeholder="成員 Gmail">
+            <input class="input" id="m-name" placeholder="顯示名稱" style="max-width:180px">
+            <button class="btn btn-pri" onclick="addMember()">＋ 新增成員</button>
+          </div>
+          <div id="member-list"><div class="loading-msg"><div class="spinner"></div>載入成員...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CHAT TAB ===== -->
+    <div class="section" id="tab-chat">
+      <div class="card">
+        <div class="card-hdr">
+          <h3>💬 聊天管理</h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sec btn-sm" onclick="loadChat()">🔄 重整</button>
+            <button class="btn btn-red btn-sm" onclick="clearAllChat()">🗑 清空全部</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="bulk-bar">
+            <span id="bulk-count">已選 0 則</span>
+            <button class="btn btn-red btn-sm" onclick="bulkDelete()">🗑 批量刪除</button>
+            <button class="btn btn-sec btn-sm" onclick="selectAll()">全選</button>
+            <button class="btn btn-sec btn-sm" onclick="clearSel()">取消</button>
+          </div>
+          <div id="chat-log"><div class="loading-msg"><div class="spinner"></div>載入聊天...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DIARY TAB ===== -->
+    <div class="section" id="tab-diary">
+      <div class="card">
+        <div class="card-hdr">
+          <h3>📓 日記管理</h3>
+          <button class="btn btn-sec btn-sm" onclick="loadDiaries()">🔄 重整</button>
+        </div>
+        <div class="card-body">
+          <div id="diary-log"><div class="loading-msg"><div class="spinner"></div>載入日記...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FLIGHTS TAB ===== -->
+    <div class="section" id="tab-flights">
+      <div class="card">
+        <div class="card-hdr"><h3>✈️ 航班資訊</h3></div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div>
+              <h4 style="color:var(--brown);margin-bottom:14px;font-size:14px;font-weight:800">🛫 去程</h4>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">航班號</label><input class="input" id="fd-flight" placeholder="如 CI 783"></div>
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">日期/時間</label><input class="input" id="fd-datetime" placeholder="2026-08-03 09:30"></div>
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">航線</label><input class="input" id="fd-route" placeholder="台北(TPE) → 雪梨(SYD)"></div>
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">備註</label><input class="input" id="fd-note" placeholder="候機室、集合時間..."></div>
+              </div>
+            </div>
+            <div>
+              <h4 style="color:var(--brown);margin-bottom:14px;font-size:14px;font-weight:800">🛬 回程</h4>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">航班號</label><input class="input" id="fr-flight" placeholder="如 CI 784"></div>
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">日期/時間</label><input class="input" id="fr-datetime" placeholder="2026-08-18 16:45"></div>
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">航線</label><input class="input" id="fr-route" placeholder="雪梨(SYD) → 台北(TPE)"></div>
+                <div><label style="font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase">備註</label><input class="input" id="fr-note" placeholder="返台後集合報告..."></div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-pri" onclick="saveFlights()" style="margin-top:20px;width:100%">💾 儲存航班資訊</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ── CONFIG ──
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC2uGxeC88EsER7rUyp8gQ_ZVcwXKPAYPw",
+  authDomain: "au-ai-lab.firebaseapp.com",
+  databaseURL: "https://au-ai-lab-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "au-ai-lab",
+  storageBucket: "au-ai-lab.firebasestorage.app",
+  messagingSenderId: "351321351868",
+  appId: "1:351321351868:web:58e652671b1d57ad98d2b9"
+};
+
+// ── ADMIN EMAIL stored as array join to prevent Cloudflare obfuscation ──
+const ADMIN = ['issac1120','gmail.com'].join('@');
+
+const SCHEDULE = [
+  {date:"2026-08-03",day:1},{date:"2026-08-04",day:2},{date:"2026-08-05",day:3},
+  {date:"2026-08-06",day:4},{date:"2026-08-07",day:5},{date:"2026-08-08",day:6},
+  {date:"2026-08-09",day:7},{date:"2026-08-10",day:8},{date:"2026-08-11",day:9},
+  {date:"2026-08-12",day:10},{date:"2026-08-13",day:11},{date:"2026-08-14",day:12},
+  {date:"2026-08-15",day:13},{date:"2026-08-16",day:14},{date:"2026-08-17",day:15},
+  {date:"2026-08-18",day:16}
+];
+
+// ── INIT ──
+let db, rtdb, auth, currentUser;
+
+firebase.initializeApp(FIREBASE_CONFIG);
+db   = firebase.firestore();
+rtdb = firebase.database();
+auth = firebase.auth();
+
+// ── UTILITIES ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
+
+function toast(msg, type=''){
+  const c = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+// ── AUTH ──
+document.getElementById('login-btn').onclick = () => {
+  const p = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(p).catch(e => toast('登入失敗: ' + e.message, 'error'));
+};
+
+document.getElementById('btn-logout').onclick = () => auth.signOut();
+document.getElementById('denied-logout').onclick = () => auth.signOut().then(() => {
+  document.getElementById('denied').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+});
+
+auth.onAuthStateChanged(user => {
+  if(!user) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('denied').style.display = 'none';
+    return;
+  }
+  if(user.email !== ADMIN) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('denied').style.display = 'flex';
+    return;
+  }
+  // ✅ Admin verified
+  currentUser = user;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('denied').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('top-avatar').src = user.photoURL || `https://ui-avatars.com/api/?name=A&background=d4650a&color=fff`;
+  document.getElementById('top-name').textContent = user.displayName || user.email;
+  
+  loadStats();
+  loadMembers();
+  loadChat();
+});
+
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if(name === 'chat') loadChat();
+  if(name === 'diary') loadDiaries();
+  if(name === 'flights') loadFlights();
+  if(name === 'members') loadMembers();
+}
+
+// ── STATS ──
+async function loadStats() {
+  try {
+    let entries=0, photos=0, comments=0, likes=0;
+    const dates = await db.collection('diaries').get();
+    await Promise.all(dates.docs.map(d =>
+      db.collection('diaries').doc(d.id).collection('entries').get().then(es => {
+        entries += es.size;
+        es.forEach(e => {
+          const data = e.data();
+          photos   += (data.photos||[]).length;
+          comments += (data.comments||[]).length;
+          likes    += Object.keys(data.likes||{}).length;
+        });
+      }).catch(()=>{})
+    ));
+    const mems = await db.collection('members').get().catch(()=>({size:0}));
+    const chat = await rtdb.ref('chat').once('value');
+    
+    document.getElementById('s-members').textContent  = mems.size || 0;
+    document.getElementById('s-entries').textContent  = entries;
+    document.getElementById('s-photos').textContent   = photos;
+    document.getElementById('s-chat').textContent     = chat.numChildren();
+    document.getElementById('s-comments').textContent = comments;
+    document.getElementById('s-likes').textContent    = likes;
+  } catch(e) { console.warn('Stats:', e.message); }
+}
+
+// ── MEMBERS ──
+async function loadMembers() {
+  const el = document.getElementById('member-list');
+  const badge = document.getElementById('member-badge');
+  if(!el) return;
+  try {
+    const snap = await db.collection('members').get();
+    badge.textContent = snap.size + ' 人';
+    if(!snap.size) {
+      el.innerHTML = '<div class="loading-msg">尚無綁定成員</div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const initials = (m.displayName||m.email||'?').slice(0,2).toUpperCase();
+      return `<div class="member-item">
+        <div class="member-avatar">${initials}</div>
+        <div class="member-info">
+          <div class="member-name">${esc(m.displayName||m.email||d.id)}</div>
+          <div class="member-email">${esc(m.email||d.id)}</div>
+        </div>
+        <button class="btn btn-red btn-sm" onclick="removeMember('${d.id}')">移除</button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div class="loading-msg" style="color:#e74c3c">⚠️ ${e.message}</div>`; }
+}
+
+async function addMember() {
+  const email = document.getElementById('m-email').value.trim();
+  const name  = document.getElementById('m-name').value.trim();
+  if(!email) { toast('請輸入 Email', 'error'); return; }
+  const id = email.replace(/[.#$[\]]/g,'_');
+  try {
+    await db.collection('members').doc(id).set({
+      email, displayName: name||email,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      addedBy: currentUser.uid
+    });
+    document.getElementById('m-email').value = '';
+    document.getElementById('m-name').value  = '';
+    toast('已綁定 ' + email + ' ✅', 'success');
+    loadMembers();
+    loadStats();
+  } catch(e) { toast('失敗: ' + e.message, 'error'); }
+}
+
+async function removeMember(id) {
+  if(!confirm('確定移除此成員？')) return;
+  try {
+    await db.collection('members').doc(id).delete();
+    toast('已移除', 'success');
+    loadMembers();
+    loadStats();
+  } catch(e) { toast('失敗: ' + e.message, 'error'); }
+}
+
+// ── CHAT ──
+async function loadChat() {
+  const el = document.getElementById('chat-log');
+  const bar = document.getElementById('bulk-bar');
+  if(!el) return;
+  try {
+    const snap = await rtdb.ref('chat').orderByChild('timestamp').limitToLast(200).once('value');
+    const msgs = [];
+    snap.forEach(c => { if(c.val()) msgs.push({id:c.key,...c.val()}); });
+    if(!msgs.length) { el.innerHTML = '<div class="loading-msg">無聊天記錄</div>'; bar.style.display='none'; return; }
+    
+    bar.style.display = 'flex';
+    el.innerHTML = msgs.reverse().map(m => {
+      const time = m.timestamp ? new Date(m.timestamp).toLocaleString('zh-TW') : '';
+      const imgHTML = m.imageURL ? `<img src="${m.imageURL}" style="max-width:140px;border-radius:8px;display:block;margin-top:6px;cursor:pointer" onclick="window.open('${m.imageURL}','_blank')">` : '';
+      const recalledBadge = m.recalled ? '<span class="recalled-badge">已收回</span>' : '';
+      const bodyText = m.recalled
+        ? `<span class="chat-log-recalled">⚠️ [已收回原文] ${esc(m.text||'')}</span>`
+        : esc(m.text||'');
+      return `<div class="chat-log-item" data-id="${m.id}">
+        <input type="checkbox" class="msg-cb" onchange="updateBulkCount()">
+        <div class="chat-log-body">
+          <span class="chat-log-name">${esc(m.userName||'訪客')}${recalledBadge}</span>
+          <span class="chat-log-time">${time}</span>
+          <div class="chat-log-text">${bodyText}${imgHTML}</div>
+        </div>
+        <button class="btn btn-red btn-sm" onclick="deleteMsg('${m.id}',this)">刪除</button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div class="loading-msg" style="color:#e74c3c">⚠️ ${e.message}</div>`; }
+}
+
+async function deleteMsg(id, btn) {
+  try {
+    await rtdb.ref('chat/' + id).remove();
+    btn?.closest('.chat-log-item')?.remove();
+    toast('已刪除', 'success');
+  } catch(e) { toast('失敗', 'error'); }
+}
+
+function updateBulkCount() {
+  const n = document.querySelectorAll('.msg-cb:checked').length;
+  document.getElementById('bulk-count').textContent = '已選 ' + n + ' 則';
+}
+function selectAll()  { document.querySelectorAll('.msg-cb').forEach(cb=>cb.checked=true);  updateBulkCount(); }
+function clearSel()   { document.querySelectorAll('.msg-cb').forEach(cb=>cb.checked=false); updateBulkCount(); }
+
+async function bulkDelete() {
+  const rows = document.querySelectorAll('.chat-log-item');
+  const ids = [];
+  rows.forEach(r => { const cb = r.querySelector('.msg-cb'); if(cb?.checked) ids.push(r.dataset.id); });
+  if(!ids.length) { toast('請先勾選訊息', 'error'); return; }
+  if(!confirm(`刪除 ${ids.length} 則訊息？`)) return;
+  const updates = {};
+  ids.forEach(id => updates['chat/'+id] = null);
+  try {
+    await rtdb.ref().update(updates);
+    toast('已刪除 ' + ids.length + ' 則 ✅', 'success');
+    loadChat();
+  } catch(e) { toast('失敗: ' + e.message, 'error'); }
+}
+
+async function clearAllChat() {
+  if(!confirm('確定清空所有聊天記錄？此操作不可復原！')) return;
+  try {
+    await rtdb.ref('chat').remove();
+    toast('聊天已清空', 'success');
+    loadChat();
+  } catch(e) { toast('失敗', 'error'); }
+}
+
+// ── DIARIES ──
+async function loadDiaries() {
+  const el = document.getElementById('diary-log');
+  if(!el) return;
+  try {
+    let all = [];
+    const dates = await db.collection('diaries').get();
+    await Promise.all(dates.docs.map(d =>
+      db.collection('diaries').doc(d.id).collection('entries').get().then(es => {
+        es.forEach(e => all.push({id:e.id, date:d.id, ...e.data()}));
+      }).catch(()=>{})
+    ));
+    if(!all.length) { el.innerHTML = '<div class="loading-msg">目前無日記</div>'; return; }
+
+    // Load profiles for names
+    const uids = [...new Set(all.map(e=>e.uid))];
+    const profMap = {};
+    await Promise.all(uids.map(uid =>
+      db.collection('profiles').doc(uid).get().then(s => { if(s.exists) profMap[uid]=s.data(); }).catch(()=>{})
+    ));
+
+    all.sort((a,b) => a.date.localeCompare(b.date));
+    el.innerHTML = all.map(e => {
+      const name = profMap[e.uid]?.nickname || profMap[e.uid]?.displayName || e.uid.slice(0,8);
+      const sched = SCHEDULE.find(s=>s.date===e.date);
+      const photos = (e.photos||[]).length;
+      const preview = (e.content||'').slice(0,80) + ((e.content||'').length>80?'...':'');
+      return `<div class="diary-item">
+        <div class="diary-tag">${sched?'Day '+sched.day:e.date}</div>
+        <div style="flex:1;min-width:0">
+          <span style="font-weight:700;font-size:13px">${esc(name)}</span>
+          <span style="color:var(--muted);font-size:11px;margin-left:8px">${e.date}</span>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(preview)||'（無文字）'}</div>
+          <div style="font-size:11px;color:var(--pri);margin-top:2px">${photos} 張照片 · ${(e.comments||[]).length} 留言 · ${Object.keys(e.likes||{}).length} 讚</div>
+        </div>
+        <button class="btn btn-red btn-sm" onclick="deleteDiary('${e.date}','${e.uid}',this)">刪除</button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div class="loading-msg" style="color:#e74c3c">⚠️ ${e.message}</div>`; }
+}
+
+async function deleteDiary(date, uid, btn) {
+  if(!confirm('確定刪除這篇日記？')) return;
+  try {
+    await db.collection('diaries').doc(date).collection('entries').doc(uid).delete();
+    btn?.closest('.diary-item')?.remove();
+    toast('已刪除日記', 'success');
+    loadStats();
+  } catch(e) { toast('失敗: ' + e.message, 'error'); }
+}
+
+// ── FLIGHTS ──
+async function loadFlights() {
+  try {
+    const snap = await db.collection('config').doc('flights').get();
+    if(!snap.exists) return;
+    const d = snap.data();
+    const fd = d.depart || {}, fr = d.return || {};
+    const sv = (id, val) => { const el=document.getElementById(id); if(el) el.value=val||''; };
+    sv('fd-flight', fd.flight); sv('fd-datetime', fd.datetime); sv('fd-route', fd.route); sv('fd-note', fd.note);
+    sv('fr-flight', fr.flight); sv('fr-datetime', fr.datetime); sv('fr-route', fr.route); sv('fr-note', fr.note);
+  } catch(e) { console.warn('Flights:', e.message); }
+}
+
+async function saveFlights() {
+  const gv = id => document.getElementById(id)?.value.trim() || '';
+  const data = {
+    depart: { flight:gv('fd-flight'), datetime:gv('fd-datetime'), route:gv('fd-route'), note:gv('fd-note') },
+    return: { flight:gv('fr-flight'), datetime:gv('fr-datetime'), route:gv('fr-route'), note:gv('fr-note') },
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('config').doc('flights').set(data);
+    toast('航班資訊已儲存 ✈️', 'success');
+  } catch(e) { toast('失敗: ' + e.message, 'error'); }
+}
+</script>
+</body>
+</html>
