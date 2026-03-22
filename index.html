@@ -3104,28 +3104,52 @@ async function renderTeamPage() {
   if(!db) return;
   try {
     const memSnap = await db.collection('members').get();
-    const uids = [];
+    const memberUids   = new Set();
+    const memberEmails = new Set();
     memSnap.forEach(d => {
       const data = d.data();
-      uids.push(data.uid || d.id);
+      if(data.uid)   memberUids.add(data.uid);
+      if(data.email) memberEmails.add(data.email.toLowerCase());
+      if(d.id && d.id.length > 10 && !d.id.includes('_')) memberUids.add(d.id);
     });
-    if(!uids.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑\u200d🏫</div><p>尚無見習成員資料</p></div>';
+
+    if(!memberUids.size && !memberEmails.size) {
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">&#x1F9D1;&#x200D;&#x1F3EB;</div><p>尚無見習成員資料</p></div>';
       return;
     }
+
     const profiles = [];
-    await Promise.all(uids.map(uid =>
+    const seenUids = new Set();
+
+    // Load by UID
+    await Promise.all([...memberUids].map(uid =>
       db.collection('profiles').doc(uid).get()
-        .then(s => { if(s.exists) profiles.push(s.data()); })
+        .then(s => { if(s.exists && !seenUids.has(s.id)) { seenUids.add(s.id); profiles.push(s.data()); } })
         .catch(() => {})
     ));
+
+    // Load by email if any email-only members
+    if(memberEmails.size > 0) {
+      const allProfs = await db.collection('profiles').get().catch(() => null);
+      if(allProfs) {
+        allProfs.forEach(d => {
+          const data = d.data();
+          if(!seenUids.has(d.id) && data.email && memberEmails.has(data.email.toLowerCase())) {
+            seenUids.add(d.id);
+            profiles.push(data);
+          }
+        });
+      }
+    }
+
     if(!profiles.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑\u200d🏫</div><p>成員尚未填寫個人資料</p></div>';
+      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">&#x1F9D1;&#x200D;&#x1F3EB;</div><p>成員尚未填寫個人資料</p></div>';
       return;
     }
     grid.innerHTML = profiles.map(p => buildMemberCard(p)).join('');
   } catch(e) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">⚠️ ' + esc(e.message) + '</div>';
+    console.error('renderTeamPage:', e);
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">&#x26A0;&#xFE0F; ' + esc(e.message) + '<br><small>請確認 Firestore 規則：members 和 profiles 允許 read: if true</small></div>';
   }
 }
 
