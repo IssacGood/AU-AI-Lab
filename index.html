@@ -1175,7 +1175,7 @@ async function handleUserLogin(user) {
     }
   } catch(e) { isMember = isAdmin; }
 
-  // Ensure profile doc
+  // Ensure profile doc + update lastLogin
   try {
     const profRef = db.collection('profiles').doc(user.uid);
     const profSnap = await profRef.get();
@@ -1186,7 +1186,16 @@ async function handleUserLogin(user) {
         photoURL: user.photoURL || '',
         nickname: user.displayName || '',
         bio: '',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } else {
+      // Update photo, displayName and lastLogin every login
+      await profRef.update({
+        displayName: user.displayName || profSnap.data().displayName || '',
+        photoURL: user.photoURL || profSnap.data().photoURL || '',
+        email: user.email,
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
   } catch(e) {}
