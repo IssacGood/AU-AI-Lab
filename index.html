@@ -189,11 +189,15 @@ h1,h2,h3,.serif{font-family:'Playfair Display',serif}
 .dc-name{font-weight:800;font-size:14px;color:var(--text)}
 .dc-date{font-size:12px;color:var(--text-muted);font-weight:600}
 .dc-sched{font-size:11px;color:var(--primary);font-weight:700;margin-top:2px;line-height:1.4}
-.dc-photos{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;height:120px}
-.dc-photos.p1{grid-template-columns:1fr;height:160px}
+.dc-photos{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.dc-photos.p1{grid-template-columns:1fr}
+.dc-photos.p1 .dc-photo{aspect-ratio:16/9}
 .dc-photos.p2{grid-template-columns:1fr 1fr}
 .dc-photos.p3{grid-template-columns:1fr 1fr 1fr}
-.dc-photo{object-fit:cover;width:100%;height:100%;cursor:pointer;transition:opacity .2s}
+.dc-photos:not(.p1) .dc-photo{aspect-ratio:1}
+.dc-photos.p4{grid-template-columns:repeat(4,1fr)}
+.dc-photos.p5,.dc-photos.p6,.dc-photos.p7,.dc-photos.p8,.dc-photos.p9,.dc-photos.p10{grid-template-columns:repeat(5,1fr)}
+.dc-photo{object-fit:cover;width:100%;height:100%;cursor:pointer;transition:opacity .2s;aspect-ratio:4/3;display:block}
 .dc-photo:hover{opacity:.85}
 .dc-body{padding:12px 20px;font-size:13px;color:var(--text);line-height:1.6;max-height:68px;overflow:hidden;position:relative;background:var(--white)}
 .dc-body.expanded{max-height:none}
@@ -731,11 +735,11 @@ textarea.diary-input:focus{border-color:var(--primary)}
             </div>
             <label class="form-label" data-i18n="label-diary-content">日記內容</label>
             <textarea class="diary-input" id="diary-text" data-i18n-placeholder="placeholder-diary" placeholder="今天我們去了... 我最印象深刻的是..."></textarea>
-            <label class="form-label" style="margin-top:16px" data-i18n="label-photos">上傳照片（最多5張）</label>
+            <label class="form-label" style="margin-top:16px" data-i18n="label-photos">上傳照片（Cloudinary · 無限制）</label>
             <div class="photo-upload-area" id="photo-drop-area" onclick="document.getElementById('photo-file-input').click()">
               <div class="upload-icon">📸</div>
               <p data-i18n="upload-hint">點擊或拖曳照片到這裡</p>
-              <small data-i18n="upload-hint2">最多5張，原尺寸上傳至 Cloudinary</small>
+              <small data-i18n="upload-hint2">原尺寸上傳至 Cloudinary · 不限張數</small>
             </div>
             <input type="file" id="photo-file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
             <div class="photo-previews" id="photo-previews"></div>
@@ -944,7 +948,7 @@ const CLOUDINARY_PRESET = "au_ai_lab";         // ← 填你建立的 preset 名
 const ADMIN_EMAIL = ["issac1120","gmail.com"].join("@");
 const ACTIVITY_START = new Date("2026-08-03T00:00:00+08:00");
 const ACTIVITY_END   = new Date("2026-08-18T23:59:59+08:00");
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 20; // Cloudinary 25GB, no practical limit
 
 const SCHEDULE = [
   {date:"2026-08-03",day:1,zh:"機場集合，搭乘國際航班前往澳洲雪梨。",en:"Airport assembly, fly to Sydney, Australia."},
@@ -1004,7 +1008,7 @@ const T = {
     "view-all":"📋 全部",
     "label-select-date":"選擇日期",
     "label-diary-content":"日記內容",
-    "label-photos":"上傳照片（最多5張）",
+    "label-photos":"上傳照片（Cloudinary · 無限制）",
     "label-nickname":"暱稱",
     "label-bio":"自我介紹",
     "upload-hint":"點擊或拖曳照片到這裡",
@@ -1056,7 +1060,7 @@ const T = {
     "view-all":"📋 All",
     "label-select-date":"Select Date",
     "label-diary-content":"Journal Content",
-    "label-photos":"Upload Photos (max 5)",
+    "label-photos":"Upload Photos (Cloudinary)",
     "label-nickname":"Nickname",
     "label-bio":"Bio",
     "upload-hint":"Click or drag photos here",
@@ -1648,7 +1652,7 @@ async function renderDiary() {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
           ${sched?`<span class="tag tag-orange">Day ${sched.day}</span>`:''}
           <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:18px">${date}</h3>
-          <span style="font-size:13px;color:var(--text-muted);font-weight:600">${sched?sched[currentLang==='zh'?'zh':'en'].slice(0,40)+'...':''}</span>
+          <span style="font-size:13px;color:var(--text-muted);font-weight:600">${sched?'Day '+sched.day:''}</span>
         </div>
         <div class="diary-grid">${byDate[date].map(e=>renderDiaryCard(e, profMap)).join('')}</div>
       </div>`;
@@ -1671,7 +1675,11 @@ function renderDiaryCard(entry, profMap) {
   const sched = SCHEDULE.find(s=>s.date===entry.date);
   const schedText = sched ? sched[currentLang==='zh'?'zh':'en'].slice(0,50) : '';
   const photos = entry.photos || [];
-  const photoClass = photos.length === 1 ? 'p1' : photos.length === 2 ? 'p2' : photos.length === 3 ? 'p3' : '';
+  const photoClass = photos.length === 1 ? 'p1' :
+    photos.length === 2 ? 'p2' :
+    photos.length === 3 ? 'p3' :
+    photos.length === 4 ? 'p4' :
+    'p' + Math.min(photos.length, 10);
   const canDelete = isAdmin || (currentUser && currentUser.uid === entry.uid);
   const canEdit   = isAdmin || (currentUser && currentUser.uid === entry.uid && isMember);
   const liked = entry.likes && entry.likes[currentUser?.uid];
@@ -1684,7 +1692,7 @@ function renderDiaryCard(entry, profMap) {
       <div style="flex:1;min-width:0">
         <div class="dc-name">${esc(name)}</div>
         <div class="dc-date">${entry.date} ${entry.updatedAt ? '（已更新）':''}</div>
-        ${schedText ? `<div class="dc-sched">${schedText}</div>` : ''}
+
       </div>
       <div style="display:flex;gap:4px">
         ${canEdit   ? `<button class="btn btn-secondary btn-sm btn-icon" onclick="openEditDiary('${entry.date}','${entry.uid}')" title="編輯">✏️</button>` : ''}
@@ -3336,9 +3344,9 @@ function removeEditPhoto(idx) {
 function handleEditPhotoSelect(input) {
   if(!editingEntry) return;
   editingEntry.photos = editingEntry.photos || [];
-  var remaining = 5 - editingEntry.photos.length;
+  var remaining = 20 - editingEntry.photos.length;
   var files = Array.from(input.files).slice(0, remaining);
-  if(files.length < input.files.length) showToast('最多5張照片', 'error');
+  if(files.length < input.files.length) showToast('照片已達上限', 'error');
   files.forEach(function(f) {
     var reader = new FileReader();
     reader.onload = function(e) {
