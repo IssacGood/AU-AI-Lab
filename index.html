@@ -1,1 +1,2153 @@
-go
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦘 澳洲冒險：AI教室實驗室</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+:root {
+  --primary: #D4650A;
+  --primary-dark: #A84D08;
+  --primary-light: #F5A623;
+  --cream: #FEF9EF;
+  --cream-dark: #F5EDD8;
+  --brown: #5C3317;
+  --brown-light: #8B5E3C;
+  --green: #2D5A27;
+  --text: #2C1810;
+  --text-muted: #7A5C46;
+  --white: #FFFFFF;
+  --shadow: 0 4px 20px rgba(84,40,10,0.12);
+  --shadow-hover: 0 8px 32px rgba(84,40,10,0.2);
+  --radius: 16px;
+  --nav-w: 240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,.serif{font-family:'Playfair Display',serif}
+
+/* ===== TOAST ===== */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{background:var(--brown);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;animation:toastIn .3s ease;box-shadow:var(--shadow)}
+.toast-item.success{background:var(--green)}
+.toast-item.error{background:#c0392b}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== LOGIN ===== */
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a0f05 0%,#3d1f0a 40%,#5c3317 100%);overflow:hidden}
+.login-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.login-bg span{position:absolute;font-size:80px;opacity:.06;animation:float 8s ease-in-out infinite}
+.login-bg span:nth-child(1){top:10%;left:5%;animation-delay:0s}
+.login-bg span:nth-child(2){top:20%;right:10%;animation-delay:1.5s;font-size:60px}
+.login-bg span:nth-child(3){bottom:20%;left:15%;animation-delay:3s;font-size:100px}
+.login-bg span:nth-child(4){bottom:10%;right:5%;animation-delay:2s;font-size:50px}
+.login-bg span:nth-child(5){top:50%;left:50%;animation-delay:4s;font-size:70px}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-20px) rotate(5deg)}}
+.login-card{position:relative;background:var(--cream);border-radius:24px;padding:48px 40px;max-width:420px;width:90%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.4)}
+.login-stamp{width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 24px;box-shadow:0 8px 24px rgba(212,101,10,.4)}
+.login-card h1{font-size:28px;color:var(--brown);line-height:1.2;margin-bottom:8px}
+.login-card .sub{font-size:14px;color:var(--text-muted);margin-bottom:32px;line-height:1.6}
+.login-dates{background:var(--cream-dark);border-radius:12px;padding:12px 20px;margin-bottom:28px;font-size:13px;color:var(--brown-light);font-weight:700;letter-spacing:.5px}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 24px;background:var(--white);border:2px solid #e0d0c0;border-radius:12px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:var(--text);transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btn-google:hover{background:var(--primary);color:#fff;border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.btn-google svg{width:20px;height:20px;flex-shrink:0}
+.login-note{margin-top:20px;font-size:12px;color:var(--text-muted);line-height:1.5}
+
+/* ===== MAIN LAYOUT ===== */
+#app{display:none;min-height:100vh}
+.app-layout{display:flex;min-height:100vh}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:var(--nav-w);background:linear-gradient(160deg,#3d1f0a 0%,#1a0f05 100%);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s ease;overflow-y:auto}
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo .logo-icon{font-size:32px;display:block;margin-bottom:6px}
+.sidebar-logo h2{font-size:15px;font-family:'Playfair Display',serif;color:var(--primary-light);line-height:1.3}
+.sidebar-logo .logo-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.sidebar-user{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sidebar-user img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--primary)}
+.sidebar-user .u-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user .u-role{font-size:11px;color:var(--primary-light);margin-top:1px}
+.sidebar-nav{flex:1;padding:12px 0}
+.nav-section{padding:8px 20px 4px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all .2s;border-left:3px solid transparent;color:rgba(255,255,255,.7);font-size:14px;font-weight:600;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav-item.active{background:rgba(212,101,10,.2);border-left-color:var(--primary-light);color:var(--primary-light)}
+.nav-item .ni{font-size:18px;width:22px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.lang-toggle{display:flex;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
+.lang-btn{flex:1;padding:6px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.6)}
+.lang-btn.active{background:var(--primary);color:#fff}
+.btn-logout{display:flex;align-items:center;gap:8px;padding:10px 0;color:rgba(255,255,255,.5);font-size:13px;cursor:pointer;transition:color .2s;border:none;background:none;font-family:'Nunito',sans-serif;margin-top:8px;width:100%}
+.btn-logout:hover{color:#fff}
+
+/* ===== TOPBAR (mobile) ===== */
+.topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:99;height:56px;background:linear-gradient(90deg,#3d1f0a,#1a0f05);align-items:center;padding:0 16px;gap:12px}
+.menu-btn{background:none;border:none;cursor:pointer;padding:6px;color:#fff;font-size:24px}
+.topbar-title{flex:1;font-family:'Playfair Display',serif;color:var(--primary-light);font-size:15px}
+.topbar-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--primary)}
+
+/* ===== CONTENT ===== */
+.content{flex:1;margin-left:var(--nav-w);min-height:100vh;padding:0}
+.page{display:none;padding:32px}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-header h2{font-size:30px;color:var(--brown);display:flex;align-items:center;gap:10px}
+.page-header p{color:var(--text-muted);margin-top:6px;font-size:14px}
+
+/* ===== CARDS ===== */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card-header{padding:20px 24px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:24px}
+
+/* ===== BUTTONS ===== */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:var(--cream-dark);color:var(--brown)}
+.btn-secondary:hover{background:var(--brown);color:#fff}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-danger:hover{background:#c0392b}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-icon{padding:8px;border-radius:8px}
+
+/* ===== HOME PAGE ===== */
+.hero-banner{background:linear-gradient(135deg,#3d1f0a 0%,#d4650a 60%,#f5a623 100%);border-radius:20px;padding:40px;color:#fff;position:relative;overflow:hidden;margin-bottom:28px}
+.hero-banner::after{content:'🦘';position:absolute;right:40px;bottom:-10px;font-size:120px;opacity:.2}
+.hero-banner h1{font-size:36px;line-height:1.2;margin-bottom:8px}
+.hero-banner .hero-sub{font-size:16px;opacity:.85;font-weight:600}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.badge{background:rgba(255,255,255,.2);backdrop-filter:blur(4px);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;text-align:center;box-shadow:var(--shadow);border-top:4px solid var(--primary)}
+.stat-card .stat-num{font-size:32px;font-family:'Playfair Display',serif;color:var(--primary);font-weight:900}
+.stat-card .stat-label{font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.countdown-card{background:linear-gradient(135deg,var(--brown) 0%,var(--primary-dark) 100%);border-radius:var(--radius);padding:28px;color:#fff;margin-bottom:28px}
+.countdown-card h3{font-size:14px;opacity:.7;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
+.countdown-grid{display:flex;gap:16px;flex-wrap:wrap}
+.cd-unit{text-align:center;background:rgba(255,255,255,.15);border-radius:12px;padding:14px 20px;min-width:80px}
+.cd-num{font-size:40px;font-family:'Playfair Display',serif;font-weight:900;line-height:1}
+.cd-label{font-size:11px;opacity:.7;font-weight:700;letter-spacing:.5px;margin-top:4px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
+
+/* ===== FLIGHT INFO ===== */
+.flight-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.flight-header{background:linear-gradient(90deg,var(--green),#4a7c42);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px}
+.flight-body{padding:20px 24px}
+.flight-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--cream-dark)}
+.flight-row:last-child{border-bottom:none}
+.flight-row .fr-icon{font-size:20px;width:28px;text-align:center}
+.flight-row .fr-info{flex:1}
+.flight-row .fr-label{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.flight-row .fr-val{font-size:14px;color:var(--text);font-weight:700;margin-top:2px}
+.flight-sep{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;padding:8px 0}
+.flight-sep::before,.flight-sep::after{content:'';flex:1;height:1px;background:var(--cream-dark)}
+
+/* ===== SCHEDULE ===== */
+.schedule-timeline{position:relative;padding-left:40px}
+.schedule-timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(var(--primary-light),var(--primary))}
+.sched-item{position:relative;margin-bottom:20px;cursor:pointer}
+.sched-item::before{content:'';position:absolute;left:-31px;top:16px;width:14px;height:14px;border-radius:50%;background:var(--primary);border:3px solid var(--cream);box-shadow:0 0 0 2px var(--primary);transition:transform .2s}
+.sched-item.today::before{background:var(--primary-light);transform:scale(1.3);box-shadow:0 0 0 3px var(--primary-light),0 0 0 6px rgba(245,166,35,.2)}
+.sched-card{background:var(--white);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);border-left:4px solid transparent;transition:all .2s}
+.sched-card:hover{border-left-color:var(--primary);transform:translateX(4px)}
+.sched-item.today .sched-card{border-left-color:var(--primary-light);background:linear-gradient(90deg,#fff9ef,#fff)}
+.sched-top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.sched-day{background:var(--primary);color:#fff;border-radius:8px;padding:2px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+.sched-item.today .sched-day{background:var(--primary-light)}
+.sched-date{font-size:13px;color:var(--text-muted);font-weight:600}
+.sched-text{font-size:14px;color:var(--text);font-weight:600;line-height:1.5}
+.sched-entries{font-size:12px;color:var(--primary);font-weight:700;margin-top:6px;display:flex;align-items:center;gap:4px}
+
+/* ===== DIARY ===== */
+.diary-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:16px 20px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow)}
+.view-tabs{display:flex;background:var(--cream-dark);border-radius:10px;padding:3px}
+.view-tab{padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text-muted);transition:all .2s;white-space:nowrap}
+.view-tab.active{background:var(--white);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.filter-select{padding:8px 12px;border:2px solid var(--cream-dark);border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:var(--white);cursor:pointer;outline:none}
+.filter-select:focus{border-color:var(--primary)}
+.diary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.diary-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s}
+.diary-card:hover{box-shadow:var(--shadow-hover)}
+.dc-header{padding:16px 20px;border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;gap:10px}
+.dc-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-light);flex-shrink:0}
+.dc-name{font-weight:800;font-size:14px;color:var(--text)}
+.dc-date{font-size:12px;color:var(--text-muted);font-weight:600}
+.dc-sched{font-size:11px;color:var(--primary);font-weight:700;margin-top:2px;line-height:1.4}
+.dc-photos{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;height:120px}
+.dc-photos.p1{grid-template-columns:1fr;height:160px}
+.dc-photos.p2{grid-template-columns:1fr 1fr}
+.dc-photos.p3{grid-template-columns:1fr 1fr 1fr}
+.dc-photo{object-fit:cover;width:100%;height:100%;cursor:pointer;transition:opacity .2s}
+.dc-photo:hover{opacity:.85}
+.dc-body{padding:16px 20px;font-size:14px;color:var(--text);line-height:1.7;max-height:120px;overflow:hidden;position:relative}
+.dc-body.expanded{max-height:none}
+.dc-body::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,#fff);pointer-events:none}
+.dc-body.expanded::after{display:none}
+.dc-footer{padding:12px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--cream-dark)}
+.dc-action{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--text-muted);font-size:13px;font-weight:700;padding:4px 8px;border-radius:6px;transition:all .2s;border:none;background:none;font-family:'Nunito',sans-serif}
+.dc-action:hover{background:var(--cream-dark);color:var(--primary)}
+.dc-action.liked{color:var(--primary)}
+.dc-comments{padding:0 20px 16px}
+.comment-item{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.comment-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.comment-bubble{background:var(--cream-dark);border-radius:12px;padding:8px 12px;font-size:13px;color:var(--text);flex:1}
+.comment-bubble .cn{font-weight:800;font-size:12px;color:var(--brown-light);margin-bottom:2px}
+.comment-input-row{display:flex;gap:8px;padding:0 20px 16px;align-items:center}
+.comment-input{flex:1;padding:8px 12px;border:2px solid var(--cream-dark);border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.comment-input:focus{border-color:var(--primary)}
+
+/* ===== WRITE DIARY ===== */
+.write-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;max-width:760px;margin:0 auto}
+.write-header{background:linear-gradient(90deg,var(--primary),var(--primary-light));color:#fff;padding:24px 28px}
+.write-header h3{font-size:22px;margin-bottom:4px}
+.write-header p{font-size:13px;opacity:.85}
+.write-body{padding:28px}
+.write-sched{background:var(--cream-dark);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:14px;color:var(--brown);font-weight:600;display:flex;gap:10px;align-items:flex-start}
+.write-sched span:first-child{font-size:20px;flex-shrink:0}
+textarea.diary-input{width:100%;min-height:200px;border:2px solid var(--cream-dark);border-radius:12px;padding:16px;font-family:'Nunito',sans-serif;font-size:15px;line-height:1.7;resize:vertical;outline:none;transition:border-color .2s;color:var(--text)}
+textarea.diary-input:focus{border-color:var(--primary)}
+.photo-upload-area{border:2px dashed var(--cream-dark);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;margin-top:16px}
+.photo-upload-area:hover{border-color:var(--primary);background:var(--cream)}
+.photo-upload-area .upload-icon{font-size:36px;margin-bottom:8px}
+.photo-upload-area p{font-size:14px;color:var(--text-muted);font-weight:600}
+.photo-upload-area small{font-size:12px;color:var(--text-muted);opacity:.7}
+.photo-previews{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+.photo-preview-item{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden}
+.photo-preview-item img{width:100%;height:100%;object-fit:cover}
+.photo-preview-item .remove-photo{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center}
+.write-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+
+/* ===== GALLERY ===== */
+.gallery-grid{columns:3;gap:12px;column-gap:12px}
+.gallery-item{break-inside:avoid;margin-bottom:12px;border-radius:12px;overflow:hidden;cursor:pointer;position:relative;transition:transform .2s}
+.gallery-item:hover{transform:scale(1.02)}
+.gallery-item img{width:100%;display:block}
+.gallery-item .gi-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;padding:12px;font-size:12px;font-weight:700;opacity:0;transition:opacity .2s}
+.gallery-item:hover .gi-overlay{opacity:1}
+
+/* ===== CHAT ===== */
+.chat-layout{display:flex;flex-direction:column;height:calc(100vh - 120px);background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.chat-header{padding:16px 24px;background:linear-gradient(90deg,var(--brown),var(--primary-dark));color:#fff;display:flex;align-items:center;gap:12px}
+.chat-live-dot{width:10px;height:10px;border-radius:50%;background:#4caf50;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--cream)}
+.chat-msg{display:flex;gap:10px;align-items:flex-start;max-width:80%}
+.chat-msg.me{flex-direction:row-reverse;align-self:flex-end}
+.chat-msg .cm-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.chat-msg .cm-bubble{background:var(--white);border-radius:14px;padding:10px 14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.chat-msg.me .cm-bubble{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff}
+.cm-name{font-size:11px;font-weight:800;color:var(--brown-light);margin-bottom:3px}
+.chat-msg.me .cm-name{display:none}
+.cm-text{font-size:14px;line-height:1.5}
+.cm-time{font-size:10px;opacity:.6;margin-top:3px}
+.chat-system{text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;padding:4px 0}
+.chat-input-area{padding:16px 20px;border-top:1px solid var(--cream-dark);display:flex;gap:10px;align-items:flex-end}
+.chat-input{flex:1;padding:12px 16px;border:2px solid var(--cream-dark);border-radius:24px;font-family:'Nunito',sans-serif;font-size:14px;outline:none;transition:border-color .2s;resize:none;min-height:44px;max-height:120px}
+.chat-input:focus{border-color:var(--primary)}
+.chat-send{width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-send:hover{background:var(--primary-dark);transform:scale(1.05)}
+
+/* ===== ADMIN ===== */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.member-list{display:flex;flex-direction:column;gap:8px}
+.member-item{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--cream);border-radius:10px}
+.member-item img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.member-item .mi-info{flex:1}
+.member-item .mi-name{font-size:14px;font-weight:700;color:var(--text)}
+.member-item .mi-email{font-size:12px;color:var(--text-muted)}
+.member-item .mi-badge{font-size:11px;font-weight:800;color:var(--primary);background:rgba(212,101,10,.1);padding:2px 8px;border-radius:10px}
+.add-member-row{display:flex;gap:8px;margin-bottom:16px}
+.input-field{flex:1;padding:10px 14px;border:2px solid var(--cream-dark);border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;outline:none;transition:border-color .2s;background:var(--white);color:var(--text)}
+.input-field:focus{border-color:var(--primary)}
+
+/* ===== PROFILE ===== */
+.profile-layout{max-width:560px;margin:0 auto}
+.profile-avatar-section{text-align:center;margin-bottom:28px}
+.profile-avatar-wrap{position:relative;display:inline-block;cursor:pointer}
+.profile-avatar-wrap img{width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid var(--primary);box-shadow:var(--shadow)}
+.avatar-edit-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.profile-avatar-wrap:hover .avatar-edit-overlay{opacity:1}
+.avatar-edit-overlay span{font-size:24px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ===== LIGHTBOX ===== */
+#lightbox{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.93);display:none;align-items:center;justify-content:center;user-select:none}
+#lightbox.open{display:flex}
+#lightbox img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;box-shadow:0 0 120px rgba(0,0,0,.6);transition:opacity .15s ease;cursor:default}
+#lightbox img.fading{opacity:0}
+#lightbox .lb-close{position:fixed;top:16px;right:20px;color:#fff;font-size:22px;cursor:pointer;background:rgba(255,255,255,.12);border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:background .2s;z-index:10}
+#lightbox .lb-close:hover{background:rgba(255,255,255,.25)}
+#lightbox .lb-nav{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.12);color:#fff;border:none;cursor:pointer;font-size:32px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all .2s;z-index:10}
+#lightbox .lb-nav:hover{background:rgba(255,255,255,.28);transform:translateY(-50%) scale(1.1)}
+#lightbox .lb-prev{left:16px}
+#lightbox .lb-next{right:16px}
+#lightbox .lb-info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.8);font-size:13px;font-weight:600;background:rgba(0,0,0,.5);padding:7px 18px;border-radius:20px;backdrop-filter:blur(6px);white-space:nowrap;max-width:80vw;overflow:hidden;text-overflow:ellipsis}
+#lightbox .lb-dots{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+#lightbox .lb-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .2s}
+#lightbox .lb-dot.active{background:#fff;transform:scale(1.3)}
+
+/* ===== MISC ===== */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state .es-icon{font-size:56px;margin-bottom:12px;opacity:.6}
+.empty-state h3{font-size:20px;color:var(--brown-light);margin-bottom:8px}
+.empty-state p{font-size:14px;line-height:1.6}
+.loading-spinner{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--primary)}
+.loading-spinner::before{content:'';width:40px;height:40px;border:4px solid var(--cream-dark);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.tag-amber{background:rgba(245,166,35,.15);color:#9a6c00}
+.tag-green{background:rgba(45,90,39,.1);color:var(--green)}
+.tag-orange{background:rgba(212,101,10,.12);color:var(--primary-dark)}
+
+/* ===== ADMIN ONLY ===== */
+.admin-only{display:none}
+.admin-only.visible{display:block}
+.member-only-msg{background:var(--cream-dark);border-radius:12px;padding:16px 20px;font-size:14px;color:var(--text-muted);display:flex;align-items:center;gap:8px;margin-bottom:16px}
+
+/* ===== PRINT ===== */
+@media print {
+  .sidebar,.topbar,.chat-input-area,.write-card,.diary-toolbar,.btn{display:none!important}
+  .content{margin-left:0!important}
+  .page{display:block!important}
+  body{background:#fff}
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .two-col,.admin-grid{grid-template-columns:1fr}
+  .gallery-grid{columns:2}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .topbar{display:flex}
+  .content{margin-left:0;padding-top:56px}
+  .page{padding:20px 16px}
+  .hero-banner h1{font-size:24px}
+  .hero-banner::after{display:none}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .gallery-grid{columns:2}
+  .diary-grid{grid-template-columns:1fr}
+  .sidebar-overlay{display:block}
+}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.sidebar-overlay.show{display:block}
+@media(max-width:480px){
+  .gallery-grid{columns:1}
+  .countdown-grid{gap:8px}
+  .cd-unit{padding:10px 14px;min-width:60px}
+  .cd-num{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<div id="login-screen">
+  <div class="login-bg">
+    <span>🦘</span><span>✈️</span><span>🌏</span><span>🏫</span><span>🤖</span>
+  </div>
+  <div class="login-card">
+    <div class="login-stamp">🦘</div>
+    <h1>澳洲冒險<br>AI教室實驗室</h1>
+    <p class="sub">I-8-29 青年百億海外圓夢基金計畫<br>Australia Adventure: AI Classroom Lab</p>
+    <div class="login-dates">📅 2025年8月3日 ─ 8月18日 │ 雪梨 × 墨爾本</div>
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      使用 Google 帳號登入
+    </button>
+    <p class="login-note" id="login-note">所有人均可登入查看日誌與即時聊天<br>已綁定成員可編輯上傳每日日記</p>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div id="toast"></div>
+
+<!-- ========== LIGHTBOX ========== -->
+<div id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <button class="lb-nav lb-prev" onclick="lbNav(-1)" id="lb-prev">&#8249;</button>
+  <img id="lb-img" src="" alt="">
+  <button class="lb-nav lb-next" onclick="lbNav(1)" id="lb-next">&#8250;</button>
+  <div class="lb-dots" id="lb-dots"></div>
+  <div class="lb-info" id="lb-info"></div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="app">
+  <div class="app-layout">
+
+    <!-- TOPBAR (mobile) -->
+    <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title">🦘 澳洲冒險</div>
+      <img class="topbar-avatar" id="topbar-avatar" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" alt="">
+    </div>
+
+    <!-- SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo-icon">🦘</span>
+        <h2 data-i18n="site-title">澳洲冒險：AI教室實驗室</h2>
+        <div class="logo-sub">2025 / 8.3 → 8.18</div>
+      </div>
+      <div class="sidebar-user">
+        <img id="sidebar-avatar" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" alt="">
+        <div>
+          <div class="u-name" id="sidebar-name">載入中...</div>
+          <div class="u-role" id="sidebar-role">訪客</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section" data-i18n="nav-main">主要</div>
+        <div class="nav-item active" onclick="navigate('home')" data-page="home"><span class="ni">🏠</span><span data-i18n="nav-home">首頁</span></div>
+        <div class="nav-item" onclick="navigate('schedule')" data-page="schedule"><span class="ni">📅</span><span data-i18n="nav-schedule">行程表</span></div>
+        <div class="nav-section" data-i18n="nav-diary">日誌</div>
+        <div class="nav-item" onclick="navigate('diary')" data-page="diary"><span class="ni">📓</span><span data-i18n="nav-diary-all">每日日記</span></div>
+        <div class="nav-item" onclick="navigate('write')" data-page="write" id="nav-write" style="display:none"><span class="ni">✏️</span><span data-i18n="nav-write">寫今日日記</span></div>
+        <div class="nav-item" onclick="navigate('gallery')" data-page="gallery"><span class="ni">📷</span><span data-i18n="nav-gallery">相片牆</span></div>
+        <div class="nav-section" data-i18n="nav-interact">互動</div>
+        <div class="nav-item" onclick="navigate('chat')" data-page="chat"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
+        <div class="nav-item" onclick="navigate('profile')" data-page="profile"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
+        <div class="nav-item admin-only" onclick="navigate('admin')" data-page="admin" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="lang-toggle">
+          <div class="lang-btn active" id="lang-zh" onclick="setLang('zh')">中文</div>
+          <div class="lang-btn" id="lang-en" onclick="setLang('en')">EN</div>
+        </div>
+        <button class="btn-logout" onclick="signOut()">🚪 <span data-i18n="logout">登出</span></button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ====== HOME ====== -->
+      <div class="page active" id="page-home">
+        <div class="hero-banner">
+          <h1 class="serif" id="hero-title">澳洲冒險：AI教室實驗室 🦘</h1>
+          <p class="hero-sub">I-8-29 │ 雪梨 × 墨爾本 │ 2025.08.03 — 08.18</p>
+          <div class="hero-badges">
+            <span class="badge">🏫 NSW教育廳</span>
+            <span class="badge">🎓 雪梨大學</span>
+            <span class="badge">🔬 UNSW</span>
+            <span class="badge">🤖 AI/STEAM教育</span>
+            <span class="badge">🌍 UDL學習設計</span>
+          </div>
+        </div>
+
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card"><div class="stat-num">16</div><div class="stat-label" data-i18n="stat-members">名見習教師</div></div>
+          <div class="stat-card"><div class="stat-num">16</div><div class="stat-label" data-i18n="stat-days">天探索旅程</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-entries">0</div><div class="stat-label" data-i18n="stat-entries">篇日記</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-photos">0</div><div class="stat-label" data-i18n="stat-photos">張照片</div></div>
+        </div>
+
+        <div id="countdown-section"></div>
+
+        <div class="two-col">
+          <!-- Departure Flight -->
+          <div class="flight-card" id="flight-depart-card">
+            <div class="flight-header">✈️ &nbsp;<span data-i18n="flight-depart">去程航班</span></div>
+            <div class="flight-body" id="flight-depart-body">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+          <!-- Return Flight -->
+          <div class="flight-card" id="flight-return-card">
+            <div class="flight-header">🛬 &nbsp;<span data-i18n="flight-return">回程航班</span></div>
+            <div class="flight-body" id="flight-return-body">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin: edit flights -->
+        <div class="admin-only" id="flight-editor">
+          <div class="card">
+            <div class="card-header"><span>✏️ 編輯航班資訊（管理員）</span></div>
+            <div class="card-body">
+              <div class="two-col">
+                <div>
+                  <h4 style="margin-bottom:12px;color:var(--brown)">去程</h4>
+                  <div class="form-group"><label class="form-label">航班號</label><input class="input-field" id="fd-flight" placeholder="如 CI 783" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">日期時間</label><input class="input-field" id="fd-datetime" placeholder="2025-08-03 09:30" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">出發地 → 目的地</label><input class="input-field" id="fd-route" placeholder="台北(TPE) → 雪梨(SYD)" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">備註</label><input class="input-field" id="fd-note" placeholder="如 候機室、集合時間" style="width:100%"></div>
+                </div>
+                <div>
+                  <h4 style="margin-bottom:12px;color:var(--brown)">回程</h4>
+                  <div class="form-group"><label class="form-label">航班號</label><input class="input-field" id="fr-flight" placeholder="如 CI 784" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">日期時間</label><input class="input-field" id="fr-datetime" placeholder="2025-08-18 16:45" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">出發地 → 目的地</label><input class="input-field" id="fr-route" placeholder="雪梨(SYD) → 台北(TPE)" style="width:100%"></div>
+                  <div class="form-group"><label class="form-label">備註</label><input class="input-field" id="fr-note" placeholder="如 返台後集合報告" style="width:100%"></div>
+                </div>
+              </div>
+              <button class="btn btn-primary" onclick="saveFlightInfo()">💾 儲存航班資訊</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== SCHEDULE ====== -->
+      <div class="page" id="page-schedule">
+        <div class="page-header">
+          <h2>📅 <span data-i18n="page-schedule">16天行程表</span></h2>
+          <p data-i18n="page-schedule-sub">澳洲雪梨・墨爾本 AI教室實驗室見習之旅</p>
+        </div>
+        <div class="schedule-timeline" id="schedule-list"></div>
+      </div>
+
+      <!-- ====== DIARY ====== -->
+      <div class="page" id="page-diary">
+        <div class="page-header">
+          <h2>📓 <span data-i18n="page-diary">每日日記</span></h2>
+          <p data-i18n="page-diary-sub">16位見習教師的每日所見所感</p>
+        </div>
+        <div class="diary-toolbar">
+          <div class="view-tabs">
+            <div class="view-tab active" onclick="setView('date')" id="vt-date" data-i18n="view-date">📅 照日期</div>
+            <div class="view-tab" onclick="setView('person')" id="vt-person" data-i18n="view-person">👤 照人員</div>
+            <div class="view-tab" onclick="setView('all')" id="vt-all" data-i18n="view-all">📋 全部</div>
+          </div>
+          <select class="filter-select" id="diary-filter" onchange="applyFilter()">
+            <option value="">-- 選擇篩選 --</option>
+          </select>
+          <select class="filter-select" id="diary-sort" onchange="renderDiary()">
+            <option value="newest">最新優先</option>
+            <option value="oldest">最舊優先</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="exportPDF()">📄 匯出PDF</button>
+        </div>
+        <div id="diary-content"><div class="loading-spinner"></div></div>
+      </div>
+
+      <!-- ====== WRITE ====== -->
+      <div class="page" id="page-write">
+        <div class="page-header">
+          <h2>✏️ <span data-i18n="page-write">寫今日日記</span></h2>
+        </div>
+        <div id="write-member-check" class="member-only-msg" style="display:none">
+          🔒 只有已綁定的見習成員才能撰寫日記。請聯絡管理員 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="244d5757454715151614644349454d480a474b49">[email&#160;protected]</a> 申請加入。
+        </div>
+        <div class="write-card" id="write-form-wrap">
+          <div class="write-header">
+            <h3 class="serif">今天的旅程故事</h3>
+            <p id="write-date-display">載入日期中...</p>
+          </div>
+          <div class="write-body">
+            <div class="write-sched" id="write-sched-display">
+              <span>📅</span><span>載入今日行程...</span>
+            </div>
+            <div style="margin-bottom:12px">
+              <label class="form-label" data-i18n="label-select-date">選擇日期</label>
+              <select class="filter-select" id="write-date-select" onchange="updateWriteDate()" style="width:100%"></select>
+            </div>
+            <label class="form-label" data-i18n="label-diary-content">日記內容</label>
+            <textarea class="diary-input" id="diary-text" data-i18n-placeholder="placeholder-diary" placeholder="今天我們去了... 我最印象深刻的是..."></textarea>
+            <label class="form-label" style="margin-top:16px" data-i18n="label-photos">上傳照片（最多5張）</label>
+            <div class="photo-upload-area" id="photo-drop-area" onclick="document.getElementById('photo-file-input').click()">
+              <div class="upload-icon">📸</div>
+              <p data-i18n="upload-hint">點擊或拖曳照片到這裡</p>
+              <small data-i18n="upload-hint2">最多5張，原尺寸上傳至 Cloudinary</small>
+            </div>
+            <input type="file" id="photo-file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
+            <div class="photo-previews" id="photo-previews"></div>
+            <div class="write-actions">
+              <button class="btn btn-secondary" onclick="clearWriteForm()">🗑 清除</button>
+              <button class="btn btn-primary" onclick="submitDiary()" id="submit-diary-btn">💾 儲存日記</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== GALLERY ====== -->
+      <div class="page" id="page-gallery">
+        <div class="page-header">
+          <h2>📷 <span data-i18n="page-gallery">相片牆</span></h2>
+          <p data-i18n="page-gallery-sub">所有見習教師的精彩影像記錄</p>
+        </div>
+        <div class="diary-toolbar" style="margin-bottom:20px">
+          <select class="filter-select" id="gallery-filter-date" onchange="renderGallery()">
+            <option value="">所有日期</option>
+          </select>
+          <select class="filter-select" id="gallery-filter-person" onchange="renderGallery()">
+            <option value="">所有成員</option>
+          </select>
+        </div>
+        <div class="gallery-grid" id="gallery-content"></div>
+      </div>
+
+      <!-- ====== CHAT ====== -->
+      <div class="page" id="page-chat">
+        <div class="chat-layout">
+          <div class="chat-header">
+            <span style="font-size:22px">💬</span>
+            <div>
+              <div style="font-weight:800;font-size:16px" data-i18n="chat-title">即時聊天室</div>
+              <div style="font-size:12px;opacity:.75" data-i18n="chat-sub">與我們即時互動</div>
+            </div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+              <div class="chat-live-dot"></div>
+              <span style="font-size:12px;opacity:.75">LIVE</span>
+            </div>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-system">💬 歡迎來到澳洲冒險即時聊天室！雖然你沒有來，但我們在線上等你 🦘</div>
+          </div>
+          <div class="chat-input-area">
+            <img id="chat-my-avatar" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">
+            <textarea class="chat-input" id="chat-input" placeholder="輸入訊息... (Enter 送出)" rows="1" onkeydown="chatKeydown(event)"></textarea>
+            <button class="chat-send" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== PROFILE ====== -->
+      <div class="page" id="page-profile">
+        <div class="page-header">
+          <h2>👤 <span data-i18n="page-profile">個人檔案</span></h2>
+        </div>
+        <div class="profile-layout">
+          <div class="card">
+            <div class="card-body">
+              <div class="profile-avatar-section">
+                <div class="profile-avatar-wrap" onclick="document.getElementById('avatar-file-input').click()">
+                  <img id="profile-avatar-big" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" alt="">
+                  <div class="avatar-edit-overlay"><span>📷</span></div>
+                </div>
+                <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                <div style="margin-top:10px;font-size:13px;color:var(--text-muted)">點擊更換頭像</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="label-nickname">暱稱</label>
+                <input class="input-field" id="profile-nickname" placeholder="你的暱稱" style="width:100%">
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="label-bio">自我介紹</label>
+                <textarea class="input-field" id="profile-bio" rows="3" placeholder="簡短介紹自己..." style="width:100%;resize:vertical"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="input-field" id="profile-email" disabled style="width:100%;opacity:.6">
+              </div>
+              <button class="btn btn-primary" onclick="saveProfile()" style="width:100%">💾 <span data-i18n="save-profile">儲存個人資料</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== ADMIN ====== -->
+      <div class="page" id="page-admin">
+        <div class="page-header">
+          <h2>⚙️ <span>管理後台</span></h2>
+          <p>僅管理員 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5039232331336161626010373d31393c7e333f3d">[email&#160;protected]</a> 可見</p>
+        </div>
+        <div class="admin-grid">
+          <!-- Member management -->
+          <div class="card">
+            <div class="card-header">
+              <span style="font-weight:800">👥 成員管理</span>
+              <span id="member-count-badge" class="tag tag-orange">0 人</span>
+            </div>
+            <div class="card-body">
+              <div class="add-member-row">
+                <input class="input-field" id="add-member-email" placeholder="輸入 Email 綁定成員">
+                <input class="input-field" id="add-member-name" placeholder="顯示名稱" style="max-width:140px">
+                <button class="btn btn-primary btn-sm" onclick="addMember()">＋</button>
+              </div>
+              <div class="member-list" id="member-list"><div class="loading-spinner"></div></div>
+            </div>
+          </div>
+          <!-- Stats -->
+          <div class="card">
+            <div class="card-header"><span style="font-weight:800">📊 活動統計</span></div>
+            <div class="card-body" id="admin-stats">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Chat moderation -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <span style="font-weight:800">💬 聊天紀錄管理</span>
+            <button class="btn btn-danger btn-sm" onclick="clearAllChat()">🗑 清空聊天</button>
+          </div>
+          <div class="card-body" id="admin-chat-list" style="max-height:400px;overflow-y:auto">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+        <!-- Diary management -->
+        <div class="card">
+          <div class="card-header"><span style="font-weight:800">📓 日記管理</span></div>
+          <div class="card-body" id="admin-diary-list">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /app-layout -->
+</div><!-- /app -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ============================================================
+// ✅ FIREBASE CONFIG
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC2uGxeC88EsER7rUyp8gQ_ZVcwXKPAYPw",
+  authDomain: "au-ai-lab.firebaseapp.com",
+  databaseURL: "https://au-ai-lab-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "au-ai-lab",
+  storageBucket: "au-ai-lab.firebasestorage.app",
+  messagingSenderId: "351321351868",
+  appId: "1:351321351868:web:58e652671b1d57ad98d2b9"
+};
+
+// ============================================================
+// ☁️ CLOUDINARY CONFIG - 免費 25GB 原尺寸照片儲存
+// 設定步驟：
+//   1. 前往 https://cloudinary.com 免費註冊
+//   2. 登入後，Cloud name 在 Dashboard 右上角
+//   3. 到 Settings → Upload → Add upload preset
+//      · Signing Mode 選「Unsigned」
+//      · Preset name 填 au_ai_lab（或自訂）
+//      · 儲存
+//   4. 填入下方兩個值
+// ============================================================
+const CLOUDINARY_CLOUD = "YOUR_CLOUD_NAME";   // ← 填你的 Cloud name
+const CLOUDINARY_PRESET = "au_ai_lab";         // ← 填你建立的 preset 名稱
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const ADMIN_EMAIL = "issac1120@gmail.com";
+const ACTIVITY_START = new Date("2025-08-03T00:00:00+08:00");
+const ACTIVITY_END   = new Date("2025-08-18T23:59:59+08:00");
+const MAX_PHOTOS = 5;
+
+const SCHEDULE = [
+  {date:"2025-08-03",day:1,zh:"機場集合，搭乘國際航班前往澳洲雪梨。",en:"Airport assembly, fly to Sydney, Australia."},
+  {date:"2025-08-04",day:2,zh:"瞭解澳洲小學 STEM/AI 教育架構。以「角色轉換」為核心，引導見習教師定位為推動 UDL 與 AI/STEAM 教育的關鍵行動者。",en:"Understanding Australia's primary school STEM/AI framework. Role transformation workshop."},
+  {date:"2025-08-05",day:3,zh:"實作 AI 基礎 × 小學教師實務。學校現場實踐與 UDL 教學架構下的設計。跨域課程與學習支持系統。",en:"AI fundamentals × primary teacher practice. School visits & UDL design framework. Cross-domain curriculum & learning support."},
+  {date:"2025-08-06",day:4,zh:"實作 AI 基礎 × 小學教師實務。STEM 工具 × 動手實作。學校現場實踐與 UDL 教學架構下的設計。",en:"AI fundamentals × primary practice. STEM tools × hands-on making. School practice & UDL design."},
+  {date:"2025-08-07",day:5,zh:"非正式學習場域與 STEAM 教育設計，教案見習實作。透過互動式展示、情境模擬與跨學科主題設計，推動STEAM教育與科學素養培養。",en:"Informal learning spaces & STEAM design. Interactive exhibits, scenario simulation, cross-disciplinary themes."},
+  {date:"2025-08-08",day:6,zh:"城市景觀 × 教師放鬆。",en:"City exploration × teacher relaxation day."},
+  {date:"2025-08-09",day:7,zh:"參訪雪梨歌劇院。",en:"Visit Sydney Opera House."},
+  {date:"2025-08-10",day:8,zh:"AI + STEM 小學教師證書課程（雪梨大學）。拜訪新南威爾斯大學教育研究單位。",en:"AI + STEM Primary Teacher Certificate Course (University of Sydney). Visit UNSW Education Research unit."},
+  {date:"2025-08-11",day:9,zh:"AI + STEM 小學教師證書課程（雪梨大學）。見習新南威爾斯州立小學。",en:"AI + STEM Certificate Course (USyd). Observation at NSW public primary school."},
+  {date:"2025-08-12",day:10,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
+  {date:"2025-08-13",day:11,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
+  {date:"2025-08-14",day:12,zh:"教師專業發展（PD）模式交流與行動設計實作。",en:"Teacher Professional Development (PD) exchange & action design workshop."},
+  {date:"2025-08-15",day:13,zh:"個人興趣探索 ＋ 跨校小組分享。",en:"Personal interest exploration + cross-school group sharing."},
+  {date:"2025-08-16",day:14,zh:"拜會新南威爾斯州教育處。",en:"Visit NSW Department of Education."},
+  {date:"2025-08-17",day:15,zh:"輕量分享交流 × 一週課程反思。",en:"Light sharing & one-week course reflection."},
+  {date:"2025-08-18",day:16,zh:"抵達臺灣。",en:"Return to Taiwan."}
+];
+
+// ============================================================
+// TRANSLATIONS
+// ============================================================
+const T = {
+  zh:{
+    "site-title":"澳洲冒險：AI教室實驗室",
+    "nav-main":"主要",
+    "nav-home":"首頁",
+    "nav-schedule":"行程表",
+    "nav-diary":"日誌",
+    "nav-diary-all":"每日日記",
+    "nav-write":"寫今日日記",
+    "nav-gallery":"相片牆",
+    "nav-interact":"互動",
+    "nav-chat":"即時聊天",
+    "nav-profile":"個人檔案",
+    "nav-admin":"管理後台",
+    "logout":"登出",
+    "stat-members":"名見習教師",
+    "stat-days":"天探索旅程",
+    "stat-entries":"篇日記",
+    "stat-photos":"張照片",
+    "flight-depart":"去程航班",
+    "flight-return":"回程航班",
+    "page-schedule":"16天行程表",
+    "page-schedule-sub":"澳洲雪梨・墨爾本 AI教室實驗室見習之旅",
+    "page-diary":"每日日記",
+    "page-diary-sub":"16位見習教師的每日所見所感",
+    "page-write":"寫今日日記",
+    "page-gallery":"相片牆",
+    "page-gallery-sub":"所有見習教師的精彩影像記錄",
+    "chat-title":"即時聊天室",
+    "chat-sub":"與我們即時互動，雖然你沒來但我們在線上！",
+    "page-profile":"個人檔案",
+    "view-date":"📅 照日期",
+    "view-person":"👤 照人員",
+    "view-all":"📋 全部",
+    "label-select-date":"選擇日期",
+    "label-diary-content":"日記內容",
+    "label-photos":"上傳照片（最多5張）",
+    "label-nickname":"暱稱",
+    "label-bio":"自我介紹",
+    "upload-hint":"點擊或拖曳照片到這裡",
+    "upload-hint2":"最多5張，原尺寸上傳至 Cloudinary",
+    "save-profile":"儲存個人資料",
+    "placeholder-diary":"今天我們去了... 我最印象深刻的是...",
+    "role-admin":"管理員",
+    "role-member":"見習成員",
+    "role-visitor":"訪客",
+    "days-before":"距離出發",
+    "days-after":"活動進行中",
+    "days-end":"活動已結束",
+    "no-flight":"尚未填寫航班資訊",
+    "no-diary":"這裡還沒有日記記錄",
+    "no-photos":"還沒有照片"
+  },
+  en:{
+    "site-title":"Australia AI Classroom Lab",
+    "nav-main":"Main",
+    "nav-home":"Home",
+    "nav-schedule":"Schedule",
+    "nav-diary":"Journal",
+    "nav-diary-all":"Daily Journal",
+    "nav-write":"Write Today",
+    "nav-gallery":"Gallery",
+    "nav-interact":"Interact",
+    "nav-chat":"Live Chat",
+    "nav-profile":"Profile",
+    "nav-admin":"Admin",
+    "logout":"Sign Out",
+    "stat-members":"teachers",
+    "stat-days":"days",
+    "stat-entries":"entries",
+    "stat-photos":"photos",
+    "flight-depart":"Departure Flight",
+    "flight-return":"Return Flight",
+    "page-schedule":"16-Day Schedule",
+    "page-schedule-sub":"Sydney & Melbourne • AI Classroom Lab",
+    "page-diary":"Daily Journal",
+    "page-diary-sub":"Daily reflections from 16 teachers",
+    "page-write":"Write Today's Entry",
+    "page-gallery":"Photo Gallery",
+    "page-gallery-sub":"Visual records from all teachers",
+    "chat-title":"Live Chat Room",
+    "chat-sub":"Chat with us in real-time!",
+    "page-profile":"Profile",
+    "view-date":"📅 By Date",
+    "view-person":"👤 By Person",
+    "view-all":"📋 All",
+    "label-select-date":"Select Date",
+    "label-diary-content":"Journal Content",
+    "label-photos":"Upload Photos (max 5)",
+    "label-nickname":"Nickname",
+    "label-bio":"Bio",
+    "upload-hint":"Click or drag photos here",
+    "upload-hint2":"Max 5 photos, original quality via Cloudinary",
+    "save-profile":"Save Profile",
+    "placeholder-diary":"Today we visited... The most memorable moment was...",
+    "role-admin":"Admin",
+    "role-member":"Member",
+    "role-visitor":"Visitor",
+    "days-before":"Days Until Departure",
+    "days-after":"Activity In Progress",
+    "days-end":"Activity Ended",
+    "no-flight":"Flight info not yet filled in",
+    "no-diary":"No journal entries yet",
+    "no-photos":"No photos yet"
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let db, storage, rtdb, auth;
+let currentUser = null;
+let currentLang = 'zh';
+let isMember = false;
+let isAdmin = false;
+let currentView = 'date';
+let selectedDiaryDate = '';
+let selectedDiaryPerson = '';
+let pendingPhotos = [];
+let allDiaries = [];
+let allGalleryPhotos = [];
+let members = [];
+let chatListener = null;
+let lbImages = [];
+let lbIndex = 0;
+let countdownInterval = null;
+
+// ============================================================
+// INIT FIREBASE
+// ============================================================
+function initFirebase() {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    storage = firebase.storage();
+    rtdb = firebase.database();
+    auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        onLogin(user);
+      } else {
+        currentUser = null;
+        showLoginScreen();
+      }
+    });
+  } catch(e) {
+    console.error("Firebase init error:", e);
+    showToast("Firebase 初始化失敗，請確認設定", "error");
+  }
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+async function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+  } catch(e) {
+    showToast("登入失敗: " + e.message, "error");
+  }
+}
+
+async function signOut() {
+  await auth.signOut();
+  showLoginScreen();
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  if(countdownInterval) clearInterval(countdownInterval);
+  if(chatListener) chatListener();
+}
+
+async function onLogin(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  isAdmin = user.email === ADMIN_EMAIL;
+  
+  // Check membership
+  try {
+    const snap = await db.collection('members').doc(user.uid).get();
+    isMember = snap.exists || isAdmin;
+  } catch(e) {
+    isMember = isAdmin;
+  }
+
+  // Ensure profile doc
+  const profRef = db.collection('profiles').doc(user.uid);
+  const profSnap = await profRef.get();
+  if(!profSnap.exists) {
+    await profRef.set({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      nickname: user.displayName || '',
+      bio: '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  updateSidebarUser(user);
+  toggleAdminUI();
+  setupWriteNav();
+  startCountdown();
+  renderSchedule();
+  renderHome();
+  loadFlightInfo();
+  navigate('home');
+  initChat();
+  loadStats();
+}
+
+function updateSidebarUser(user) {
+  const photo = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName||'U')}&background=d4650a&color=fff`;
+  document.getElementById('sidebar-avatar').src = photo;
+  document.getElementById('topbar-avatar').src = photo;
+  document.getElementById('chat-my-avatar').src = photo;
+  document.getElementById('sidebar-name').textContent = user.displayName || user.email;
+  document.getElementById('sidebar-role').textContent = isAdmin ? t('role-admin') : isMember ? t('role-member') : t('role-visitor');
+  document.getElementById('profile-avatar-big').src = photo;
+  document.getElementById('profile-email').value = user.email;
+}
+
+function toggleAdminUI() {
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.classList.toggle('visible', isAdmin);
+  });
+  if(isAdmin) document.getElementById('nav-admin').style.display = 'flex';
+}
+
+function setupWriteNav() {
+  document.getElementById('nav-write').style.display = isMember ? 'flex' : 'none';
+}
+
+// ============================================================
+// TRANSLATIONS
+// ============================================================
+function t(key) {
+  return T[currentLang][key] || T['zh'][key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(key) el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if(key) el.placeholder = t(key);
+  });
+  // Re-render dynamic content
+  renderSchedule();
+  renderCountdown();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if(pg) pg.classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  
+  // Lazy load
+  if(page === 'diary') { populateDiaryFilters(); renderDiary(); }
+  if(page === 'gallery') { populateGalleryFilters(); renderGallery(); }
+  if(page === 'write') loadWriteForm();
+  if(page === 'profile') loadProfileForm();
+  if(page === 'admin' && isAdmin) loadAdminPanel();
+  
+  // Close mobile sidebar
+  const sb = document.getElementById('sidebar');
+  if(sb.classList.contains('open')) toggleSidebar();
+  window.scrollTo(0,0);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+
+// ============================================================
+// COUNTDOWN
+// ============================================================
+function startCountdown() {
+  renderCountdown();
+  countdownInterval = setInterval(renderCountdown, 1000);
+}
+
+function renderCountdown() {
+  const now = new Date();
+  const section = document.getElementById('countdown-section');
+  if(!section) return;
+  
+  let html = '';
+  if(now < ACTIVITY_START) {
+    const diff = ACTIVITY_START - now;
+    const {d,h,m,s} = msToUnits(diff);
+    html = `<div class="countdown-card" style="margin-bottom:28px">
+      <h3>🚀 ${t('days-before')}</h3>
+      <div class="countdown-grid">
+        <div class="cd-unit"><div class="cd-num">${d}</div><div class="cd-label">${currentLang==='zh'?'天':'Days'}</div></div>
+        <div class="cd-unit"><div class="cd-num">${h}</div><div class="cd-label">${currentLang==='zh'?'小時':'Hours'}</div></div>
+        <div class="cd-unit"><div class="cd-num">${m}</div><div class="cd-label">${currentLang==='zh'?'分鐘':'Mins'}</div></div>
+        <div class="cd-unit"><div class="cd-num">${s}</div><div class="cd-label">${currentLang==='zh'?'秒':'Secs'}</div></div>
+      </div>
+    </div>`;
+  } else if(now <= ACTIVITY_END) {
+    const day = Math.floor((now - ACTIVITY_START)/(1000*60*60*24)) + 1;
+    html = `<div class="countdown-card" style="margin-bottom:28px;background:linear-gradient(135deg,var(--green),#4a7c42)">
+      <h3>🌏 ${t('days-after')}</h3>
+      <div style="font-size:48px;font-family:'Playfair Display',serif;font-weight:900;margin-bottom:8px">Day ${Math.min(day,16)}</div>
+      <div style="opacity:.8;font-size:15px">${SCHEDULE[Math.min(day-1,15)]?.[currentLang==='zh'?'zh':'en']||''}</div>
+    </div>`;
+  } else {
+    html = `<div class="countdown-card" style="margin-bottom:28px;background:linear-gradient(135deg,#555,#333)">
+      <h3>🏁 ${t('days-end')}</h3>
+      <div style="font-size:18px;opacity:.8;margin-top:8px">${currentLang==='zh'?'感謝16位教師的精彩旅程！':'Thank you for this incredible journey!'}</div>
+    </div>`;
+  }
+  section.innerHTML = html;
+}
+
+function msToUnits(ms) {
+  const s = Math.floor(ms/1000)%60;
+  const m = Math.floor(ms/1000/60)%60;
+  const h = Math.floor(ms/1000/60/60)%24;
+  const d = Math.floor(ms/1000/60/60/24);
+  return {d,h,m,s};
+}
+
+// ============================================================
+// HOME
+// ============================================================
+async function renderHome() {
+  // Load profiles for stats
+  loadStats();
+}
+
+async function loadStats() {
+  try {
+    // Count diaries
+    const ds = await db.collectionGroup('entries').get();
+    let photoCount = 0;
+    ds.forEach(doc => {
+      const d = doc.data();
+      if(d.photos) photoCount += d.photos.length;
+    });
+    const e = document.getElementById('stat-entries');
+    const p = document.getElementById('stat-photos');
+    if(e) e.textContent = ds.size;
+    if(p) p.textContent = photoCount;
+  } catch(e) {}
+}
+
+// ============================================================
+// FLIGHT INFO
+// ============================================================
+async function loadFlightInfo() {
+  try {
+    const snap = await db.collection('config').doc('flights').get();
+    const data = snap.exists ? snap.data() : {};
+    renderFlightCard('depart', data.depart);
+    renderFlightCard('return', data.return);
+    if(isAdmin) prefillFlightEditor(data);
+  } catch(e) {
+    renderFlightCard('depart', null);
+    renderFlightCard('return', null);
+  }
+}
+
+function renderFlightCard(type, info) {
+  const body = document.getElementById(`flight-${type}-body`);
+  if(!body) return;
+  if(!info || !info.flight) {
+    body.innerHTML = `<div class="empty-state" style="padding:20px"><div class="es-icon">✈️</div><p>${t('no-flight')}</p></div>`;
+    return;
+  }
+  body.innerHTML = `
+    <div class="flight-row"><div class="fr-icon">✈️</div><div class="fr-info"><div class="fr-label">航班</div><div class="fr-val">${info.flight}</div></div></div>
+    <div class="flight-row"><div class="fr-icon">🕐</div><div class="fr-info"><div class="fr-label">日期/時間</div><div class="fr-val">${info.datetime||'-'}</div></div></div>
+    <div class="flight-row"><div class="fr-icon">🗺️</div><div class="fr-info"><div class="fr-label">航線</div><div class="fr-val">${info.route||'-'}</div></div></div>
+    ${info.note ? `<div class="flight-row"><div class="fr-icon">📌</div><div class="fr-info"><div class="fr-label">備註</div><div class="fr-val">${info.note}</div></div></div>` : ''}
+  `;
+}
+
+function prefillFlightEditor(data) {
+  const d = data.depart || {};
+  const r = data.return || {};
+  document.getElementById('fd-flight').value = d.flight||'';
+  document.getElementById('fd-datetime').value = d.datetime||'';
+  document.getElementById('fd-route').value = d.route||'';
+  document.getElementById('fd-note').value = d.note||'';
+  document.getElementById('fr-flight').value = r.flight||'';
+  document.getElementById('fr-datetime').value = r.datetime||'';
+  document.getElementById('fr-route').value = r.route||'';
+  document.getElementById('fr-note').value = r.note||'';
+}
+
+async function saveFlightInfo() {
+  if(!isAdmin) return;
+  const data = {
+    depart: {
+      flight: document.getElementById('fd-flight').value.trim(),
+      datetime: document.getElementById('fd-datetime').value.trim(),
+      route: document.getElementById('fd-route').value.trim(),
+      note: document.getElementById('fd-note').value.trim()
+    },
+    return: {
+      flight: document.getElementById('fr-flight').value.trim(),
+      datetime: document.getElementById('fr-datetime').value.trim(),
+      route: document.getElementById('fr-route').value.trim(),
+      note: document.getElementById('fr-note').value.trim()
+    },
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try {
+    await db.collection('config').doc('flights').set(data);
+    renderFlightCard('depart', data.depart);
+    renderFlightCard('return', data.return);
+    showToast("航班資訊已儲存 ✈️", "success");
+  } catch(e) {
+    showToast("儲存失敗: " + e.message, "error");
+  }
+}
+
+// ============================================================
+// SCHEDULE
+// ============================================================
+function renderSchedule() {
+  const container = document.getElementById('schedule-list');
+  if(!container) return;
+  const today = new Date().toISOString().split('T')[0];
+  container.innerHTML = SCHEDULE.map(s => {
+    const isToday = s.date === today;
+    const d = new Date(s.date);
+    const weekdays = currentLang==='zh' ? ['日','一','二','三','四','五','六'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const dateStr = currentLang==='zh' 
+      ? `${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`
+      : `Aug ${d.getDate()} (${weekdays[d.getDay()]})`;
+    const text = currentLang==='zh' ? s.zh : s.en;
+    return `<div class="sched-item ${isToday?'today':''}" onclick="handleSchedClick('${s.date}')">
+      <div class="sched-card">
+        <div class="sched-top">
+          <span class="sched-day">Day ${s.day}</span>
+          <span class="sched-date">📅 ${dateStr}</span>
+          ${isToday ? '<span class="tag tag-amber">今天</span>' : ''}
+        </div>
+        <div class="sched-text">${text}</div>
+        <div class="sched-entries" id="sched-count-${s.date}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  loadScheduleEntryCounts();
+}
+
+async function loadScheduleEntryCounts() {
+  try {
+    const snap = await db.collection('diaries').get();
+    snap.forEach(dateDoc => {
+      const el = document.getElementById(`sched-count-${dateDoc.id}`);
+      if(el) {
+        const count = Object.keys(dateDoc.data()).length;
+        if(count > 0) el.innerHTML = `📝 ${count} 篇日記`;
+      }
+    });
+  } catch(e) {}
+}
+
+function handleSchedClick(date) {
+  navigate('diary');
+  setView('date');
+  document.getElementById('diary-filter').value = date;
+  applyFilter();
+}
+
+// ============================================================
+// DIARY - DATA
+// ============================================================
+async function loadAllDiaries() {
+  allDiaries = [];
+  try {
+    const datesSnap = await db.collection('diaries').get();
+    const promises = [];
+    datesSnap.forEach(dateDoc => {
+      const dateStr = dateDoc.id;
+      promises.push(
+        db.collection('diaries').doc(dateStr).collection('entries').get().then(entriesSnap => {
+          entriesSnap.forEach(entDoc => {
+            allDiaries.push({id: entDoc.id, date: dateStr, ...entDoc.data()});
+          });
+        })
+      );
+    });
+    await Promise.all(promises);
+  } catch(e) { console.error(e); }
+  return allDiaries;
+}
+
+// ============================================================
+// DIARY - UI
+// ============================================================
+async function populateDiaryFilters() {
+  await loadAllDiaries();
+  const filterEl = document.getElementById('diary-filter');
+  
+  if(currentView === 'date') {
+    filterEl.innerHTML = '<option value="">所有日期</option>' + 
+      SCHEDULE.map(s => `<option value="${s.date}">Day ${s.day} - ${s.date.slice(5)}</option>`).join('');
+  } else if(currentView === 'person') {
+    const people = [...new Set(allDiaries.map(d => d.uid))];
+    const profMap = await loadProfiles(people);
+    filterEl.innerHTML = '<option value="">所有成員</option>' +
+      people.map(uid => `<option value="${uid}">${profMap[uid]?.nickname||profMap[uid]?.displayName||uid.slice(0,8)}</option>`).join('');
+  } else {
+    filterEl.innerHTML = '<option value="">所有</option>';
+  }
+}
+
+async function loadProfiles(uids) {
+  const map = {};
+  const batches = [];
+  for(let i=0;i<uids.length;i+=10) batches.push(uids.slice(i,i+10));
+  for(const batch of batches) {
+    const snaps = await Promise.all(batch.map(uid => db.collection('profiles').doc(uid).get()));
+    snaps.forEach(s => { if(s.exists) map[s.id] = s.data(); });
+  }
+  return map;
+}
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`vt-${view}`)?.classList.add('active');
+  populateDiaryFilters();
+}
+
+function applyFilter() {
+  const val = document.getElementById('diary-filter').value;
+  if(currentView === 'date') selectedDiaryDate = val;
+  else if(currentView === 'person') selectedDiaryPerson = val;
+  renderDiary();
+}
+
+async function renderDiary() {
+  const container = document.getElementById('diary-content');
+  if(!container) return;
+  container.innerHTML = '<div class="loading-spinner"></div>';
+  
+  if(!allDiaries.length) await loadAllDiaries();
+  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
+  
+  let entries = [...allDiaries];
+  const sort = document.getElementById('diary-sort')?.value || 'newest';
+  
+  // Filter
+  if(currentView === 'date' && selectedDiaryDate) entries = entries.filter(e => e.date === selectedDiaryDate);
+  else if(currentView === 'person' && selectedDiaryPerson) entries = entries.filter(e => e.uid === selectedDiaryPerson);
+  
+  // Sort
+  entries.sort((a,b) => {
+    const ta = a.createdAt?.seconds || 0;
+    const tb = b.createdAt?.seconds || 0;
+    return sort==='newest' ? tb-ta : ta-tb;
+  });
+  
+  if(!entries.length) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">📓</div><h3>${t('no-diary')}</h3></div>`;
+    return;
+  }
+  
+  // Group by date if 'date' view
+  let html = '';
+  if(currentView === 'date' && !selectedDiaryDate) {
+    const byDate = {};
+    entries.forEach(e => { if(!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
+    const dates = Object.keys(byDate).sort(sort==='newest'?(a,b)=>b.localeCompare(a):(a,b)=>a.localeCompare(b));
+    dates.forEach(date => {
+      const sched = SCHEDULE.find(s=>s.date===date);
+      html += `<div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          ${sched?`<span class="tag tag-orange">Day ${sched.day}</span>`:''}
+          <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:18px">${date}</h3>
+          <span style="font-size:13px;color:var(--text-muted);font-weight:600">${sched?sched[currentLang==='zh'?'zh':'en'].slice(0,40)+'...':''}</span>
+        </div>
+        <div class="diary-grid">${byDate[date].map(e=>renderDiaryCard(e, profMap)).join('')}</div>
+      </div>`;
+    });
+  } else {
+    html = `<div class="diary-grid">${entries.map(e=>renderDiaryCard(e, profMap)).join('')}</div>`;
+  }
+  
+  container.innerHTML = html;
+  
+  // Store gallery photos
+  allGalleryPhotos = [];
+  entries.forEach(e => { if(e.photos) e.photos.forEach(p => allGalleryPhotos.push({url:p, uid:e.uid, date:e.date, name:profMap[e.uid]?.nickname||''})); });
+}
+
+function renderDiaryCard(entry, profMap) {
+  const prof = profMap[entry.uid] || {};
+  const name = prof.nickname || prof.displayName || entry.uid.slice(0,8);
+  const avatar = prof.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=d4650a&color=fff`;
+  const sched = SCHEDULE.find(s=>s.date===entry.date);
+  const schedText = sched ? sched[currentLang==='zh'?'zh':'en'].slice(0,50) : '';
+  const photos = entry.photos || [];
+  const photoClass = photos.length === 1 ? 'p1' : photos.length === 2 ? 'p2' : photos.length === 3 ? 'p3' : '';
+  const canDelete = isAdmin || (currentUser && currentUser.uid === entry.uid);
+  const liked = entry.likes && entry.likes[currentUser?.uid];
+  const likeCount = entry.likes ? Object.keys(entry.likes).length : 0;
+  const comments = entry.comments || [];
+  
+  return `<div class="diary-card" id="dc-${entry.id}-${entry.date}">
+    <div class="dc-header">
+      <img class="dc-avatar" src="${avatar}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=d4650a&color=fff'">
+      <div style="flex:1;min-width:0">
+        <div class="dc-name">${esc(name)}</div>
+        <div class="dc-date">${entry.date} ${entry.updatedAt ? '（已更新）':''}</div>
+        ${schedText ? `<div class="dc-sched">${schedText}</div>` : ''}
+      </div>
+      ${canDelete ? `<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry('${entry.date}','${entry.uid}')" title="刪除">🗑</button>` : ''}
+    </div>
+    ${photos.length ? `<div class="dc-photos ${photoClass}">${photos.map((p,i)=>`<img class="dc-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox(${i}, ${JSON.stringify(photos).replace(/"/g,"'")})" onerror="this.style.display='none'">`).join('')}</div>` : ''}
+    <div class="dc-body" id="dcb-${entry.id}">${esc(entry.content||'')}</div>
+    <div style="padding:4px 20px"><button onclick="toggleExpand('dcb-${entry.id}')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0">展開全文 ▼</button></div>
+    <div class="dc-footer">
+      <button class="dc-action ${liked?'liked':''}" onclick="toggleLike('${entry.date}','${entry.uid}')">
+        ${liked?'❤️':'🤍'} ${likeCount}
+      </button>
+      <button class="dc-action" onclick="toggleComments('comment-section-${entry.id}')">
+        💬 ${comments.length}
+      </button>
+    </div>
+    <div class="dc-comments" id="comment-section-${entry.id}" style="display:none">
+      ${comments.map(c => `<div class="comment-item">
+        <img class="comment-avatar" src="${c.userPhoto||`https://ui-avatars.com/api/?name=${encodeURIComponent(c.userName||'U')}&background=e0d0c0&color=5c3317`}" alt="">
+        <div class="comment-bubble"><div class="cn">${esc(c.userName||'')}</div>${esc(c.text||'')}</div>
+        ${isAdmin ? `<button onclick="deleteComment('${entry.date}','${entry.uid}',${entry.comments.indexOf(c)})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted)">✕</button>` : ''}
+      </div>`).join('')}
+      <div class="comment-input-row">
+        <input class="comment-input" id="ci-${entry.id}" placeholder="留言..." onkeydown="if(event.key==='Enter')postComment('${entry.date}','${entry.uid}','${entry.id}')">
+        <button class="btn btn-primary btn-sm" onclick="postComment('${entry.date}','${entry.uid}','${entry.id}')">送出</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleExpand(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.toggle('expanded');
+  const btn = el.nextElementSibling?.querySelector('button');
+  if(btn) btn.textContent = el.classList.contains('expanded') ? '收起 ▲' : '展開全文 ▼';
+}
+
+function toggleComments(id) {
+  const el = document.getElementById(id);
+  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function toggleLike(date, uid) {
+  if(!currentUser) { showToast("請先登入", "error"); return; }
+  const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
+  try {
+    const snap = await ref.get();
+    const likes = snap.data()?.likes || {};
+    if(likes[currentUser.uid]) delete likes[currentUser.uid];
+    else likes[currentUser.uid] = true;
+    await ref.update({ likes });
+    allDiaries = [];
+    renderDiary();
+  } catch(e) { showToast("操作失敗", "error"); }
+}
+
+async function postComment(date, uid, entryId) {
+  if(!currentUser) { showToast("請先登入", "error"); return; }
+  const input = document.getElementById(`ci-${entryId}`);
+  const text = input?.value.trim();
+  if(!text) return;
+  const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
+  try {
+    const snap = await ref.get();
+    const comments = snap.data()?.comments || [];
+    comments.push({
+      uid: currentUser.uid,
+      userName: currentUser.displayName || currentUser.email,
+      userPhoto: currentUser.photoURL || '',
+      text,
+      timestamp: new Date().toISOString()
+    });
+    await ref.update({ comments });
+    if(input) input.value = '';
+    allDiaries = [];
+    renderDiary();
+    showToast("留言已送出 💬", "success");
+  } catch(e) { showToast("留言失敗", "error"); }
+}
+
+async function deleteDiaryEntry(date, uid) {
+  if(!confirm('確定要刪除這篇日記嗎？')) return;
+  try {
+    await db.collection('diaries').doc(date).collection('entries').doc(uid).delete();
+    allDiaries = [];
+    renderDiary();
+    showToast("已刪除日記", "success");
+  } catch(e) { showToast("刪除失敗", "error"); }
+}
+
+async function deleteComment(date, uid, idx) {
+  const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
+  try {
+    const snap = await ref.get();
+    const comments = snap.data()?.comments || [];
+    comments.splice(idx, 1);
+    await ref.update({ comments });
+    allDiaries = [];
+    renderDiary();
+  } catch(e) {}
+}
+
+// ============================================================
+// WRITE DIARY
+// ============================================================
+function loadWriteForm() {
+  if(!isMember) {
+    document.getElementById('write-member-check').style.display = 'flex';
+    document.getElementById('write-form-wrap').style.display = 'none';
+    return;
+  }
+  document.getElementById('write-member-check').style.display = 'none';
+  document.getElementById('write-form-wrap').style.display = 'block';
+  
+  // Populate date select
+  const sel = document.getElementById('write-date-select');
+  const today = new Date().toISOString().split('T')[0];
+  sel.innerHTML = SCHEDULE.map(s => `<option value="${s.date}" ${s.date===today?'selected':''}>${s.date} - Day ${s.day}</option>`).join('');
+  
+  updateWriteDate();
+  loadExistingEntry(sel.value);
+}
+
+function updateWriteDate() {
+  const date = document.getElementById('write-date-select')?.value;
+  if(!date) return;
+  const sched = SCHEDULE.find(s=>s.date===date);
+  document.getElementById('write-date-display').textContent = `${date} - Day ${sched?.day||''}`;
+  document.getElementById('write-sched-display').innerHTML = `<span>📅</span><span>${sched?sched.zh:'無行程資訊'}</span>`;
+  loadExistingEntry(date);
+}
+
+async function loadExistingEntry(date) {
+  if(!currentUser || !date) return;
+  try {
+    const snap = await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).get();
+    if(snap.exists) {
+      const data = snap.data();
+      document.getElementById('diary-text').value = data.content || '';
+      pendingPhotos = (data.photos||[]).map(url => ({url, existing:true}));
+      renderPhotoPreviews();
+    } else {
+      document.getElementById('diary-text').value = '';
+      pendingPhotos = [];
+      renderPhotoPreviews();
+    }
+  } catch(e) {}
+}
+
+function handlePhotoSelect(input) {
+  const files = Array.from(input.files);
+  const remaining = MAX_PHOTOS - pendingPhotos.filter(p=>!p.existing).length - pendingPhotos.filter(p=>p.existing).length;
+  const allowed = Math.min(files.length, remaining);
+  if(files.length > remaining) showToast(`最多只能上傳 ${MAX_PHOTOS} 張照片`, "error");
+  files.slice(0, allowed).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingPhotos.push({file: f, preview: e.target.result, existing: false});
+      renderPhotoPreviews();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function renderPhotoPreviews() {
+  const container = document.getElementById('photo-previews');
+  if(!container) return;
+  container.innerHTML = pendingPhotos.map((p,i) => `
+    <div class="photo-preview-item">
+      <img src="${p.existing ? p.url : p.preview}" alt="">
+      <button class="remove-photo" onclick="removePhoto(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removePhoto(idx) {
+  pendingPhotos.splice(idx, 1);
+  renderPhotoPreviews();
+}
+
+async function submitDiary() {
+  if(!currentUser || !isMember) return;
+  const date = document.getElementById('write-date-select')?.value;
+  const content = document.getElementById('diary-text').value.trim();
+  if(!content && pendingPhotos.length === 0) { showToast("請輸入日記內容或上傳照片", "error"); return; }
+  
+  const btn = document.getElementById('submit-diary-btn');
+  btn.textContent = '⏳ 儲存中...';
+  btn.disabled = true;
+  
+  try {
+    // Upload new photos via Cloudinary (original quality, 25GB free)
+    const photoURLs = [];
+    const toUpload = pendingPhotos.filter(p=>!p.existing);
+    const existingURLs = pendingPhotos.filter(p=>p.existing).map(p=>p.url);
+    
+    for(let i=0; i<toUpload.length; i++) {
+      btn.textContent = `⏳ 上傳照片 ${i+1}/${toUpload.length}...`;
+      const url = await uploadToCloudinary(toUpload[i].file);
+      photoURLs.push(url);
+    }
+    photoURLs.push(...existingURLs);
+    
+    // Get profile info
+    const profSnap = await db.collection('profiles').doc(currentUser.uid).get();
+    const prof = profSnap.exists ? profSnap.data() : {};
+    
+    const entryData = {
+      uid: currentUser.uid,
+      email: currentUser.email,
+      displayName: prof.nickname || currentUser.displayName || '',
+      photoURL: prof.photoURL || currentUser.photoURL || '',
+      content,
+      photos: photoURLs,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).set(entryData, {merge:true});
+    
+    showToast("日記已儲存 🎉", "success");
+    allDiaries = [];
+    loadStats();
+    
+  } catch(e) {
+    showToast("儲存失敗: " + e.message, "error");
+  } finally {
+    btn.textContent = '💾 儲存日記';
+    btn.disabled = false;
+  }
+}
+
+function clearWriteForm() {
+  document.getElementById('diary-text').value = '';
+  pendingPhotos = [];
+  renderPhotoPreviews();
+}
+
+// ============================================================
+// ☁️ CLOUDINARY UPLOAD - 原尺寸上傳，無壓縮，25GB 免費
+// ============================================================
+async function uploadToCloudinary(file) {
+  if(CLOUDINARY_CLOUD === "YOUR_CLOUD_NAME") {
+    // Fallback: use Firebase Storage if Cloudinary not configured
+    return uploadToFirebaseStorage(file);
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
+  formData.append("folder", "au-ai-lab");
+  
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+  if(!res.ok) throw new Error("Cloudinary upload failed");
+  const data = await res.json();
+  return data.secure_url;
+}
+
+async function uploadToFirebaseStorage(file) {
+  // Fallback Firebase Storage upload (when Cloudinary not set up yet)
+  const path = `photos/${currentUser.uid}/${Date.now()}_${file.name}`;
+  const ref = storage.ref(path);
+  await ref.put(file);
+  return await ref.getDownloadURL();
+}
+
+// Keep for avatar upload only (small files)
+async function compressImage(file, maxKB=200) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w=img.width, h=img.height, maxDim=800;
+        if(w>maxDim||h>maxDim) { const r=Math.min(maxDim/w,maxDim/h); w=Math.round(w*r); h=Math.round(h*r); }
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.85);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ============================================================
+// GALLERY
+// ============================================================
+async function populateGalleryFilters() {
+  if(!allDiaries.length) await loadAllDiaries();
+  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
+  
+  const dateEl = document.getElementById('gallery-filter-date');
+  const personEl = document.getElementById('gallery-filter-person');
+  if(!dateEl || !personEl) return;
+  
+  const dates = [...new Set(allDiaries.map(d=>d.date))].sort();
+  dateEl.innerHTML = '<option value="">所有日期</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  
+  const people = [...new Set(allDiaries.map(d=>d.uid))];
+  personEl.innerHTML = '<option value="">所有成員</option>' + people.map(uid=>`<option value="${uid}">${profMap[uid]?.nickname||uid.slice(0,8)}</option>`).join('');
+}
+
+async function renderGallery() {
+  const container = document.getElementById('gallery-content');
+  if(!container) return;
+  container.innerHTML = '<div class="loading-spinner"></div>';
+  if(!allDiaries.length) await loadAllDiaries();
+  
+  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
+  const filterDate = document.getElementById('gallery-filter-date')?.value || '';
+  const filterPerson = document.getElementById('gallery-filter-person')?.value || '';
+  
+  let photos = [];
+  allDiaries.forEach(entry => {
+    if(filterDate && entry.date !== filterDate) return;
+    if(filterPerson && entry.uid !== filterPerson) return;
+    (entry.photos||[]).forEach(url => {
+      const name = profMap[entry.uid]?.nickname || profMap[entry.uid]?.displayName || '';
+      photos.push({url, uid:entry.uid, date:entry.date, name});
+    });
+  });
+  
+  allGalleryPhotos = photos;
+  
+  if(!photos.length) {
+    container.innerHTML = `<div class="empty-state"><div class="es-icon">📷</div><h3>${t('no-photos')}</h3></div>`;
+    return;
+  }
+  
+  container.innerHTML = photos.map((p,i) => `
+    <div class="gallery-item" onclick="openLightbox(${i}, null, true)">
+      <img src="${p.url}" alt="${esc(p.name)}" loading="lazy">
+      <div class="gi-overlay">${esc(p.name)} · ${p.date}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// LIGHTBOX - 支援鍵盤、點擊、滑鼠滾輪、觸控滑動
+// ============================================================
+let lbTouchStartX = 0, lbTouchStartY = 0;
+
+function openLightbox(idx, photos, useGallery=false) {
+  const lb = document.getElementById('lightbox');
+  if(useGallery) {
+    lbImages = allGalleryPhotos.map(p=>({url:p.url, info:`${p.name}  ·  ${p.date}`}));
+  } else if(Array.isArray(photos)) {
+    // photos can be array of URLs or array of objects
+    lbImages = photos.map(p => typeof p === 'string' ? {url:p, info:''} : {url:p, info:''});
+  }
+  lbIndex = Math.max(0, Math.min(idx, lbImages.length-1));
+  updateLightbox(false);
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function updateLightbox(animate=true) {
+  const img = document.getElementById('lb-img');
+  const info = document.getElementById('lb-info');
+  const dots = document.getElementById('lb-dots');
+  const prev = document.getElementById('lb-prev');
+  const next = document.getElementById('lb-next');
+  
+  if(animate) {
+    img.classList.add('fading');
+    setTimeout(() => {
+      img.src = lbImages[lbIndex]?.url || '';
+      img.classList.remove('fading');
+    }, 120);
+  } else {
+    img.src = lbImages[lbIndex]?.url || '';
+  }
+  
+  info.textContent = `${lbIndex+1} / ${lbImages.length}${lbImages[lbIndex]?.info ? '  ·  '+lbImages[lbIndex].info : ''}`;
+  
+  // Show/hide nav arrows
+  if(prev) prev.style.opacity = lbImages.length > 1 ? '1' : '0';
+  if(next) next.style.opacity = lbImages.length > 1 ? '1' : '0';
+  
+  // Dots (max 10)
+  if(dots && lbImages.length <= 12) {
+    dots.innerHTML = lbImages.map((_,i) => `<div class="lb-dot ${i===lbIndex?'active':''}" onclick="lbGoTo(${i})"></div>`).join('');
+  } else if(dots) {
+    dots.innerHTML = '';
+  }
+}
+
+function lbNav(dir) {
+  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+  updateLightbox(true);
+}
+
+function lbGoTo(idx) {
+  lbIndex = idx;
+  updateLightbox(true);
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Click backdrop to close
+document.getElementById('lightbox').addEventListener('click', e => {
+  if(e.target.id === 'lightbox') closeLightbox();
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('lightbox');
+  if(!lb.classList.contains('open')) return;
+  if(e.key === 'ArrowLeft') lbNav(-1);
+  else if(e.key === 'ArrowRight') lbNav(1);
+  else if(e.key === 'Escape') closeLightbox();
+});
+
+// Mouse wheel navigation
+document.getElementById('lightbox').addEventListener('wheel', e => {
+  e.preventDefault();
+  lbNav(e.deltaY > 0 ? 1 : -1);
+}, {passive:false});
+
+// Touch swipe support
+document.getElementById('lightbox').addEventListener('touchstart', e => {
+  lbTouchStartX = e.touches[0].clientX;
+  lbTouchStartY = e.touches[0].clientY;
+}, {passive:true});
+
+document.getElementById('lightbox').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - lbTouchStartX;
+  const dy = e.changedTouches[0].clientY - lbTouchStartY;
+  if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    lbNav(dx < 0 ? 1 : -1);
+  }
+  if(Math.abs(dy) > 80 && Math.abs(dx) < 50) closeLightbox();
+}, {passive:true});
+
+// ============================================================
+// CHAT
+// ============================================================
+function initChat() {
+  if(chatListener) chatListener();
+  const chatRef = rtdb.ref('chat').orderByChild('timestamp').limitToLast(100);
+  chatListener = chatRef.on('value', snap => {
+    const msgs = [];
+    snap.forEach(child => msgs.push({id:child.key, ...child.val()}));
+    renderChatMessages(msgs);
+  });
+}
+
+function renderChatMessages(msgs) {
+  const container = document.getElementById('chat-messages');
+  if(!container) return;
+  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+  
+  container.innerHTML = `<div class="chat-system">💬 歡迎來到澳洲冒險即時聊天室！雖然你沒有來，但我們在線上等你 🦘</div>`;
+  
+  msgs.forEach(msg => {
+    const isMe = currentUser && msg.uid === currentUser.uid;
+    const avatar = msg.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.userName||'U')}&background=d4650a&color=fff`;
+    const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
+    const deleteBtn = isAdmin ? `<button onclick="deleteChat('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:rgba(255,255,255,.5);padding:0 4px">✕</button>` : '';
+    container.innerHTML += `<div class="chat-msg ${isMe?'me':''}">
+      <img class="cm-avatar" src="${avatar}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=e0d0c0&color=5c3317'">
+      <div>
+        <div class="cm-bubble">
+          <div class="cm-name">${esc(msg.userName||'')}</div>
+          <div class="cm-text">${esc(msg.text||'')}</div>
+          <div class="cm-time">${time} ${deleteBtn}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  
+  if(wasAtBottom) container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage() {
+  if(!currentUser) { showToast("請先登入才能聊天", "error"); return; }
+  const input = document.getElementById('chat-input');
+  const text = input?.value.trim();
+  if(!text) return;
+  
+  try {
+    await rtdb.ref('chat').push({
+      uid: currentUser.uid,
+      userName: currentUser.displayName || currentUser.email,
+      userPhoto: currentUser.photoURL || '',
+      text,
+      timestamp: Date.now()
+    });
+    input.value = '';
+    input.style.height = '';
+  } catch(e) {
+    showToast("發送失敗", "error");
+  }
+}
+
+function chatKeydown(e) {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function deleteChat(msgId) {
+  if(!isAdmin) return;
+  try { await rtdb.ref('chat/' + msgId).remove(); } catch(e) {}
+}
+
+async function clearAllChat() {
+  if(!isAdmin || !confirm('確定要清空所有聊天紀錄嗎？')) return;
+  try { await rtdb.ref('chat').remove(); showToast("聊天紀錄已清空", "success"); } catch(e) {}
+}
+
+// ============================================================
+// PROFILE
+// ============================================================
+async function loadProfileForm() {
+  if(!currentUser) return;
+  try {
+    const snap = await db.collection('profiles').doc(currentUser.uid).get();
+    if(snap.exists) {
+      const d = snap.data();
+      document.getElementById('profile-nickname').value = d.nickname || '';
+      document.getElementById('profile-bio').value = d.bio || '';
+      if(d.photoURL) document.getElementById('profile-avatar-big').src = d.photoURL;
+    }
+    document.getElementById('profile-email').value = currentUser.email;
+  } catch(e) {}
+}
+
+async function saveProfile() {
+  if(!currentUser) return;
+  const nickname = document.getElementById('profile-nickname').value.trim();
+  const bio = document.getElementById('profile-bio').value.trim();
+  try {
+    await db.collection('profiles').doc(currentUser.uid).update({ nickname, bio, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    document.getElementById('sidebar-name').textContent = nickname || currentUser.displayName;
+    showToast("個人資料已儲存 ✨", "success");
+  } catch(e) { showToast("儲存失敗", "error"); }
+}
+
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if(!file || !currentUser) return;
+  showToast("上傳頭像中...", "success");
+  try {
+    const blob = await compressImage(file, 200);
+    const ref = storage.ref(`avatars/${currentUser.uid}/avatar.jpg`);
+    await ref.put(blob);
+    const url = await ref.getDownloadURL();
+    await db.collection('profiles').doc(currentUser.uid).update({ photoURL: url });
+    document.getElementById('profile-avatar-big').src = url;
+    document.getElementById('sidebar-avatar').src = url;
+    document.getElementById('topbar-avatar').src = url;
+    document.getElementById('chat-my-avatar').src = url;
+    showToast("頭像已更新 📷", "success");
+  } catch(e) { showToast("上傳失敗: " + e.message, "error"); }
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+async function loadAdminPanel() {
+  if(!isAdmin) return;
+  loadMemberList();
+  loadAdminStats();
+  loadAdminChatLog();
+  loadAdminDiaries();
+}
+
+async function loadMemberList() {
+  const container = document.getElementById('member-list');
+  if(!container) return;
+  try {
+    const snap = await db.collection('members').get();
+    members = [];
+    snap.forEach(d => members.push({id:d.id, ...d.data()}));
+    document.getElementById('member-count-badge').textContent = members.length + ' 人';
+    container.innerHTML = members.length ? members.map(m => `
+      <div class="member-item">
+        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(m.displayName||m.email||'U')}&background=d4650a&color=fff" alt="">
+        <div class="mi-info">
+          <div class="mi-name">${esc(m.displayName||m.email||m.id)}</div>
+          <div class="mi-email">${esc(m.email||m.id)}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="removeMember('${m.id}')">移除</button>
+      </div>
+    `).join('') : '<div class="empty-state" style="padding:20px"><p>尚未綁定任何成員</p></div>';
+  } catch(e) { container.innerHTML = '<p style="color:red">載入失敗</p>'; }
+}
+
+async function addMember() {
+  const email = document.getElementById('add-member-email').value.trim();
+  const name = document.getElementById('add-member-name').value.trim();
+  if(!email) { showToast("請輸入 Email", "error"); return; }
+  
+  try {
+    // Use email as ID (URL encoded)
+    const id = email.replace(/[.#$[\]]/g,'_');
+    await db.collection('members').doc(id).set({
+      email, displayName: name || email,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      addedBy: currentUser.uid
+    });
+    document.getElementById('add-member-email').value = '';
+    document.getElementById('add-member-name').value = '';
+    showToast(`已綁定 ${email} 為成員 ✅`, "success");
+    loadMemberList();
+  } catch(e) { showToast("新增失敗: " + e.message, "error"); }
+}
+
+async function removeMember(id) {
+  if(!confirm('確定要移除此成員嗎？')) return;
+  try {
+    await db.collection('members').doc(id).delete();
+    showToast("已移除成員", "success");
+    loadMemberList();
+  } catch(e) { showToast("移除失敗", "error"); }
+}
+
+async function loadAdminStats() {
+  const container = document.getElementById('admin-stats');
+  if(!container) return;
+  try {
+    const ds = await db.collectionGroup('entries').get();
+    let photos = 0, comments = 0, likes = 0;
+    ds.forEach(d => {
+      const data = d.data();
+      photos += (data.photos||[]).length;
+      comments += (data.comments||[]).length;
+      likes += Object.keys(data.likes||{}).length;
+    });
+    const chatSnap = await rtdb.ref('chat').once('value');
+    const chatCount = chatSnap.numChildren();
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="stat-card"><div class="stat-num">${ds.size}</div><div class="stat-label">篇日記</div></div>
+        <div class="stat-card"><div class="stat-num">${photos}</div><div class="stat-label">張照片</div></div>
+        <div class="stat-card"><div class="stat-num">${comments}</div><div class="stat-label">則留言</div></div>
+        <div class="stat-card"><div class="stat-num">${chatCount}</div><div class="stat-label">聊天訊息</div></div>
+      </div>`;
+  } catch(e) { container.innerHTML = '<p>統計載入失敗</p>'; }
+}
+
+async function loadAdminChatLog() {
+  const container = document.getElementById('admin-chat-list');
+  if(!container) return;
+  try {
+    const snap = await rtdb.ref('chat').orderByChild('timestamp').limitToLast(50).once('value');
+    const msgs = [];
+    snap.forEach(c => msgs.push({id:c.key, ...c.val()}));
+    if(!msgs.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">無聊天記錄</p>'; return; }
+    container.innerHTML = msgs.reverse().map(m => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--cream-dark)">
+        <div style="flex:1">
+          <span style="font-weight:700;font-size:13px">${esc(m.userName||'')}</span>
+          <span style="color:var(--text-muted);font-size:12px;margin-left:8px">${m.timestamp?new Date(m.timestamp).toLocaleString('zh-TW'):''}</span>
+          <div style="font-size:14px;color:var(--text)">${esc(m.text||'')}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteChat('${m.id}');this.parentElement.parentElement.remove()">刪除</button>
+      </div>
+    `).join('');
+  } catch(e) { container.innerHTML = '<p>載入失敗</p>'; }
+}
+
+async function loadAdminDiaries() {
+  const container = document.getElementById('admin-diary-list');
+  if(!container) return;
+  if(!allDiaries.length) await loadAllDiaries();
+  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
+  container.innerHTML = allDiaries.map(e => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--cream-dark)">
+      <div style="flex:1">
+        <span style="font-weight:700;font-size:13px">${esc(profMap[e.uid]?.nickname||e.uid.slice(0,8))}</span>
+        <span style="color:var(--text-muted);font-size:12px;margin-left:8px">${e.date}</span>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${esc((e.content||'').slice(0,60))}${(e.content||'').length>60?'...':''}</div>
+        <div style="font-size:12px;color:var(--primary)">${(e.photos||[]).length} 張照片</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="deleteDiaryEntry('${e.date}','${e.uid}');this.parentElement.parentElement.remove()">刪除</button>
+    </div>
+  `).join('') || '<p style="text-align:center;color:var(--text-muted);padding:20px">無日記記錄</p>';
+}
+
+// ============================================================
+// PDF EXPORT (print-based)
+// ============================================================
+function exportPDF() {
+  showToast("準備匯出PDF，請稍候...", "success");
+  setTimeout(() => window.print(), 500);
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function showToast(msg, type='') {
+  const container = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+
+// ============================================================
+// MEMBER CHECK (by email)
+// ============================================================
+// This listener is called when user logs in
+// Member matching is by UID; admin must bind by searching email 
+// To support email-based binding: when user logs in, also check by email
+async function checkMembershipByEmail(email) {
+  try {
+    const snap = await db.collection('members').where('email','==',email).get();
+    if(!snap.empty && currentUser) {
+      // Auto-register UID in members
+      await db.collection('members').doc(currentUser.uid).set({
+        email,
+        displayName: currentUser.displayName || email,
+        photoURL: currentUser.photoURL || '',
+        addedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Override onLogin to also check by email
+const _onLogin = onLogin;
+window.onLogin = async function(user) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  isAdmin = user.email === ADMIN_EMAIL;
+  
+  try {
+    const snap = await db.collection('members').doc(user.uid).get();
+    if(snap.exists) { isMember = true; }
+    else {
+      const byEmail = await checkMembershipByEmail(user.email);
+      isMember = byEmail || isAdmin;
+    }
+  } catch(e) { isMember = isAdmin; }
+
+  const profRef = db.collection('profiles').doc(user.uid);
+  const profSnap = await profRef.get();
+  if(!profSnap.exists) {
+    await profRef.set({
+      uid: user.uid, email: user.email,
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      nickname: user.displayName || '',
+      bio: '', createdAt: firebase.fire
