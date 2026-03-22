@@ -566,7 +566,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="nav-section" data-i18n="nav-interact">互動</div>
         <div class="nav-item" onclick="chatToggle()" id="nav-chat-item"><span class="ni">💬</span><span data-i18n="nav-chat">即時聊天</span><span id="chat-badge" style="display:none;background:var(--primary);color:#fff;border-radius:10px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:auto"></span></div>
         <div class="nav-item" onclick="navigate('profile')" data-page="profile" id="nav-profile" style="display:none"><span class="ni">👤</span><span data-i18n="nav-profile">個人檔案</span></div>
-        <div class="nav-item admin-only" onclick="navigate('admin')" data-page="admin" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
+        <div class="nav-item admin-only" onclick="window.open('admin.html','_blank')" id="nav-admin"><span class="ni">⚙️</span><span data-i18n="nav-admin">管理後台</span></div>
       </nav>
       <div class="sidebar-footer">
         <div class="lang-toggle">
@@ -2780,11 +2780,7 @@ function renderProfilePage() {
 }
 
 // Also update uploadAvatar to use correct id
-const _uploadAvatar = uploadAvatar;
-function uploadAvatar(input) {
-  // Support both old and new avatar input ids
-  _uploadAvatar(input);
-}
+
 
 // ============================================================
 // ADMIN PAGE - renders directly into DOM  
