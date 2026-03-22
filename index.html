@@ -1839,7 +1839,11 @@ function removePhoto(idx) {
 }
 
 async function submitDiary() {
-  if(!currentUser || !isMember) return;
+  if(!currentUser) { showToast("請先登入", "error"); return; }
+  if(!isMember) {
+    showToast("你尚未被加入成員名單，請聯絡管理員", "error");
+    return;
+  }
   const date = document.getElementById('write-date-select')?.value;
   const content = document.getElementById('diary-text').value.trim();
   if(!content && pendingPhotos.length === 0) { showToast("請輸入日記內容或上傳照片", "error"); return; }
@@ -1881,6 +1885,9 @@ async function submitDiary() {
     showToast("日記已儲存 🎉", "success");
     allDiaries = [];
     loadStats();
+    // Clear form and go to diary page
+    clearWriteForm();
+    setTimeout(() => navigate('diary'), 800);
     
   } catch(e) {
     showToast("儲存失敗: " + e.message, "error");
