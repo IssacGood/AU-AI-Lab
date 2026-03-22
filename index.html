@@ -448,14 +448,15 @@ textarea.diary-input:focus{border-color:var(--primary)}
 }
 @media(min-width:601px){
   #chat-float.cf-fullscreen{
-    /* Desktop: fill content area (sidebar=240px, FAB area on right ~80px) */
+    /* Desktop: fill content area, stop above FAB button */
     left: calc(var(--nav-w) + 12px) !important;
     right: 12px !important;
     width: auto !important;
-    bottom: 0 !important;
-    height: 96vh !important;
-    max-height: 96vh !important;
-    border-radius: 16px 16px 0 0 !important;
+    bottom: calc(10% + 80px) !important;
+    top: 8px !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 16px !important;
   }
 }
 /* Chat image message */
