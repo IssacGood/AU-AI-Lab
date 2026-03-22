@@ -403,17 +403,64 @@ textarea.diary-input:focus{border-color:var(--primary)}
 #cf-guest-bar .cf-gb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cf-gb-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
 
-/* Mobile: full screen chat */
-@media(max-width:600px){
-  #chat-float{width:100vw;right:0;bottom:0;max-height:100dvh;border-radius:20px 20px 0 0;border-bottom:none}
-  #chat-float.cf-open{animation:cfInMobile .25s ease}
-  @keyframes cfInMobile{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
-  #chat-fab{bottom:24px;right:16px;width:56px;height:56px}
-  #chat-fab-dot{bottom:calc(24px + 52px);right:calc(16px - 4px)}
-}
+/* Desktop */
 @media(min-width:601px){
   #chat-float{height:480px}
 }
+/* Mobile: slides up from above the FAB button */
+@media(max-width:600px){
+  #chat-fab{bottom:20px;right:16px;width:58px;height:58px}
+  #chat-fab-dot{bottom:calc(20px + 54px);right:calc(16px - 2px)}
+  #chat-float{
+    width:100vw;
+    right:0;
+    bottom:98px;          /* sit above the FAB (58px + 20px bottom + 20px gap) */
+    max-height:calc(100dvh - 110px);
+    border-radius:20px 20px 0 0;
+    border-bottom:1px solid rgba(212,101,10,.2)
+  }
+  #chat-float.cf-open{animation:cfInMobile .28s cubic-bezier(.22,1,.36,1)}
+  @keyframes cfInMobile{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+}
+
+
+/* Chat fullscreen mode */
+#chat-float.cf-fullscreen{
+  width:100vw!important; right:0!important; bottom:0!important;
+  height:100dvh!important; max-height:100dvh!important;
+  border-radius:0!important; border:none!important;
+}
+@media(min-width:601px){
+  #chat-float.cf-fullscreen{
+    width:min(680px,96vw)!important;
+    right:2%!important; bottom:0!important;
+    height:96dvh!important; max-height:96dvh!important;
+    border-radius:20px 20px 0 0!important;
+  }
+}
+/* Chat image message */
+.cf-img-msg{max-width:220px;border-radius:12px;cursor:pointer;display:block;margin-top:4px;border:2px solid rgba(255,255,255,.3)}
+.cf-img-msg:hover{opacity:.88}
+/* Recalled message */
+.cf-recalled{font-style:italic;opacity:.55;font-size:12px}
+.cf-recalled-admin{font-size:12px;background:rgba(231,76,60,.08);border:1px dashed #e74c3c!important;border-radius:8px;padding:6px 10px!important}
+.cf-recalled-badge{background:#e74c3c;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+/* Image upload btn */
+#cf-img-btn{background:none;border:none;cursor:pointer;font-size:20px;padding:4px 6px;color:var(--text-muted);transition:color .2s;flex-shrink:0;align-self:center}
+#cf-img-btn:hover{color:var(--primary)}
+#cf-img-input{display:none}
+/* Admin multi-select */
+.admin-msg-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--primary);flex-shrink:0}
+#admin-bulk-bar{display:none;align-items:center;gap:10px;padding:10px 16px;background:rgba(212,101,10,.1);border-radius:10px;margin-bottom:12px}
+
+
+/* Message action buttons (recall, delete) */
+.cf-actions{display:inline-flex;gap:4px;margin-left:6px;vertical-align:middle}
+.cf-action-btn{background:none;border:1px solid rgba(0,0,0,.1);border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;padding:1px 7px;color:var(--text-muted);font-family:'Nunito',sans-serif;transition:all .15s;white-space:nowrap}
+.cf-action-btn:hover{background:var(--cream-dark);color:var(--text)}
+.cf-del-btn:hover{background:#e74c3c!important;color:#fff!important;border-color:#e74c3c!important}
+.cf-row.me .cf-action-btn{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.3)}
+.cf-row.me .cf-action-btn:hover{background:rgba(255,255,255,.2);color:#fff}
 
 </style>
 </head>
@@ -1078,22 +1125,23 @@ async function handleUserLogin(user) {
 
 function updateSidebarUser(user) {
   const photo = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName||'U')}&background=d4650a&color=fff`;
-  document.getElementById('sidebar-avatar').src = photo;
-  document.getElementById('topbar-avatar').src = photo;
-  document.getElementById('chat-my-avatar').src = photo;
-  document.getElementById('sidebar-name').textContent = user.displayName || user.email;
-  document.getElementById('sidebar-role').textContent = isAdmin ? t('role-admin') : isMember ? t('role-member') : t('role-visitor');
-  document.getElementById('profile-avatar-big').src = photo;
-  document.getElementById('profile-email').value = user.email;
-  document.getElementById('sidebar-auth-label').textContent = '登出';
-  // Show profile nav only when logged in
+  const setEl = (id, prop, val) => { const el = document.getElementById(id); if(el) el[prop] = val; };
+  setEl('sidebar-avatar', 'src', photo);
+  setEl('topbar-avatar',  'src', photo);
+  setEl('cf-my-av',       'src', photo);   // floating chat avatar
+  setEl('sidebar-name',   'textContent', user.displayName || user.email);
+  setEl('sidebar-role',   'textContent', isAdmin ? t('role-admin') : isMember ? t('role-member') : t('role-visitor'));
+  setEl('profile-avatar-big', 'src', photo);
+  setEl('profile-email',  'value', user.email);
+  setEl('sidebar-auth-label', 'textContent', '登出');
   const navProfile = document.getElementById('nav-profile');
   if(navProfile) navProfile.style.display = 'flex';
-  // Update chat widget user bar
   updateCfUserBar();
-  // Cache nickname for chat
-  db.collection('profiles').doc(user.uid).get().then(s => {
-    if(s.exists && s.data().nickname) sessionStorage.setItem('profileNickname', s.data().nickname);
+  if(db) db.collection('profiles').doc(user.uid).get().then(s => {
+    if(s.exists && s.data().nickname) {
+      sessionStorage.setItem('profileNickname', s.data().nickname);
+      setEl('sidebar-name', 'textContent', s.data().nickname || user.displayName || user.email);
+    }
   }).catch(()=>{});
 }
 
@@ -1961,8 +2009,11 @@ function chatToggle() {
   if(cfOpen) {
     cfUnreadCount = 0;
     updateChatBadge();
-    setTimeout(() => document.getElementById('cf-input')?.focus(), 200);
-    // Close mobile sidebar if open
+    // Only auto-focus on desktop; on mobile, wait for user tap to avoid keyboard pop-up
+    const isMobile = window.innerWidth <= 600;
+    if(!isMobile) {
+      setTimeout(() => document.getElementById('cf-input')?.focus(), 250);
+    }
     if(sidebar?.classList.contains('open')) toggleSidebar();
   }
 }
@@ -2001,67 +2052,114 @@ function initChat() {
   });
 }
 
+let cfFullscreen = false;
+
+function cfToggleFullscreen() {
+  cfFullscreen = !cfFullscreen;
+  const win = document.getElementById('chat-float');
+  const btn = document.getElementById('cf-fs-btn');
+  if(win) win.classList.toggle('cf-fullscreen', cfFullscreen);
+  if(btn) btn.textContent = cfFullscreen ? '⊡' : '⛶';
+  if(btn) btn.title = cfFullscreen ? '縮小' : '放大';
+}
+
 function renderCfMessages(msgs) {
   const container = document.getElementById('cf-msgs');
   if(!container) return;
   const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-  
   const prevCount = container.querySelectorAll('.cf-row').length;
+  
+  const myUid = currentUser ? currentUser.uid : sessionStorage.getItem('guestUid');
   
   container.innerHTML = '<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
   
   let lastDate = '';
   msgs.forEach(msg => {
-    const isMe = (currentUser && msg.uid === currentUser.uid) || 
-                 (!currentUser && msg.uid && msg.uid.startsWith('guest_') && 
-                  msg.uid === sessionStorage.getItem('guestUid'));
+    const isMe = myUid && msg.uid === myUid;
     const ts = msg.timestamp ? new Date(msg.timestamp) : null;
     const time = ts ? ts.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'}) : '';
     const dateStr = ts ? ts.toLocaleDateString('zh-TW', {month:'numeric', day:'numeric'}) : '';
     
-    // Date separator
     if(dateStr && dateStr !== lastDate) {
       lastDate = dateStr;
       container.innerHTML += `<div class="cf-sys">── ${dateStr} ──</div>`;
     }
     
     const name = msg.userName || '訪客';
-    const initials = name.slice(0,1).toUpperCase();
+    const initials = name.slice(0,2).toUpperCase();
     const avatarHTML = msg.userPhoto 
-      ? `<img class="cf-av" src="${msg.userPhoto}" alt="" onerror="this.style.display='none';this.nextSibling&&(this.nextSibling.style.display='flex')">`
+      ? `<img class="cf-av" src="${msg.userPhoto}" alt="">`
       : `<div class="cf-av-placeholder">${initials}</div>`;
     
-    const delBtn = isAdmin ? ` <button onclick="cfDeleteMsg('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:.5;padding:0 2px;color:inherit">✕</button>` : '';
+    // Build message content
+    let contentHTML = '';
+    
+    if(msg.recalled && !isAdmin) {
+      // Non-admin sees recalled message as greyed out
+      contentHTML = `<span class="cf-recalled">🚫 此訊息已收回</span>`;
+    } else if(msg.recalled && isAdmin) {
+      // Admin sees original with recalled badge
+      contentHTML = buildMsgContent(msg) + `<span class="cf-recalled-badge">已收回</span>`;
+    } else {
+      contentHTML = buildMsgContent(msg);
+    }
+    
+    // Action buttons (recall for own, delete for admin)
+    let actions = '';
+    if(isMe && !msg.recalled) {
+      actions = `<button onclick="cfRecallMsg('${msg.id}')" class="cf-action-btn" title="收回訊息">↩ 收回</button>`;
+    }
+    if(isAdmin) {
+      actions += `<button onclick="cfDeleteMsg('${msg.id}')" class="cf-action-btn cf-del-btn" title="刪除">🗑</button>`;
+    }
+    
+    const actionsHTML = actions ? `<div class="cf-actions">${actions}</div>` : '';
+    const recalledClass = (msg.recalled && isAdmin) ? 'cf-recalled-admin' : '';
     
     if(isMe) {
-      container.innerHTML += `<div class="cf-row me">
+      container.innerHTML += `<div class="cf-row me" data-msgid="${msg.id}">
         <div class="cf-bubble-wrap" style="align-items:flex-end">
-          <div class="cf-bubble me">${esc(msg.text||'')}${delBtn}</div>
-          <div class="cf-time">${time}</div>
+          <div class="cf-bubble me ${recalledClass}">${contentHTML}</div>
+          <div class="cf-time">${time}${actionsHTML}</div>
         </div>
       </div>`;
     } else {
-      container.innerHTML += `<div class="cf-row">
+      container.innerHTML += `<div class="cf-row" data-msgid="${msg.id}">
         ${avatarHTML}
         <div class="cf-bubble-wrap">
           <div class="cf-name">${esc(name)}</div>
-          <div class="cf-bubble other">${esc(msg.text||'')}${delBtn}</div>
-          <div class="cf-time">${time}</div>
+          <div class="cf-bubble other ${recalledClass}">${contentHTML}</div>
+          <div class="cf-time">${time}${actionsHTML}</div>
         </div>
       </div>`;
     }
   });
   
-  // Unread badge
   const newCount = container.querySelectorAll('.cf-row').length;
   if(!cfOpen && newCount > prevCount) {
     cfUnreadCount += newCount - prevCount;
     updateChatBadge();
   }
-  
   if(atBottom || msgs.length <= 3) {
     requestAnimationFrame(() => container.scrollTop = container.scrollHeight);
   }
+}
+
+function buildMsgContent(msg) {
+  let html = '';
+  if(msg.text) html += esc(msg.text);
+  if(msg.imageURL) {
+    html += `<img class="cf-img-msg" src="${msg.imageURL}" alt="圖片" onclick="openLightbox(0, [{url:'${msg.imageURL}',info:''}])">`;
+  }
+  return html || '';
+}
+
+async function cfRecallMsg(msgId) {
+  if(!confirm('確定要收回這則訊息嗎？其他人將看不到內容，管理員仍可查閱。')) return;
+  try {
+    await rtdb.ref('chat/' + msgId).update({ recalled: true, recalledAt: Date.now() });
+    showToast('訊息已收回，管理員審核後將刪除', 'success');
+  } catch(e) { showToast('收回失敗', 'error'); }
 }
 
 function updateCfUserBar() {
@@ -2087,6 +2185,7 @@ function updateCfUserBar() {
 function wireCfInput() {
   const input = document.getElementById('cf-input');
   const sendBtn = document.getElementById('cf-send');
+  const imgInput = document.getElementById('cf-img-input');
   if(!input || !sendBtn) return;
   
   input.addEventListener('keydown', e => {
@@ -2097,6 +2196,52 @@ function wireCfInput() {
     input.style.height = Math.min(input.scrollHeight, 100) + 'px';
   });
   sendBtn.onclick = cfSendMessage;
+  
+  // Image upload handler
+  if(imgInput) {
+    imgInput.onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      if(!files.length) return;
+      
+      let userName, userPhoto, uid;
+      if(currentUser) {
+        userName = sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email;
+        userPhoto = currentUser.photoURL || '';
+        uid = currentUser.uid;
+      } else {
+        let guestName = sessionStorage.getItem('guestName');
+        if(!guestName) {
+          guestName = prompt('請輸入你的暱稱（訪客）：', '') || '訪客';
+          guestName = guestName.trim().slice(0,20);
+          sessionStorage.setItem('guestName', guestName);
+          updateCfUserBar();
+        }
+        userName = guestName + ' 👋';
+        userPhoto = '';
+        uid = sessionStorage.getItem('guestUid') || 'guest_' + Math.random().toString(36).slice(2,8);
+        sessionStorage.setItem('guestUid', uid);
+      }
+      
+      for(const file of files.slice(0,4)) {
+        try {
+          showToast('圖片上傳中...', 'success');
+          // Upload to Cloudinary
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', CLOUDINARY_PRESET);
+          formData.append('folder', 'au-ai-lab/chat');
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:formData });
+          if(!res.ok) throw new Error('上傳失敗');
+          const data = await res.json();
+          await rtdb.ref('chat').push({ uid, userName, userPhoto, text:'', imageURL: data.secure_url, timestamp: Date.now() });
+          showToast('圖片已傳送 🖼', 'success');
+        } catch(err) {
+          showToast('圖片上傳失敗: ' + err.message, 'error');
+        }
+      }
+      imgInput.value = '';
+    };
+  }
 }
 
 async function cfSendMessage() {
@@ -2294,21 +2439,82 @@ async function loadAdminChatLog() {
   const container = document.getElementById('admin-chat-list');
   if(!container) return;
   try {
-    const snap = await rtdb.ref('chat').orderByChild('timestamp').limitToLast(50).once('value');
+    const snap = await rtdb.ref('chat').orderByChild('timestamp').limitToLast(200).once('value');
     const msgs = [];
     snap.forEach(c => msgs.push({id:c.key, ...c.val()}));
     if(!msgs.length) { container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">無聊天記錄</p>'; return; }
-    container.innerHTML = msgs.reverse().map(m => `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--cream-dark)">
-        <div style="flex:1">
-          <span style="font-weight:700;font-size:13px">${esc(m.userName||'')}</span>
-          <span style="color:var(--text-muted);font-size:12px;margin-left:8px">${m.timestamp?new Date(m.timestamp).toLocaleString('zh-TW'):''}</span>
-          <div style="font-size:14px;color:var(--text)">${esc(m.text||'')}</div>
-        </div>
-        <button class="btn btn-danger btn-sm" onclick="deleteChat('${m.id}');this.parentElement.parentElement.remove()">刪除</button>
+    
+    container.innerHTML = `
+      <div id="admin-bulk-bar">
+        <span id="admin-sel-count" style="font-weight:800;font-size:13px;color:var(--brown)">已選 0 則</span>
+        <button class="btn btn-danger btn-sm" onclick="adminBulkDelete()">🗑 批量刪除</button>
+        <button class="btn btn-secondary btn-sm" onclick="adminSelectAll()">全選</button>
+        <button class="btn btn-secondary btn-sm" onclick="adminClearSelect()">取消</button>
       </div>
-    `).join('');
-  } catch(e) { container.innerHTML = '<p>載入失敗</p>'; }
+      ${msgs.reverse().map(m => {
+        const isRecalled = m.recalled ? '⚠️' : '';
+        const recalledStyle = m.recalled ? 'background:rgba(231,76,60,.06);border-left:3px solid #e74c3c;' : '';
+        const imgHTML = m.imageURL ? `<img src="${m.imageURL}" style="max-width:120px;max-height:80px;border-radius:8px;margin-top:4px;display:block">` : '';
+        const recalledBadge = m.recalled ? '<span style="background:#e74c3c;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;margin-left:6px">已收回</span>' : '';
+        return `<div class="admin-msg-row" data-id="${m.id}" style="display:flex;align-items:flex-start;gap:10px;padding:8px 6px;border-bottom:1px solid var(--cream-dark);${recalledStyle}">
+          <input type="checkbox" class="admin-msg-cb" onchange="adminUpdateSelCount()">
+          <div style="flex:1;min-width:0">
+            <span style="font-weight:700;font-size:13px">${esc(m.userName||'')}</span>
+            ${recalledBadge}
+            <span style="color:var(--text-muted);font-size:11px;margin-left:8px">${m.timestamp?new Date(m.timestamp).toLocaleString('zh-TW'):''}</span>
+            <div style="font-size:13px;color:var(--text);margin-top:2px;word-break:break-word">${isRecalled} ${esc(m.text||'')}${imgHTML}</div>
+            ${m.recalled && m.recalledAt ? `<div style="font-size:11px;color:#e74c3c;margin-top:2px">收回時間：${new Date(m.recalledAt).toLocaleString('zh-TW')}</div>` : ''}
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="adminDeleteSingle('${m.id}',this)">刪除</button>
+        </div>`;
+      }).join('')}
+    `;
+    // Show bulk bar
+    document.getElementById('admin-bulk-bar').style.display = 'flex';
+  } catch(e) { container.innerHTML = '<p>載入失敗：' + e.message + '</p>'; }
+}
+
+function adminUpdateSelCount() {
+  const checked = document.querySelectorAll('.admin-msg-cb:checked').length;
+  const el = document.getElementById('admin-sel-count');
+  if(el) el.textContent = `已選 ${checked} 則`;
+}
+
+function adminSelectAll() {
+  document.querySelectorAll('.admin-msg-cb').forEach(cb => cb.checked = true);
+  adminUpdateSelCount();
+}
+
+function adminClearSelect() {
+  document.querySelectorAll('.admin-msg-cb').forEach(cb => cb.checked = false);
+  adminUpdateSelCount();
+}
+
+async function adminBulkDelete() {
+  const rows = document.querySelectorAll('.admin-msg-row');
+  const toDelete = [];
+  rows.forEach(row => {
+    const cb = row.querySelector('.admin-msg-cb');
+    if(cb && cb.checked) toDelete.push(row.dataset.id);
+  });
+  if(!toDelete.length) { showToast('請先勾選要刪除的訊息', 'error'); return; }
+  if(!confirm(`確定要刪除選取的 ${toDelete.length} 則訊息嗎？`)) return;
+  
+  try {
+    const updates = {};
+    toDelete.forEach(id => updates['chat/' + id] = null);
+    await rtdb.ref().update(updates);
+    showToast(`已刪除 ${toDelete.length} 則訊息 ✅`, 'success');
+    loadAdminChatLog();
+  } catch(e) { showToast('刪除失敗：' + e.message, 'error'); }
+}
+
+async function adminDeleteSingle(msgId, btn) {
+  try {
+    await rtdb.ref('chat/' + msgId).remove();
+    btn?.closest('.admin-msg-row')?.remove();
+    showToast('已刪除', 'success');
+  } catch(e) { showToast('刪除失敗', 'error'); }
 }
 
 async function loadAdminDiaries() {
@@ -2401,6 +2607,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="cf-size-btn" onclick="cfSetSize(12)">小</button>
       <button class="cf-size-btn" onclick="cfSetSize(14)">中</button>
       <button class="cf-size-btn" onclick="cfSetSize(16)">大</button>
+      <button class="cf-icon-btn" id="cf-fs-btn" onclick="cfToggleFullscreen()" title="放大">⛶</button>
       <button class="cf-icon-btn" onclick="chatToggle()" title="關閉">✕</button>
     </div>
   </div>
@@ -2422,6 +2629,8 @@ document.addEventListener('DOMContentLoaded', () => {
   <div id="cf-footer">
     <img id="cf-my-av" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" alt="">
     <textarea id="cf-input" placeholder="輸入訊息…（Enter 送出，Shift+Enter 換行）" rows="1"></textarea>
+    <button id="cf-img-btn" onclick="document.getElementById('cf-img-input').click()" title="傳送圖片">🖼</button>
+    <input type="file" id="cf-img-input" accept="image/*" multiple>
     <button id="cf-send">➤</button>
   </div>
 </div>
