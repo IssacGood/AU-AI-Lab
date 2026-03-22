@@ -2854,83 +2854,84 @@ function renderProfilePage() {
         <h2 style="font-family:'Playfair Display',serif;font-size:26px;color:#5c3317">👤 個人檔案</h2>
         <p style="font-size:13px;color:#7a5c46;margin-top:4px">這些資料會顯示在「見習成員」介紹頁面</p>
       </div>
-      <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);max-width:560px">
-        <div style="padding:32px">
+      <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);max-width:600px">
+        <div style="padding:32px 36px">
 
           <!-- Avatar -->
-          <div style="text-align:center;margin-bottom:28px">
-            <label style="cursor:pointer;display:inline-block">
-              <div style="position:relative;display:inline-block">
-                <img id="prof-av" src="${photo}"
-                  style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block">
-                <label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px" title="更換頭像">📷</label>
-                <input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)">
-              </div>
-              <div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點 📷 更換頭像</div>
+          <div style="text-align:center;margin-bottom:32px">
+            <div style="position:relative;display:inline-block">
+              <img id="prof-av" src="${photo}"
+                style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block">
+              <label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px" title="更換頭像">📷</label>
+              <input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)">
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點 📷 更換頭像</div>
+          </div>
+
+          <!-- Row 1: 暱稱 full width -->
+          <div style="margin-bottom:20px">
+            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">暱稱 / 顯示名稱</label>
+            <input id="prof-nickname" type="text" placeholder="你的暱稱"
+              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
+              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+          </div>
+
+          <!-- Row 2: 服務學校 + 職稱 side by side -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">服務學校</label>
+              <input id="prof-school" type="text" placeholder="如：高雄市○○國小"
+                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
+                onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">職稱</label>
+              <input id="prof-title" type="text" placeholder="如：教師、組長、主任"
+                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
+                onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
             </div>
           </div>
 
-          <!-- Nickname -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">暱稱 / 顯示名稱</label>
-            <input id="prof-nickname" type="text" placeholder="你的暱稱"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
+          <!-- Row 3: 專長領域 full width -->
+          <div style="margin-bottom:20px">
+            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">專長領域</label>
+            <input id="prof-expertise" type="text" placeholder="如：AI教育、STEAM、UDL（用逗號分隔）"
+              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
+              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
           </div>
 
-          <!-- School -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">服務學校</label>
-            <input id="prof-school" type="text" placeholder="如：高雄市○○國小"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
-          </div>
-
-          <!-- Title -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">職稱</label>
-            <input id="prof-title" type="text" placeholder="如：教師、組長、主任"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
-          </div>
-
-          <!-- Expertise -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">專長領域</label>
-            <input id="prof-expertise" type="text" placeholder="如：AI教育、STEAM、UDL、資訊融入"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
-          </div>
-
-          <!-- Motivation -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">參加動機與期待</label>
+          <!-- Row 4: 參加動機 textarea -->
+          <div style="margin-bottom:20px">
+            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">參加動機與期待</label>
             <textarea id="prof-motivation" placeholder="分享你參加這次澳洲冒險的動機與期待..." rows="3"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'"></textarea>
+              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6"
+              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
           </div>
 
-          <!-- Real Name -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">真實姓名 <span style="font-size:10px;background:#f5edd8;padding:2px 7px;border-radius:8px;margin-left:4px;font-weight:600">公開頁面顯示王O明格式</span></label>
-            <input id="prof-realname" type="text" placeholder="如：王小明（公開時會自動遮蔽中間字）"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
+          <!-- Row 5: 真實姓名 + Email side by side -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">
+                真實姓名
+                <span style="font-size:10px;background:#f5edd8;padding:2px 6px;border-radius:6px;margin-left:4px;font-weight:600;text-transform:none">公開顯示王O明</span>
+              </label>
+              <input id="prof-realname" type="text" placeholder="如：王小明"
+                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8"
+                onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Email</label>
+              <input type="text" value="${u.email || ''}" disabled
+                style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;color:#aaa;background:#f5f5f3;box-sizing:border-box">
+            </div>
           </div>
 
-          <!-- Bio -->
-          <div style="margin-bottom:14px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">自我介紹</label>
+          <!-- Row 6: 自我介紹 -->
+          <div style="margin-bottom:28px">
+            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">自我介紹</label>
             <textarea id="prof-bio" placeholder="簡短介紹自己..." rows="3"
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810"
-              onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'"></textarea>
-          </div>
-
-          <!-- Email (readonly) -->
-          <div style="margin-bottom:24px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Email</label>
-            <input type="text" value="${u.email || ''}" disabled
-              style="width:100%;padding:10px 14px;border:2px solid #f5edd8;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;color:#7a5c46;background:#f9f5ee;box-sizing:border-box">
+              style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6"
+              onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
           </div>
 
           <button onclick="profSave()"
@@ -2955,7 +2956,7 @@ function renderProfilePage() {
           sv('prof-title',      d.jobTitle);
           sv('prof-expertise',  d.expertise);
           sv('prof-motivation', d.motivation);
-          sv('prof-realname',  d.realName);
+          sv('prof-realname',   d.realName);
           const av = document.getElementById('prof-av');
           if(av && d.photoURL) av.src = d.photoURL;
         }
