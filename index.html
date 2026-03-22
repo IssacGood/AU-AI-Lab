@@ -865,7 +865,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
   </div><!-- /app-layout -->
 </div><!-- /app -->
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ============================================================
 // ✅ FIREBASE CONFIG
 // ============================================================
@@ -2405,16 +2405,18 @@ async function deleteChat(msgId) { return cfDeleteMsg(msgId); }
 // ============================================================
 async function loadProfileForm() {
   if(!currentUser) return;
+  const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+  const setSrc = (id, src) => { const el = document.getElementById(id); if(el) el.src = src; };
   try {
     const snap = await db.collection('profiles').doc(currentUser.uid).get();
     if(snap.exists) {
       const d = snap.data();
-      document.getElementById('profile-nickname').value = d.nickname || '';
-      document.getElementById('profile-bio').value = d.bio || '';
-      if(d.photoURL) document.getElementById('profile-avatar-big').src = d.photoURL;
+      setVal('profile-nickname', d.nickname || '');
+      setVal('profile-bio', d.bio || '');
+      if(d.photoURL) setSrc('profile-avatar-big', d.photoURL);
     }
-    document.getElementById('profile-email').value = currentUser.email;
-  } catch(e) {}
+    setVal('profile-email', currentUser.email);
+  } catch(e) { console.warn('Profile load:', e.message); }
 }
 
 async function saveProfile() {
@@ -2565,25 +2567,41 @@ async function removeMember(id) {
 async function loadAdminStats() {
   const container = document.getElementById('admin-stats');
   if(!container) return;
+  container.innerHTML = '<div class="loading-spinner"></div>';
   try {
-    const ds = await db.collectionGroup('entries').get();
-    let photos = 0, comments = 0, likes = 0;
-    ds.forEach(d => {
-      const data = d.data();
-      photos += (data.photos||[]).length;
-      comments += (data.comments||[]).length;
-      likes += Object.keys(data.likes||{}).length;
+    let entryCount=0, photos=0, comments=0, likes=0;
+    const datesSnap = await db.collection('diaries').get();
+    const ps = [];
+    datesSnap.forEach(dateDoc => {
+      ps.push(db.collection('diaries').doc(dateDoc.id).collection('entries').get().then(es => {
+        entryCount += es.size;
+        es.forEach(d => {
+          const data = d.data();
+          photos += (data.photos||[]).length;
+          comments += (data.comments||[]).length;
+          likes += Object.keys(data.likes||{}).length;
+        });
+      }).catch(()=>{}));
     });
-    const chatSnap = await rtdb.ref('chat').once('value');
-    const chatCount = chatSnap.numChildren();
+    await Promise.all(ps);
+    let chatCount = 0;
+    if(rtdb) {
+      const chatSnap = await rtdb.ref('chat').once('value');
+      chatCount = chatSnap.numChildren();
+    }
+    const membersSnap = await db.collection('members').get().catch(()=>({size:0}));
     container.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="stat-card"><div class="stat-num">${ds.size}</div><div class="stat-label">篇日記</div></div>
+        <div class="stat-card"><div class="stat-num">${membersSnap.size||0}</div><div class="stat-label">已綁定成員</div></div>
+        <div class="stat-card"><div class="stat-num">${entryCount}</div><div class="stat-label">篇日記</div></div>
         <div class="stat-card"><div class="stat-num">${photos}</div><div class="stat-label">張照片</div></div>
         <div class="stat-card"><div class="stat-num">${comments}</div><div class="stat-label">則留言</div></div>
+        <div class="stat-card"><div class="stat-num">${likes}</div><div class="stat-label">個按讚</div></div>
         <div class="stat-card"><div class="stat-num">${chatCount}</div><div class="stat-label">聊天訊息</div></div>
       </div>`;
-  } catch(e) { container.innerHTML = '<p>統計載入失敗</p>'; }
+  } catch(e) {
+    container.innerHTML = `<div style="color:#e74c3c;padding:12px;font-size:13px">⚠️ 載入失敗：${e.message}</div>`;
+  }
 }
 
 async function loadAdminChatLog() {
@@ -2671,116 +2689,34 @@ async function adminDeleteSingle(msgId, btn) {
 async function loadAdminDiaries() {
   const container = document.getElementById('admin-diary-list');
   if(!container) return;
-  if(!allDiaries.length) await loadAllDiaries();
-  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
-  container.innerHTML = allDiaries.map(e => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--cream-dark)">
-      <div style="flex:1">
-        <span style="font-weight:700;font-size:13px">${esc(profMap[e.uid]?.nickname||e.uid.slice(0,8))}</span>
-        <span style="color:var(--text-muted);font-size:12px;margin-left:8px">${e.date}</span>
-        <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${esc((e.content||'').slice(0,60))}${(e.content||'').length>60?'...':''}</div>
-        <div style="font-size:12px;color:var(--primary)">${(e.photos||[]).length} 張照片</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteDiaryEntry('${e.date}','${e.uid}');this.parentElement.parentElement.remove()">刪除</button>
-    </div>
-  `).join('') || '<p style="text-align:center;color:var(--text-muted);padding:20px">無日記記錄</p>';
-}
-
-// ============================================================
-// PDF EXPORT (print-based)
-// ============================================================
-function exportPDF() {
-  showToast("準備匯出PDF，請稍候...", "success");
-  setTimeout(() => window.print(), 500);
-}
-
-// ============================================================
-// UTILITIES
-// ============================================================
-function showToast(msg, type='') {
-  const container = document.getElementById('toast');
-  const el = document.createElement('div');
-  el.className = `toast-item ${type}`;
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-
-function esc(str) {
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
-}
-
-// ============================================================
-// ADMIN LIVE CHAT PANEL
-// ============================================================
-function renderAdminLiveChat(msgs) {
-  const container = document.getElementById('alc-msgs');
-  if(!container) return;
-  const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
-  
-  if(!msgs.length) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px">還沒有聊天訊息</div>';
-    return;
-  }
-  
-  const myUid = currentUser?.uid;
-  let html = '';
-  let lastDate = '';
-  
-  msgs.forEach(msg => {
-    const isMe = myUid && msg.uid === myUid;
-    const ts = msg.timestamp ? new Date(msg.timestamp) : null;
-    const time = ts ? ts.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) : '';
-    const dateStr = ts ? ts.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'}) : '';
-    if(dateStr && dateStr !== lastDate) {
-      lastDate = dateStr;
-      html += `<div style="text-align:center;font-size:11px;color:var(--text-muted);padding:4px 0">── ${dateStr} ──</div>`;
+  container.innerHTML = '<div class="loading-spinner"></div>';
+  try {
+    await loadAllDiaries();
+    const uids = [...new Set(allDiaries.map(d=>d.uid))];
+    const profMap = uids.length ? await loadProfiles(uids) : {};
+    if(!allDiaries.length) {
+      container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">目前沒有任何日記</p>';
+      return;
     }
-    
-    const name = msg.userName || '訪客';
-    const avatarHTML = msg.userPhoto
-      ? `<img class="alc-avatar" src="${msg.userPhoto}" alt="">`
-      : `<div class="alc-avatar">${name.slice(0,1)}</div>`;
-    
-    let bodyHTML = '';
-    if(msg.recalled) {
-      bodyHTML = `<span class="alc-recalled">⚠️ [已收回] ${esc(msg.text||'')}${msg.imageURL?'[圖片]':''}` +
-        `<button onclick="cfDeleteMsg('${msg.id}')" style="margin-left:8px;background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:1px 8px;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif">確認刪除</button></span>`;
-    } else {
-      bodyHTML = esc(msg.text||'')+
-        (msg.imageURL ? `<img class="alc-img" src="${msg.imageURL}" onclick="openLightbox(0,[{url:'${msg.imageURL}',info:''}])">` : '');
-    }
-    
-    const delBtn = `<button onclick="alcDeleteMsg('${msg.id}')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-muted);padding:2px 4px;transition:color .15s" title="刪除">🗑</button>`;
-    
-    if(isMe) {
-      html += `<div class="alc-row me">
-        <div>
-          <div class="alc-bubble me">${bodyHTML}</div>
-          <div class="alc-meta" style="text-align:right">${time} ${delBtn}</div>
+    const schedLabel = (date) => { const s = SCHEDULE.find(x=>x.date===date); return s ? `Day ${s.day}` : ''; };
+    container.innerHTML = allDiaries
+      .sort((a,b) => a.date.localeCompare(b.date))
+      .map(e => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--cream-dark)">
+        <div style="flex:1;min-width:0">
+          <span style="font-weight:700;font-size:13px">${esc(profMap[e.uid]?.nickname||profMap[e.uid]?.displayName||e.uid.slice(0,8))}</span>
+          <span style="background:var(--cream-dark);border-radius:6px;font-size:11px;font-weight:700;padding:1px 7px;margin-left:6px;color:var(--brown-light)">${schedLabel(e.date)}</span>
+          <span style="color:var(--text-muted);font-size:11px;margin-left:6px">${e.date}</span>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc((e.content||'').slice(0,80))}${(e.content||'').length>80?'...':''}</div>
+          <div style="font-size:12px;color:var(--primary);margin-top:2px">${(e.photos||[]).length} 張照片 · ${(e.comments||[]).length} 則留言 · ${Object.keys(e.likes||{}).length} 個讚</div>
         </div>
-      </div>`;
-    } else {
-      html += `<div class="alc-row">
-        ${avatarHTML}
-        <div>
-          <div style="font-size:11px;font-weight:800;color:var(--brown-light);margin-bottom:2px">${esc(name)}</div>
-          <div class="alc-bubble other">${bodyHTML}</div>
-          <div class="alc-meta">${time} ${delBtn}</div>
-        </div>
-      </div>`;
-    }
-  });
-  
-  container.innerHTML = html;
-  if(atBottom) requestAnimationFrame(() => container.scrollTop = container.scrollHeight);
-  
-  // Update avatar
-  if(currentUser) {
-    const av = document.getElementById('alc-my-av');
-    if(av) av.src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'A')}&background=d4650a&color=fff`;
+        <button class="btn btn-danger btn-sm" onclick="deleteDiaryEntry('${e.date}','${e.uid}');this.parentElement.remove()">刪除</button>
+      </div>`).join('');
+  } catch(err) {
+    container.innerHTML = `<div style="color:#e74c3c;padding:12px;font-size:13px">⚠️ ${err.message}</div>`;
   }
 }
+
 
 async function alcSend() {
   if(!currentUser || !rtdb) return;
