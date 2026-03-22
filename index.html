@@ -912,45 +912,10 @@ textarea.diary-input:focus{border-color:var(--primary)}
   </div><!-- /app-layout -->
 </div><!-- /app -->
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-// ============================================================
-// CORE UTILITIES (must be defined before any async calls)
-// ============================================================
-function showToast(msg, type='') {
-  let container = document.getElementById('toast');
-  if(!container) {
-    container = document.createElement('div');
-    container.id = 'toast';
-    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none';
-    document.body.appendChild(container);
-  }
-  const el = document.createElement('div');
-  el.className = 'toast-item ' + type;
-  el.textContent = msg;
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 3500);
-}
-
-function esc(str) {
-  if(str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/\n/g,'<br>');
-}
-
-function exportPDF() {
-  showToast('準備匯出PDF，請稍候...', 'success');
-  setTimeout(() => window.print(), 500);
-}
-
-
-
-// ============================================================
-// ✅ FIREBASE CONFIG
-// ============================================================
+<script>
+// ─────────────────────────────────────────────
+// FIREBASE CONFIG
+// ─────────────────────────────────────────────
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyC2uGxeC88EsER7rUyp8gQ_ZVcwXKPAYPw",
   authDomain: "au-ai-lab.firebaseapp.com",
@@ -960,1537 +925,893 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "351321351868",
   appId: "1:351321351868:web:58e652671b1d57ad98d2b9"
 };
-
-// ============================================================
-// ☁️ CLOUDINARY CONFIG - 免費 25GB 原尺寸照片儲存
-// 設定步驟：
-//   1. 前往 https://cloudinary.com 免費註冊
-//   2. 登入後，Cloud name 在 Dashboard 右上角
-//   3. 到 Settings → Upload → Add upload preset
-//      · Signing Mode 選「Unsigned」
-//      · Preset name 填 au_ai_lab（或自訂）
-//      · 儲存
-//   4. 填入下方兩個值
-// ============================================================
-const CLOUDINARY_CLOUD = "dnypguvxl";   // ← 填你的 Cloud name
-const CLOUDINARY_PRESET = "au_ai_lab";         // ← 填你建立的 preset 名稱
-
-// ============================================================
-// CONSTANTS
-// ============================================================
-const ADMIN_EMAIL = ["issac1120","gmail.com"].join("@");
-const ACTIVITY_START = new Date("2026-08-03T00:00:00+08:00");
-const ACTIVITY_END   = new Date("2026-08-18T23:59:59+08:00");
-const MAX_PHOTOS = 20; // Cloudinary 25GB, no practical limit
+const CLOUDINARY_CLOUD  = "dnypguvxl";
+const CLOUDINARY_PRESET = "au_ai_lab";
+const ADMIN = ["issac1120","gmail.com"].join("@");
 
 const SCHEDULE = [
-  {date:"2026-08-03",day:1,zh:"機場集合，搭乘國際航班前往澳洲雪梨。",en:"Airport assembly, fly to Sydney, Australia."},
-  {date:"2026-08-04",day:2,zh:"瞭解澳洲小學 STEM/AI 教育架構。以「角色轉換」為核心，引導見習教師定位為推動 UDL 與 AI/STEAM 教育的關鍵行動者。",en:"Understanding Australia's primary school STEM/AI framework. Role transformation workshop."},
-  {date:"2026-08-05",day:3,zh:"實作 AI 基礎 × 小學教師實務。學校現場實踐與 UDL 教學架構下的設計。跨域課程與學習支持系統。",en:"AI fundamentals × primary teacher practice. School visits & UDL design framework. Cross-domain curriculum & learning support."},
-  {date:"2026-08-06",day:4,zh:"實作 AI 基礎 × 小學教師實務。STEM 工具 × 動手實作。學校現場實踐與 UDL 教學架構下的設計。",en:"AI fundamentals × primary practice. STEM tools × hands-on making. School practice & UDL design."},
-  {date:"2026-08-07",day:5,zh:"非正式學習場域與 STEAM 教育設計，教案見習實作。透過互動式展示、情境模擬與跨學科主題設計，推動STEAM教育與科學素養培養。",en:"Informal learning spaces & STEAM design. Interactive exhibits, scenario simulation, cross-disciplinary themes."},
-  {date:"2026-08-08",day:6,zh:"城市景觀 × 教師放鬆。",en:"City exploration × teacher relaxation day."},
-  {date:"2026-08-09",day:7,zh:"參訪雪梨歌劇院。",en:"Visit Sydney Opera House."},
-  {date:"2026-08-10",day:8,zh:"AI + STEM 小學教師證書課程（雪梨大學）。拜訪新南威爾斯大學教育研究單位。",en:"AI + STEM Primary Teacher Certificate Course (University of Sydney). Visit UNSW Education Research unit."},
-  {date:"2026-08-11",day:9,zh:"AI + STEM 小學教師證書課程（雪梨大學）。見習新南威爾斯州立小學。",en:"AI + STEM Certificate Course (USyd). Observation at NSW public primary school."},
-  {date:"2026-08-12",day:10,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
-  {date:"2026-08-13",day:11,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW public primary school."},
-  {date:"2026-08-14",day:12,zh:"教師專業發展（PD）模式交流與行動設計實作。",en:"Teacher Professional Development (PD) exchange & action design workshop."},
-  {date:"2026-08-15",day:13,zh:"個人興趣探索 ＋ 跨校小組分享。",en:"Personal interest exploration + cross-school group sharing."},
+  {date:"2026-08-03",day:1, zh:"機場集合，搭乘國際航班前往澳洲雪梨。",en:"Airport assembly, fly to Sydney."},
+  {date:"2026-08-04",day:2, zh:"瞭解澳洲小學 STEM/AI 教育架構。以「角色轉換」為核心，引導見習教師定位為推動 UDL 與 AI/STEAM 教育的關鍵行動者。",en:"Understanding STEM/AI framework."},
+  {date:"2026-08-05",day:3, zh:"實作 AI 基礎 × 小學教師實務。學校現場實踐與 UDL 教學架構下的設計。",en:"AI fundamentals × primary teacher practice."},
+  {date:"2026-08-06",day:4, zh:"實作 AI 基礎 × 小學教師實務。STEM 工具 × 動手實作。",en:"AI fundamentals × primary practice. STEM tools × hands-on making."},
+  {date:"2026-08-07",day:5, zh:"非正式學習場域與 STEAM 教育設計，教案見習實作。",en:"Informal learning spaces & STEAM design."},
+  {date:"2026-08-08",day:6, zh:"城市景觀 × 教師放鬆。",en:"City exploration × teacher relaxation day."},
+  {date:"2026-08-09",day:7, zh:"參觀雪梨歌劇院。",en:"Visit Sydney Opera House."},
+  {date:"2026-08-10",day:8, zh:"AI + STEM 小學教師證書課程（雪梨大學）。拜訪 UNSW 教育研究單位。",en:"AI + STEM Certificate Course (USyd). Visit UNSW."},
+  {date:"2026-08-11",day:9, zh:"AI + STEM 小學教師證書課程（雪梨大學）。見習新南威爾斯州立小學。",en:"AI + STEM Certificate Course. Observation at NSW primary school."},
+  {date:"2026-08-12",day:10,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW primary school."},
+  {date:"2026-08-13",day:11,zh:"見習新南威爾斯州立小學。",en:"Observation at NSW primary school."},
+  {date:"2026-08-14",day:12,zh:"教師專業發展（PD）模式交流與行動設計實作。",en:"Teacher PD exchange & action design workshop."},
+  {date:"2026-08-15",day:13,zh:"個人興趣探索 + 跨校小組分享。",en:"Personal interest exploration + cross-school sharing."},
   {date:"2026-08-16",day:14,zh:"拜會新南威爾斯州教育處。",en:"Visit NSW Department of Education."},
   {date:"2026-08-17",day:15,zh:"輕量分享交流 × 一週課程反思。",en:"Light sharing & one-week course reflection."},
-  {date:"2026-08-18",day:16,zh:"抵達臺灣。",en:"Return to Taiwan."}
+  {date:"2026-08-18",day:16,zh:"抵達台灣。",en:"Return to Taiwan."}
 ];
 
-// ============================================================
-// TRANSLATIONS
-// ============================================================
-const T = {
-  zh:{
-    "site-title":"澳洲冒險：AI教室實驗室",
-    "nav-main":"主要",
-    "nav-home":"首頁",
-    "nav-schedule":"行程表",
-    "nav-diary":"日誌",
-    "nav-diary-all":"每日日記",
-    "nav-write":"寫今日日記",
-    "nav-gallery":"相片牆",
-    "nav-interact":"互動",
-    "nav-chat":"即時聊天",
-    "nav-profile":"個人檔案",
-    "nav-admin":"管理後台",
-    "logout":"登出",
-    "stat-members":"名見習教師",
-    "stat-days":"天探索旅程",
-    "stat-entries":"篇日記",
-    "stat-photos":"張照片",
-    "flight-depart":"去程航班",
-    "flight-return":"回程航班",
-    "page-schedule":"16天行程表",
-    "page-schedule-sub":"澳洲雪梨・墨爾本 AI教室實驗室見習之旅",
-    "page-diary":"每日日記",
-    "page-diary-sub":"16位見習教師的每日所見所感",
-    "page-write":"寫今日日記",
-    "page-gallery":"相片牆",
-    "page-gallery-sub":"所有見習教師的精彩影像記錄",
-    "chat-title":"即時聊天室",
-    "chat-sub":"與我們即時互動，雖然你沒來但我們在線上！",
-    "page-profile":"個人檔案",
-    "view-date":"📅 照日期",
-    "view-person":"👤 照人員",
-    "view-all":"📋 全部",
-    "label-select-date":"選擇日期",
-    "label-diary-content":"日記內容",
-    "label-photos":"上傳照片（Cloudinary · 無限制）",
-    "label-nickname":"暱稱",
-    "label-bio":"自我介紹",
-    "upload-hint":"點擊或拖曳照片到這裡",
-    "upload-hint2":"最多5張，原尺寸上傳至 Cloudinary",
-    "save-profile":"儲存個人資料",
-    "placeholder-diary":"今天我們去了... 我最印象深刻的是...",
-    "role-admin":"管理員",
-    "role-member":"見習成員",
-    "role-visitor":"訪客",
-    "days-before":"距離出發",
-    "days-after":"活動進行中",
-    "days-end":"活動已結束",
-    "no-flight":"尚未填寫航班資訊",
-    "no-diary":"這裡還沒有日記記錄",
-    "no-photos":"還沒有照片"
-  },
-  en:{
-    "site-title":"Australia AI Classroom Lab",
-    "nav-main":"Main",
-    "nav-home":"Home",
-    "nav-schedule":"Schedule",
-    "nav-diary":"Journal",
-    "nav-diary-all":"Daily Journal",
-    "nav-write":"Write Today",
-    "nav-gallery":"Gallery",
-    "nav-interact":"Interact",
-    "nav-chat":"Live Chat",
-    "nav-profile":"Profile",
-    "nav-admin":"Admin",
-    "logout":"Sign Out",
-    "stat-members":"teachers",
-    "stat-days":"days",
-    "stat-entries":"entries",
-    "stat-photos":"photos",
-    "flight-depart":"Departure Flight",
-    "flight-return":"Return Flight",
-    "page-schedule":"16-Day Schedule",
-    "page-schedule-sub":"Sydney & Melbourne • AI Classroom Lab",
-    "page-diary":"Daily Journal",
-    "page-diary-sub":"Daily reflections from 16 teachers",
-    "page-write":"Write Today's Entry",
-    "page-gallery":"Photo Gallery",
-    "page-gallery-sub":"Visual records from all teachers",
-    "chat-title":"Live Chat Room",
-    "chat-sub":"Chat with us in real-time!",
-    "page-profile":"Profile",
-    "view-date":"📅 By Date",
-    "view-person":"👤 By Person",
-    "view-all":"📋 All",
-    "label-select-date":"Select Date",
-    "label-diary-content":"Journal Content",
-    "label-photos":"Upload Photos (Cloudinary)",
-    "label-nickname":"Nickname",
-    "label-bio":"Bio",
-    "upload-hint":"Click or drag photos here",
-    "upload-hint2":"Max 5 photos, original quality via Cloudinary",
-    "save-profile":"Save Profile",
-    "placeholder-diary":"Today we visited... The most memorable moment was...",
-    "role-admin":"Admin",
-    "role-member":"Member",
-    "role-visitor":"Visitor",
-    "days-before":"Days Until Departure",
-    "days-after":"Activity In Progress",
-    "days-end":"Activity Ended",
-    "no-flight":"Flight info not yet filled in",
-    "no-diary":"No journal entries yet",
-    "no-photos":"No photos yet"
-  }
-};
+const ACTIVITY_START = new Date("2026-08-03T00:00:00+08:00");
+const ACTIVITY_END   = new Date("2026-08-18T23:59:59+08:00");
 
-// ============================================================
+// ─────────────────────────────────────────────
 // STATE
-// ============================================================
-let db, storage, rtdb, auth;
-let currentUser = null;
-let currentLang = 'zh';
-let isMember = false;
-let isAdmin = false;
-let currentView = 'date';
-let selectedDiaryDate = '';
-let selectedDiaryPerson = '';
-let pendingPhotos = [];
-let allDiaries = [];
+// ─────────────────────────────────────────────
+let db, rtdb, storage, auth;
+let currentUser    = null;
+let currentLang    = 'zh';
+let isMember       = false;
+let isAdmin        = false;
+let currentView    = 'date';
+let pendingPhotos  = [];
+let allDiaries     = [];
 let allGalleryPhotos = [];
-let members = [];
-let chatListener = null;
-let cfChatListener = null;
-let cfChatQuery = null;
-let cfUnreadCount = 0;
-let cfFullscreen = false;
-let _chatWired = false;
-let _isSendingMsg = false;
-let _loadingDiaries = false;
-let lbImages = [];
-let lbIndex = 0;
+let lbImages = [], lbIndex = 0;
 let countdownInterval = null;
-let firebaseReady = false;
+let cfChatListener = null, cfChatQuery = null;
+let cfUnreadCount  = 0, cfFullscreen = false;
+let _chatWired     = false;
+let _isSendingMsg  = false;
+let _loadingDiaries= false;
+let editingEntry   = null;
+let lbZoom=1,lbPanX=0,lbPanY=0,lbDragging=false,lbDragX=0,lbDragY=0,lbPinchStart=0,lbTouchX=0,lbTouchY=0;
 
-// ============================================================
-// INIT FIREBASE - runs immediately when script loads
-// ============================================================
-(function initFirebase() {
-  try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.firestore();
-    storage = firebase.storage();
-    rtdb = firebase.database();
-    auth = firebase.auth();
-    firebaseReady = true;
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        handleUserLogin(user);
-      } else {
-        currentUser = null;
-        handleGuestMode();
-      }
-    });
-  } catch(e) {
-    console.error("Firebase init error:", e);
-  }
-})();
-
-// ============================================================
-// AUTH - all functions global scope
-// ============================================================
-function signInWithGoogle() {
-  if(!firebaseReady) { showToast("Firebase 初始化中，請稍候", "error"); return; }
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(e => showToast("登入失敗: " + e.message, "error"));
+// ─────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────
+function showToast(msg, type) {
+  type = type || '';
+  var c = document.getElementById('toast');
+  if(!c) return;
+  var el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3500);
 }
-
-function handleAuthBtn() {
-  if(currentUser) {
-    if(confirm("確定要登出嗎？")) doSignOut();
-  } else {
-    openLoginModal();
-  }
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
 }
-
-function openLoginModal() {
-  const m = document.getElementById('login-modal');
-  if(m) { m.style.display = 'flex'; }
-}
-
-function doSignOut() {
-  auth.signOut().then(() => {
-    currentUser = null;
-    isMember = false;
-    isAdmin = false;
-    handleGuestMode();
-    showToast("已登出", "success");
-  });
-}
-
-// Guest mode - app fully visible, editing disabled
-function handleGuestMode() {
-  document.getElementById('sidebar-avatar').src = 'https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff';
-  document.getElementById('sidebar-name').textContent = '訪客瀏覽中';
-  document.getElementById('sidebar-role').textContent = '點此登入';
-  document.getElementById('sidebar-auth-label').textContent = '登入';
-  document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('visible'));
-  document.getElementById('nav-write').style.display = 'none';
-  document.getElementById('nav-admin') && (document.getElementById('nav-admin').style.display = 'none');
-  const navProfile = document.getElementById('nav-profile');
-  if(navProfile) navProfile.style.display = 'none';
-  // Start public features
-  startCountdown();
-  renderSchedule();
-  loadFlightInfo();
-  loadStats();
-  if(!countdownInterval) startCountdown();
-}
-
-async function handleUserLogin(user) {
-  // Close login modal
-  const modal = document.getElementById('login-modal');
-  if(modal) modal.style.display = 'none';
-
-  isAdmin = user.email === ADMIN_EMAIL;
-
-  // Check membership (admin must also be added to members list to write diary)
-  try {
-    const snap = await db.collection('members').doc(user.uid).get();
-    if(snap.exists) {
-      isMember = true;
-    } else {
-      const emailSnap = await db.collection('members').where('email','==',user.email).get();
-      if(!emailSnap.empty) {
-        await db.collection('members').doc(user.uid).set({
-          email: user.email,
-          displayName: user.displayName || user.email,
-          photoURL: user.photoURL || '',
-          addedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, {merge:true});
-        isMember = true;
-      } else {
-        isMember = false;
-      }
-    }
-  } catch(e) { isMember = false; }
-
-  // Ensure profile doc + update lastLogin
-  try {
-    const profRef = db.collection('profiles').doc(user.uid);
-    const profSnap = await profRef.get();
-    if(!profSnap.exists) {
-      await profRef.set({
-        uid: user.uid, email: user.email,
-        displayName: user.displayName || '',
-        photoURL: user.photoURL || '',
-        nickname: user.displayName || '',
-        bio: '',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    } else {
-      // Update photo, displayName and lastLogin every login
-      await profRef.update({
-        displayName: user.displayName || profSnap.data().displayName || '',
-        photoURL: user.photoURL || profSnap.data().photoURL || '',
-        email: user.email,
-        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-  } catch(e) {}
-
-  updateSidebarUser(user);
-  toggleAdminUI();
-  setupWriteNav();
-  initChat();
-  loadStats();
-  showToast(`歡迎回來，${user.displayName || user.email}！`, "success");
-}
-
-function updateSidebarUser(user) {
-  const photo = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName||'U')}&background=d4650a&color=fff`;
-  const setEl = (id, prop, val) => { const el = document.getElementById(id); if(el) el[prop] = val; };
-  setEl('sidebar-avatar', 'src', photo);
-  setEl('topbar-avatar',  'src', photo);
-  setEl('cf-my-av',       'src', photo);   // floating chat avatar
-  setEl('sidebar-name',   'textContent', user.displayName || user.email);
-  setEl('sidebar-role',   'textContent', isAdmin ? t('role-admin') : isMember ? t('role-member') : t('role-visitor'));
-  setEl('profile-avatar-big', 'src', photo);
-  setEl('profile-email',  'value', user.email);
-  setEl('sidebar-auth-label', 'textContent', '登出');
-  const navProfile = document.getElementById('nav-profile');
-  if(navProfile) navProfile.style.display = 'flex';
-  updateCfUserBar();
-  if(db) db.collection('profiles').doc(user.uid).get().then(s => {
-    if(s.exists && s.data().nickname) {
-      sessionStorage.setItem('profileNickname', s.data().nickname);
-      setEl('sidebar-name', 'textContent', s.data().nickname || user.displayName || user.email);
-    }
-  }).catch(()=>{});
-}
-
-function toggleAdminUI() {
-  document.querySelectorAll('.admin-only').forEach(el => {
-    el.classList.toggle('visible', isAdmin);
-  });
-  if(isAdmin) document.getElementById('nav-admin').style.display = 'flex';
-}
-
-function setupWriteNav() {
-  document.getElementById('nav-write').style.display = isMember ? 'flex' : 'none';
-}
-
-// ============================================================
-// TRANSLATIONS
-// ============================================================
-function t(key) {
-  return T[currentLang][key] || T['zh'][key] || key;
-}
-
-function setLang(lang) {
-  currentLang = lang;
-  document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
-  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if(key) el.textContent = t(key);
-  });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    if(key) el.placeholder = t(key);
-  });
-  // Re-render dynamic content
-  renderSchedule();
-  renderCountdown();
-}
-
-// ============================================================
-// NAVIGATION
-// ============================================================
-function navigate(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const pg = document.getElementById('page-' + page);
-  if(pg) pg.classList.add('active');
-  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  
-  // Lazy load
-  if(page === 'diary') { populateDiaryFilters(); renderDiary(); }
-  if(page === 'gallery') { populateGalleryFilters(); renderGallery(); }
-  if(page === 'team') renderTeamPage();
-  if(page === 'write') loadWriteForm();
-  if(page === 'profile') {
-    if(!currentUser) {
-      setTimeout(() => openLoginModal(), 100);
-      navigate('home');
-      return;
-    }
-    setTimeout(() => renderProfilePage(), 10);
-  }
-  if(page === 'admin') setTimeout(() => renderAdminPage(), 10);
-  
-  // Close mobile sidebar
-  const sb = document.getElementById('sidebar');
-  if(sb.classList.contains('open')) toggleSidebar();
-  window.scrollTo(0,0);
-}
-
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('show');
-}
-
-// ============================================================
-// COUNTDOWN
-// ============================================================
-function startCountdown() {
-  renderCountdown();
-  countdownInterval = setInterval(renderCountdown, 1000);
-}
-
-function renderCountdown() {
-  const now = new Date();
-  const section = document.getElementById('countdown-section');
-  if(!section) return;
-  
-  let html = '';
-  if(now < ACTIVITY_START) {
-    const diff = ACTIVITY_START - now;
-    const {d,h,m,s} = msToUnits(diff);
-    html = `<div class="countdown-card" style="margin-bottom:28px">
-      <h3>🚀 ${t('days-before')}</h3>
-      <div class="countdown-grid">
-        <div class="cd-unit"><div class="cd-num">${d}</div><div class="cd-label">${currentLang==='zh'?'天':'Days'}</div></div>
-        <div class="cd-unit"><div class="cd-num">${h}</div><div class="cd-label">${currentLang==='zh'?'小時':'Hours'}</div></div>
-        <div class="cd-unit"><div class="cd-num">${m}</div><div class="cd-label">${currentLang==='zh'?'分鐘':'Mins'}</div></div>
-        <div class="cd-unit"><div class="cd-num">${s}</div><div class="cd-label">${currentLang==='zh'?'秒':'Secs'}</div></div>
-      </div>
-    </div>`;
-  } else if(now <= ACTIVITY_END) {
-    const day = Math.floor((now - ACTIVITY_START)/(1000*60*60*24)) + 1;
-    html = `<div class="countdown-card" style="margin-bottom:28px;background:linear-gradient(135deg,var(--green),#4a7c42)">
-      <h3>🌏 ${t('days-after')}</h3>
-      <div style="font-size:48px;font-family:'Playfair Display',serif;font-weight:900;margin-bottom:8px">Day ${Math.min(day,16)}</div>
-      <div style="opacity:.8;font-size:15px">${SCHEDULE[Math.min(day-1,15)]?.[currentLang==='zh'?'zh':'en']||''}</div>
-    </div>`;
-  } else {
-    html = `<div class="countdown-card" style="margin-bottom:28px;background:linear-gradient(135deg,#555,#333)">
-      <h3>🏁 ${t('days-end')}</h3>
-      <div style="font-size:18px;opacity:.8;margin-top:8px">${currentLang==='zh'?'感謝16位教師的精彩旅程！':'Thank you for this incredible journey!'}</div>
-    </div>`;
-  }
-  section.innerHTML = html;
-}
-
-function msToUnits(ms) {
-  const s = Math.floor(ms/1000)%60;
-  const m = Math.floor(ms/1000/60)%60;
-  const h = Math.floor(ms/1000/60/60)%24;
-  const d = Math.floor(ms/1000/60/60/24);
-  return {d,h,m,s};
-}
-
-// ============================================================
-// HOME
-// ============================================================
-
-async function loadStats() {
-  if(!db) return;
-  try {
-    // collectionGroup requires special Firestore index — use regular reads as fallback
-    let entryCount = 0, photoCount = 0;
-    const datesSnap = await db.collection('diaries').get();
-    const promises = [];
-    datesSnap.forEach(dateDoc => {
-      promises.push(
-        db.collection('diaries').doc(dateDoc.id).collection('entries').get().then(es => {
-          entryCount += es.size;
-          es.forEach(d => { const data = d.data(); if(data.photos) photoCount += data.photos.length; });
-        }).catch(()=>{})
-      );
-    });
-    await Promise.all(promises);
-    const e = document.getElementById('stat-entries');
-    const p = document.getElementById('stat-photos');
-    if(e) e.textContent = entryCount;
-    if(p) p.textContent = photoCount;
-  } catch(err) { console.warn('Stats:', err.message); }
-}
-
-// ============================================================
-// FLIGHT INFO
-// ============================================================
-async function loadFlightInfo() {
-  try {
-    const snap = await db.collection('config').doc('flights').get();
-    const data = snap.exists ? snap.data() : {};
-    renderFlightCard('depart', data.depart);
-    renderFlightCard('return', data.return);
-    if(isAdmin) prefillFlightEditor(data);
-  } catch(e) {
-    renderFlightCard('depart', null);
-    renderFlightCard('return', null);
-  }
-}
-
-function renderFlightCard(type, info) {
-  const body = document.getElementById(`flight-${type}-body`);
-  if(!body) return;
-  if(!info || !info.flight) {
-    body.innerHTML = `<div class="empty-state" style="padding:20px"><div class="es-icon">✈️</div><p>${t('no-flight')}</p></div>`;
-    return;
-  }
-  body.innerHTML = `
-    <div class="flight-row"><div class="fr-icon">✈️</div><div class="fr-info"><div class="fr-label">航班</div><div class="fr-val">${info.flight}</div></div></div>
-    <div class="flight-row"><div class="fr-icon">🕐</div><div class="fr-info"><div class="fr-label">日期/時間</div><div class="fr-val">${info.datetime||'-'}</div></div></div>
-    <div class="flight-row"><div class="fr-icon">🗺️</div><div class="fr-info"><div class="fr-label">航線</div><div class="fr-val">${info.route||'-'}</div></div></div>
-    ${info.note ? `<div class="flight-row"><div class="fr-icon">📌</div><div class="fr-info"><div class="fr-label">備註</div><div class="fr-val">${info.note}</div></div></div>` : ''}
-  `;
-}
-
-function prefillFlightEditor(data) {
-  const d = data.depart || {};
-  const r = data.return || {};
-  document.getElementById('fd-flight').value = d.flight||'';
-  document.getElementById('fd-datetime').value = d.datetime||'';
-  document.getElementById('fd-route').value = d.route||'';
-  document.getElementById('fd-note').value = d.note||'';
-  document.getElementById('fr-flight').value = r.flight||'';
-  document.getElementById('fr-datetime').value = r.datetime||'';
-  document.getElementById('fr-route').value = r.route||'';
-  document.getElementById('fr-note').value = r.note||'';
-}
-
-async function saveFlightInfo() {
-  if(!isAdmin) return;
-  const data = {
-    depart: {
-      flight: document.getElementById('fd-flight').value.trim(),
-      datetime: document.getElementById('fd-datetime').value.trim(),
-      route: document.getElementById('fd-route').value.trim(),
-      note: document.getElementById('fd-note').value.trim()
-    },
-    return: {
-      flight: document.getElementById('fr-flight').value.trim(),
-      datetime: document.getElementById('fr-datetime').value.trim(),
-      route: document.getElementById('fr-route').value.trim(),
-      note: document.getElementById('fr-note').value.trim()
-    },
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  try {
-    await db.collection('config').doc('flights').set(data);
-    renderFlightCard('depart', data.depart);
-    renderFlightCard('return', data.return);
-    showToast("航班資訊已儲存 ✈️", "success");
-  } catch(e) {
-    showToast("儲存失敗: " + e.message, "error");
-  }
-}
-
-// ============================================================
-// SCHEDULE
-// ============================================================
-function renderSchedule() {
-  const container = document.getElementById('schedule-list');
-  if(!container) return;
-  const today = new Date().toISOString().split('T')[0];
-  container.innerHTML = SCHEDULE.map(s => {
-    const isToday = s.date === today;
-    const d = new Date(s.date);
-    const weekdays = currentLang==='zh' ? ['日','一','二','三','四','五','六'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const dateStr = currentLang==='zh' 
-      ? `${d.getMonth()+1}月${d.getDate()}日（${weekdays[d.getDay()]}）`
-      : `Aug ${d.getDate()} (${weekdays[d.getDay()]})`;
-    const text = currentLang==='zh' ? s.zh : s.en;
-    return `<div class="sched-item ${isToday?'today':''}" onclick="handleSchedClick('${s.date}')">
-      <div class="sched-card">
-        <div class="sched-top">
-          <span class="sched-day">Day ${s.day}</span>
-          <span class="sched-date">📅 ${dateStr}</span>
-          ${isToday ? '<span class="tag tag-amber">今天</span>' : ''}
-        </div>
-        <div class="sched-text">${text}</div>
-        <div class="sched-entries" id="sched-count-${s.date}"></div>
-      </div>
-    </div>`;
-  }).join('');
-  loadScheduleEntryCounts();
-}
-
-async function loadScheduleEntryCounts() {
-  if(!db) return;
-  try {
-    const snap = await db.collection('diaries').get();
-    snap.forEach(dateDoc => {
-      db.collection('diaries').doc(dateDoc.id).collection('entries').get()
-        .then(entriesSnap => {
-          const el = document.getElementById('sched-count-' + dateDoc.id);
-          if(el && entriesSnap.size > 0) {
-            el.innerHTML = '📝 ' + entriesSnap.size + ' 篇日記';
-          }
-        }).catch(() => {});
-    });
-  } catch(e) { console.warn('Entry counts:', e.message); }
-}
-
-function handleSchedClick(date) {
-  navigate('diary');
-  setView('date');
-  document.getElementById('diary-filter').value = date;
-  applyFilter();
-}
-
-// ============================================================
-// DIARY - DATA
-// ============================================================
-let _loadingDiaries = false;
-async function loadAllDiaries() {
-  if(_loadingDiaries) { // wait for ongoing load
-    await new Promise(r => setTimeout(r, 300));
-    return allDiaries;
-  }
-  _loadingDiaries = true;
-  allDiaries = [];
-  if(!db) { _loadingDiaries = false; return allDiaries; }
-  try {
-    // Query each of the 16 schedule dates directly
-    // This bypasses the Ghost Document problem entirely
-    const promises = SCHEDULE.map(s =>
-      db.collection('diaries').doc(s.date).collection('entries').get()
-        .then(entriesSnap => {
-          entriesSnap.forEach(entDoc => {
-            allDiaries.push({id: entDoc.id, date: s.date, ...entDoc.data()});
-          });
-        })
-        .catch(() => {})
-    );
-    await Promise.all(promises);
-  } catch(e) {
-    console.warn('loadAllDiaries:', e.message);
-  }
-  _loadingDiaries = false;
-  return allDiaries;
-}
-
-// ============================================================
-// DIARY - UI
-// ============================================================
-async function populateDiaryFilters() {
-  if(allDiaries.length === 0) await loadAllDiaries();
-  const profMap = await loadProfiles();
-
-  // Date pills
-  const dates = [...new Set(allDiaries.map(e=>e.date))].sort().reverse();
-  const datePills = document.getElementById('diary-date-pills');
-  let activeDateVal = '';
-  let activePersonVal = '';
-
-  if(datePills) {
-    const allPill = document.createElement('button');
-    allPill.className = 'filter-pill active';
-    allPill.textContent = '全部';
-    allPill.dataset.val = '';
-    allPill.onclick = function() {
-      datePills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-      this.classList.add('active');
-      activeDateVal = '';
-      document.getElementById('diary-filter').value = '';
-      renderDiary();
-    };
-    datePills.appendChild(allPill);
-
-    dates.forEach(d => {
-      const sched = SCHEDULE.find(s=>s.date===d);
-      const label = sched ? 'Day ' + sched.day + ' · ' + d.slice(5) : d;
-      const pill = document.createElement('button');
-      pill.className = 'filter-pill';
-      pill.textContent = label;
-      pill.dataset.val = d;
-      pill.onclick = function() {
-        datePills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById('diary-filter').value = 'date:' + d;
-        renderDiary();
-      };
-      datePills.appendChild(pill);
-    });
-  }
-
-  // Person pills
-  const uids = [...new Set(allDiaries.map(e=>e.uid))];
-  const personPills = document.getElementById('diary-person-pills');
-  if(personPills) {
-    const allPill = document.createElement('button');
-    allPill.className = 'filter-pill active';
-    allPill.textContent = '所有成員';
-    allPill.dataset.val = '';
-    allPill.onclick = function() {
-      personPills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
-      this.classList.add('active');
-      document.getElementById('diary-filter').value = '';
-      renderDiary();
-    };
-    personPills.appendChild(allPill);
-
-    uids.forEach(uid => {
-      const name = profMap[uid]?.nickname || profMap[uid]?.displayName || uid.slice(0,8);
-      const pill = document.createElement('button');
-      pill.className = 'filter-pill';
-      pill.textContent = name;
-      pill.dataset.val = uid;
-      pill.onclick = function() {
-        // Allow multi-select on person? For now single select
-        personPills.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
-        this.classList.add('active-person');
-        document.getElementById('diary-filter').value = 'person:' + uid;
-        renderDiary();
-      };
-      personPills.appendChild(pill);
-    });
-  }
-}
-
-
-
-function setView(view) {
-  currentView = view;
-  ['date','person','all'].forEach(v => {
-    const btn = document.getElementById('vt-' + v);
-    if(btn) btn.classList.toggle('active', v === view);
-  });
-  renderDiary();
-}
-
-function applyFilter() { renderDiary(); }
-
-async function renderDiary() {
-  const container = document.getElementById('diary-content');
-  if(!container) return;
-  container.innerHTML = '<div class="loading-spinner" style="margin:40px auto"></div>';
-
-  if(!allDiaries.length) await loadAllDiaries();
-  const profMap = await loadProfiles([...new Set(allDiaries.map(e=>e.uid))]);
-
-  const filterVal = document.getElementById('diary-filter')?.value || '';
-  const sortVal   = document.getElementById('diary-sort')?.value || 'newest';
-
-  // Parse filter
-  let filterDate = '', filterPerson = '';
-  if(filterVal.startsWith('date:'))   filterDate   = filterVal.slice(5);
-  if(filterVal.startsWith('person:')) filterPerson = filterVal.slice(7);
-
-  // Filter entries
-  let entries = allDiaries.filter(e => {
-    if(filterDate   && e.date !== filterDate)   return false;
-    if(filterPerson && e.uid  !== filterPerson) return false;
-    return true;
-  });
-
-  // Sort
-  entries = entries.slice().sort((a,b) => {
-    const ta = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
-    const tb = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
-    return sortVal === 'oldest' ? ta - tb : tb - ta;
-  });
-
-  if(!entries.length) {
-    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:48px;margin-bottom:12px">📓</div><p>這裡還沒有日記記錄</p></div>';
-    return;
-  }
-
-  if(currentView === 'date') {
-    // Group by date
-    const byDate = {};
-    entries.forEach(e => { (byDate[e.date] = byDate[e.date]||[]).push(e); });
-    const dates = Object.keys(byDate).sort((a,b) => sortVal==='oldest' ? a.localeCompare(b) : b.localeCompare(a));
-    container.innerHTML = dates.map(date => {
-      const sched = SCHEDULE.find(s=>s.date===date);
-      const schedLabel = sched ? (currentLang==='zh' ? sched.zh : sched.en) : '';
-      const dayTag = sched ? '<span class="day-tag">Day ' + sched.day + '</span>' : '';
-      return '<div class="diary-group">' +
-        '<div class="diary-group-hdr">' + dayTag +
-        '<span class="diary-group-date">' + date + '</span>' +
-        (schedLabel ? '<span class="diary-group-sched">' + esc(schedLabel) + '</span>' : '') +
-        '</div>' +
-        '<div class="diary-cards">' + byDate[date].map(e => renderDiaryCard(e, profMap)).join('') + '</div>' +
-        '</div>';
-    }).join('');
-  } else if(currentView === 'person') {
-    const byPerson = {};
-    entries.forEach(e => { (byPerson[e.uid] = byPerson[e.uid]||[]).push(e); });
-    container.innerHTML = Object.entries(byPerson).map(([uid, ents]) => {
-      const prof = profMap[uid] || {};
-      const name = prof.nickname || prof.displayName || uid.slice(0,8);
-      return '<div class="diary-group">' +
-        '<div class="diary-group-hdr"><span class="day-tag" style="background:#5c3317">👤 ' + esc(name) + '</span></div>' +
-        '<div class="diary-cards">' + ents.map(e => renderDiaryCard(e, profMap)).join('') + '</div>' +
-        '</div>';
-    }).join('');
-  } else {
-    // All: just a grid
-    container.innerHTML = '<div class="diary-cards">' + entries.map(e => renderDiaryCard(e, profMap)).join('') + '</div>';
-  }
-}
-
-
-
-async function populateGalleryFilters() {
-  if(!allDiaries.length) await loadAllDiaries();
-  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
-
-  const dates = [...new Set(allDiaries.map(d=>d.date))].sort();
-  const uids  = [...new Set(allDiaries.map(d=>d.uid))];
-
-  const buildPills = (containerId, items, selectId, labelFn) => {
-    const container = document.getElementById(containerId);
-    const select    = document.getElementById(selectId);
-    if(!container) return;
-    container.innerHTML = '';
-    const all = document.createElement('button');
-    all.className = 'filter-pill active';
-    all.textContent = '全部';
-    all.onclick = function() {
-      container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
-      this.classList.add('active');
-      if(select) select.value = '';
-      renderGallery();
-    };
-    container.appendChild(all);
-    items.forEach(val => {
-      const pill = document.createElement('button');
-      pill.className = 'filter-pill';
-      pill.textContent = labelFn(val);
-      pill.onclick = function() {
-        container.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active','active-person'));
-        this.classList.add(containerId.includes('person') ? 'active-person' : 'active');
-        if(select) select.value = val;
-        renderGallery();
-      };
-      container.appendChild(pill);
-    });
-  };
-
-  buildPills('gallery-date-pills', dates, 'gallery-filter-date', d => {
-    const s = SCHEDULE.find(x=>x.date===d);
-    return s ? 'Day ' + s.day + ' · ' + d.slice(5) : d;
-  });
-  buildPills('gallery-person-pills', uids, 'gallery-filter-person', uid =>
-    profMap[uid]?.nickname || profMap[uid]?.displayName || uid.slice(0,8)
-  );
-}
-
-
-async function renderGallery() {
-  const container = document.getElementById('gallery-content');
-  if(!container) return;
-  container.innerHTML = '<div class="loading-spinner" style="margin:40px auto"></div>';
-  if(!allDiaries.length) await loadAllDiaries();
-  const profMap = await loadProfiles([...new Set(allDiaries.map(d=>d.uid))]);
-  const filterDate   = document.getElementById('gallery-filter-date')?.value   || '';
-  const filterPerson = document.getElementById('gallery-filter-person')?.value || '';
-  let photos = [];
-  allDiaries.forEach(entry => {
-    if(filterDate   && entry.date !== filterDate)   return;
-    if(filterPerson && entry.uid  !== filterPerson) return;
-    (entry.photos||[]).forEach(url => {
-      const name = profMap[entry.uid]?.nickname || profMap[entry.uid]?.displayName || '';
-      photos.push({url, uid:entry.uid, date:entry.date, name});
-    });
-  });
-  allGalleryPhotos = photos;
-  if(!photos.length) {
-    container.innerHTML = '<div class="empty-state"><div class="es-icon">📷</div><h3>還沒有照片</h3></div>';
-    return;
-  }
-  container.innerHTML = photos.map((p,i) =>
-    `<div class="gallery-item" onclick="openLightbox(${i},null,true)">
-      <img src="${p.url}" alt="${esc(p.name)}" loading="lazy">
-      <div class="gi-overlay">${esc(p.name)} · ${p.date}</div>
-    </div>`
-  ).join('');
-}
-
-
-// ── renderDiaryCard ──
-function renderDiaryCard(entry, profMap) {
-  const prof = profMap[entry.uid] || {};
-  const name   = prof.nickname || prof.displayName || entry.uid.slice(0,8);
-  const avatar = prof.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=d4650a&color=fff`;
-  const photos = entry.photos || [];
-  const pLen   = photos.length;
-  const photoClass = pLen===1?'p1':pLen===2?'p2':pLen===3?'p3':pLen===4?'p4':'p' + Math.min(pLen,10);
-  const canDelete = isAdmin || (currentUser && currentUser.uid === entry.uid);
-  const canEdit   = isAdmin || (currentUser && currentUser.uid === entry.uid && isMember);
-  const liked     = entry.likes && entry.likes[currentUser?.uid];
-  const likeCount = entry.likes ? Object.keys(entry.likes).length : 0;
-  const comments  = entry.comments || [];
-  return `<div class="diary-card" id="dc-${entry.id}-${entry.date}">
-    <div class="dc-header">
-      <img class="dc-avatar" src="${avatar}" alt="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=d4650a&color=fff'">
-      <div style="flex:1;min-width:0">
-        <div class="dc-name">${esc(name)}</div>
-        <div class="dc-date">${entry.date} ${entry.updatedAt ? '（已更新）':''}</div>
-      </div>
-      <div style="display:flex;gap:4px">
-        ${canEdit   ? `<button class="btn btn-secondary btn-sm btn-icon" onclick="openEditDiary('${entry.date}','${entry.uid}')" title="編輯">✏️</button>` : ''}
-        ${canDelete ? `<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry('${entry.date}','${entry.uid}')" title="刪除">🗑</button>` : ''}
-      </div>
-    </div>
-    ${photos.length ? `<div class="dc-photos ${photoClass}">${photos.map((p,i)=>`<img class="dc-photo" src="${p}" alt="" loading="lazy" onclick="openLightbox(${i},${JSON.stringify(photos).replace(/"/g,"'")})" onerror="this.style.display='none'">`).join('')}</div>` : ''}
-    <div class="dc-body" id="dcb-${entry.id}" style="background:#fff">${esc(entry.content||'')}</div>
-    <div style="padding:4px 20px"><button onclick="toggleExpand('dcb-${entry.id}')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0">展開全文 ▼</button></div>
-    <div class="dc-footer">
-      <button class="dc-action ${liked?'liked':''}" onclick="toggleLike('${entry.date}','${entry.uid}')">
-        ${liked?'❤️':'🤍'} ${likeCount}
-      </button>
-      <button class="dc-action" onclick="toggleComments('comment-section-${entry.id}')">
-        💬 ${comments.length}
-      </button>
-    </div>
-    <div class="dc-comments" id="comment-section-${entry.id}" style="display:none">
-      ${comments.map(c => `<div class="comment-item">
-        <img class="comment-avatar" src="${c.userPhoto||`https://ui-avatars.com/api/?name=${encodeURIComponent(c.userName||'U')}&background=e0d0c0&color=5c3317`}" alt="">
-        <div class="comment-bubble"><div class="cn">${esc(c.userName||'')}</div>${esc(c.text||'')}</div>
-        ${isAdmin ? `<button onclick="deleteComment('${entry.date}','${entry.uid}',${comments.indexOf(c)})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted)">✕</button>` : ''}
-      </div>`).join('')}
-      <div class="comment-input-row">
-        <input class="comment-input" id="ci-${entry.id}" placeholder="留言..." onkeydown="if(event.key==='Enter')postComment('${entry.date}','${entry.uid}','${entry.id}')">
-        <button class="btn btn-primary btn-sm" onclick="postComment('${entry.date}','${entry.uid}','${entry.id}')">送出</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function toggleExpand(id) {
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.classList.toggle('expanded');
-  const btn = el.nextElementSibling?.querySelector('button');
-  if(btn) btn.textContent = el.classList.contains('expanded') ? '收起 ▲' : '展開全文 ▼';
-}
-function toggleComments(id) {
-  const el = document.getElementById(id);
-  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
-}
-async function toggleLike(date, uid) {
-  if(!currentUser) { showToast('請先登入','error'); return; }
-  const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
-  try {
-    const snap = await ref.get();
-    const likes = snap.data()?.likes || {};
-    if(likes[currentUser.uid]) delete likes[currentUser.uid];
-    else likes[currentUser.uid] = true;
-    await ref.update({likes});
-    allDiaries = []; renderDiary();
-  } catch(e) { showToast('操作失敗','error'); }
-}
-async function postComment(date, uid, entryId) {
-  if(!currentUser) { showToast('請先登入','error'); return; }
-  const input = document.getElementById('ci-' + entryId);
-  const text = input?.value.trim();
-  if(!text) return;
-  const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
-  try {
-    const snap = await ref.get();
-    const comments = snap.data()?.comments || [];
-    comments.push({ uid:currentUser.uid, userName:currentUser.displayName||currentUser.email,
-      userPhoto:currentUser.photoURL||'', text, timestamp: new Date().toISOString() });
-    await ref.update({comments});
-    if(input) input.value = '';
-    allDiaries = []; renderDiary();
-    showToast('留言已送出 💬','success');
-  } catch(e) { showToast('留言失敗','error'); }
-}
-async function deleteDiaryEntry(date, uid) {
-  if(!confirm('確定要刪除這篇日記嗎？')) return;
-  try {
-    await db.collection('diaries').doc(date).collection('entries').doc(uid).delete();
-    allDiaries = []; renderDiary();
-    showToast('已刪除日記','success');
-  } catch(e) { showToast('刪除失敗','error'); }
-}
-async function deleteComment(date, uid, idx) {
-  const ref = db.collection('diaries').doc(date).collection('entries').doc(uid);
-  try {
-    const snap = await ref.get();
-    const comments = snap.data()?.comments || [];
-    comments.splice(idx,1);
-    await ref.update({comments});
-    allDiaries = []; renderDiary();
-  } catch(e) {}
-}
-
-
-// ============================================================
-// LIGHTBOX with zoom/pan/pinch
-// ============================================================
-let lbTouchStartX = 0, lbTouchStartY = 0;
-let lbZoom = 1, lbPanX = 0, lbPanY = 0, lbPinchStart = 0;
-let lbIsDragging = false, lbDragStartX = 0, lbDragStartY = 0;
-let lbDots = null;
-
-function openLightbox(idx, photos, useGallery=false) {
-  if(useGallery) {
-    lbImages = allGalleryPhotos.map(p=>({url:p.url, info:`${p.name} · ${p.date}`}));
-  } else if(Array.isArray(photos)) {
-    lbImages = photos.map(p=>({url:p, info:''}));
-  }
-  lbIndex = Math.max(0, Math.min(idx, lbImages.length-1));
-  lbZoom = 1; lbPanX = 0; lbPanY = 0;
-  updateLightbox(false);
-  document.getElementById('lightbox').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function updateLightbox(animate=true) {
-  const img  = document.getElementById('lb-img');
-  const info = document.getElementById('lb-info');
-  if(!img) return;
-  lbZoom = 1; lbPanX = 0; lbPanY = 0;
-  applyLbTransform(img);
-  if(animate) {
-    img.style.opacity = '0';
-    setTimeout(() => { img.src = lbImages[lbIndex]?.url||''; img.style.opacity='1'; }, 120);
-  } else {
-    img.src = lbImages[lbIndex]?.url || '';
-  }
-  if(info) info.textContent = (lbIndex+1) + ' / ' + lbImages.length +
-    (lbImages[lbIndex]?.info ? '  ·  ' + lbImages[lbIndex].info : '');
-}
-function applyLbTransform(img) {
-  if(!img) img = document.getElementById('lb-img');
-  if(img) {
-    img.style.transform = `scale(${lbZoom}) translate(${lbPanX/lbZoom}px,${lbPanY/lbZoom}px)`;
-    img.style.cursor = lbZoom > 1 ? 'grab' : 'zoom-in';
-  }
-}
-function lbNav(dir) {
-  if(lbZoom > 1) { lbZoom=1; lbPanX=0; lbPanY=0; applyLbTransform(); return; }
-  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
-  updateLightbox(true);
-}
-function lbGoTo(idx) { lbIndex=idx; updateLightbox(true); }
-function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('open');
-  document.body.style.overflow = '';
-  lbZoom=1; lbPanX=0; lbPanY=0;
-}
-document.addEventListener('DOMContentLoaded', () => {
-  const lb = document.getElementById('lightbox');
-  if(!lb) return;
-  lb.addEventListener('click', e => { if(e.target.id==='lightbox') closeLightbox(); });
-  lb.addEventListener('dblclick', e => {
-    if(e.target.id==='lb-img') {
-      lbZoom = lbZoom > 1 ? 1 : 2.5;
-      lbPanX=0; lbPanY=0; applyLbTransform();
-    }
-  });
-  lb.addEventListener('mousedown', e => {
-    if(e.target.id!=='lb-img' || lbZoom<=1) return;
-    lbIsDragging=true; lbDragStartX=e.clientX-lbPanX; lbDragStartY=e.clientY-lbPanY;
-    e.target.style.cursor='grabbing';
-  });
-  lb.addEventListener('mousemove', e => {
-    if(!lbIsDragging) return;
-    lbPanX=e.clientX-lbDragStartX; lbPanY=e.clientY-lbDragStartY; applyLbTransform();
-  });
-  lb.addEventListener('mouseup', () => { lbIsDragging=false; applyLbTransform(); });
-  lb.addEventListener('wheel', e => {
-    e.preventDefault();
-    if(e.target.id==='lb-img' || lbZoom>1) {
-      lbZoom = Math.max(1, Math.min(5, lbZoom + (e.deltaY<0?0.3:-0.3)));
-      if(lbZoom===1){lbPanX=0;lbPanY=0;} applyLbTransform();
-    } else { lbNav(e.deltaY>0?1:-1); }
-  }, {passive:false});
-  lb.addEventListener('touchstart', e => {
-    if(e.touches.length===1){lbTouchStartX=e.touches[0].clientX; lbTouchStartY=e.touches[0].clientY;}
-    else if(e.touches.length===2) lbPinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-  },{passive:true});
-  lb.addEventListener('touchmove', e => {
-    if(e.touches.length===2){
-      e.preventDefault();
-      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      lbZoom=Math.max(1,Math.min(5,lbZoom*(dist/lbPinchStart))); lbPinchStart=dist; applyLbTransform();
-    }
-  },{passive:false});
-  lb.addEventListener('touchend', e => {
-    if(e.changedTouches.length===1 && lbZoom===1){
-      const dx=e.changedTouches[0].clientX-lbTouchStartX, dy=e.changedTouches[0].clientY-lbTouchStartY;
-      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50) lbNav(dx<0?1:-1);
-      else if(Math.abs(dy)>80&&Math.abs(dx)<50) closeLightbox();
-    }
-  },{passive:true});
-});
-document.addEventListener('keydown', e => {
-  if(!document.getElementById('lightbox')?.classList.contains('open')) return;
-  if(e.key==='ArrowLeft')  lbNav(-1);
-  else if(e.key==='ArrowRight') lbNav(1);
-  else if(e.key==='Escape') closeLightbox();
-  else if(e.key==='+'||e.key==='='){lbZoom=Math.min(5,lbZoom+0.5);applyLbTransform();}
-  else if(e.key==='-'){lbZoom=Math.max(1,lbZoom-0.5);if(lbZoom===1){lbPanX=0;lbPanY=0;}applyLbTransform();}
-});
-
-
-// ============================================================
-// PROFILE PAGE - rendered via JS
-// ============================================================
-function renderProfilePage() {
-  const target = document.getElementById('profile-render-target');
-  if(!target) { console.error('profile-render-target not found'); return; }
-  if(!currentUser) { openLoginModal(); return; }
-  const u = currentUser;
-  const photo = u.photoURL || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.displayName||'U') + '&background=d4650a&color=fff';
-  target.innerHTML = `
-    <div style="padding:32px 0;font-family:'Nunito',sans-serif">
-      <div style="margin-bottom:24px">
-        <h2 style="font-family:'Playfair Display',serif;font-size:26px;color:#5c3317">👤 個人檔案</h2>
-        <p style="font-size:13px;color:#7a5c46;margin-top:4px">這些資料會顯示在「見習成員」介紹頁面</p>
-      </div>
-      <div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);max-width:600px">
-        <div style="padding:32px 36px">
-          <div style="text-align:center;margin-bottom:32px">
-            <div style="position:relative;display:inline-block">
-              <img id="prof-av" src="${photo}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block">
-              <label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px">📷</label>
-              <input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)">
-            </div>
-            <div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點 📷 更換頭像</div>
-          </div>
-          <div style="margin-bottom:16px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">暱稱 / 顯示名稱</label>
-            <input id="prof-nickname" type="text" placeholder="你的暱稱" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-            <div>
-              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">服務學校</label>
-              <input id="prof-school" type="text" placeholder="如：高雄市○○國小" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">職稱</label>
-              <input id="prof-title" type="text" placeholder="如：教師、組長、主任" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
-            </div>
-          </div>
-          <div style="margin-bottom:16px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">專長領域</label>
-            <input id="prof-expertise" type="text" placeholder="如：AI教育、STEAM、UDL（用逗號分隔）" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
-          </div>
-          <div style="margin-bottom:16px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">參加動機與期待</label>
-            <textarea id="prof-motivation" placeholder="分享你參加這次澳洲冒險的動機與期待..." rows="3" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-            <div>
-              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">真實姓名 <span style="font-size:10px;background:#f5edd8;padding:2px 6px;border-radius:6px;font-weight:600;text-transform:none">公開顯示王O明</span></label>
-              <input id="prof-realname" type="text" placeholder="如：王小明" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'">
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Email</label>
-              <input type="text" value="${u.email||''}" disabled style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;color:#aaa;background:#f5f5f3;box-sizing:border-box">
-            </div>
-          </div>
-          <div style="margin-bottom:28px">
-            <label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">自我介紹</label>
-            <textarea id="prof-bio" placeholder="簡短介紹自己..." rows="3" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6" onfocus="this.style.borderColor='#d4650a';this.style.background='#fff'" onblur="this.style.borderColor='#e8e0d4';this.style.background='#fafaf8'"></textarea>
-          </div>
-          <button onclick="profSave()" style="width:100%;padding:13px;background:#d4650a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif" onmouseover="this.style.background='#a84d08'" onmouseout="this.style.background='#d4650a'">💾 儲存個人資料</button>
-          <div id="prof-status" style="text-align:center;margin-top:12px;font-size:13px;font-weight:600;min-height:20px"></div>
-        </div>
-      </div>
-    </div>`;
-  if(db && u) {
-    db.collection('profiles').doc(u.uid).get().then(snap => {
-      if(snap.exists) {
-        const d = snap.data();
-        const sv = (id,val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
-        sv('prof-nickname', d.nickname); sv('prof-bio', d.bio); sv('prof-school', d.school);
-        sv('prof-title', d.jobTitle); sv('prof-expertise', d.expertise);
-        sv('prof-motivation', d.motivation); sv('prof-realname', d.realName);
-        const av = document.getElementById('prof-av');
-        if(av && d.photoURL) av.src = d.photoURL;
-      }
-    }).catch(e => console.warn('Profile load:', e.message));
-  }
-}
-
-async function profSave() {
-  if(!currentUser || !db) return;
-  const gv = id => document.getElementById(id)?.value.trim() || '';
-  const status = document.getElementById('prof-status');
-  if(status) status.textContent = '儲存中...';
-  try {
-    await db.collection('profiles').doc(currentUser.uid).update({
-      nickname: gv('prof-nickname'), bio: gv('prof-bio'), school: gv('prof-school'),
-      jobTitle: gv('prof-title'), expertise: gv('prof-expertise'),
-      motivation: gv('prof-motivation'), realName: gv('prof-realname')
-    });
-    const sn = document.getElementById('sidebar-name');
-    if(sn && gv('prof-nickname')) sn.textContent = gv('prof-nickname');
-    sessionStorage.setItem('profileNickname', gv('prof-nickname'));
-    if(status){status.textContent='✅ 儲存成功！';status.style.color='#2d5a27';}
-    setTimeout(()=>{if(status)status.textContent='';},2500);
-    showToast('個人資料已儲存 ✨','success');
-  } catch(e) {
-    if(status){status.textContent='❌ '+e.message;status.style.color='#c0392b';}
-  }
-}
-
 async function uploadToCloudinary(file) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_PRESET);
-  formData.append('folder', 'au_ai_lab');
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
-    method: 'POST', body: formData
-  });
-  const data = await res.json();
+  var fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  fd.append('folder', 'au_ai_lab');
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload', {method:'POST',body:fd});
+  var data = await res.json();
   if(data.error) throw new Error(data.error.message);
   return data.secure_url;
 }
-
-
-async function profUploadAvatar(input) {
-  if(!input.files[0] || !currentUser) return;
-  const file = input.files[0];
-  const status = document.getElementById('prof-status');
-  if(status) { status.textContent = '上傳頭像中...'; status.style.color = '#7a5c46'; }
-  try {
-    // Use Cloudinary (avoids Firebase Storage CORS issues)
-    const url = await uploadToCloudinary(file);
-    await db.collection('profiles').doc(currentUser.uid).update({ photoURL: url });
-    ['prof-av','sidebar-avatar','topbar-avatar','cf-my-av'].forEach(id => {
-      const el = document.getElementById(id); if(el) el.src = url;
-    });
-    if(status) { status.textContent = '✅ 頭像已更新！'; status.style.color = '#2d5a27'; }
-    setTimeout(() => { if(status) status.textContent = ''; }, 2500);
-    showToast('頭像已更新 📷', 'success');
-  } catch(e) {
-    if(status) { status.textContent = '❌ ' + e.message; status.style.color = '#c0392b'; }
-    showToast('上傳失敗: ' + e.message, 'error');
-  }
-}
-
-
-
-// ============================================================
-// ADMIN PAGE - rendered via JS
-// ============================================================
-function renderAdminPage() {
-  const target = document.getElementById('admin-render-target');
-  if(!target) return;
-  if(!isAdmin) {
-    target.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#7a5c46"><div style="font-size:48px;margin-bottom:12px">🔒</div><p>僅管理員可見</p></div>';
-    return;
-  }
-  target.innerHTML = `<div style="font-family:'Nunito',sans-serif">
-    <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <h2 style="font-family:'Playfair Display',serif;font-size:28px;color:#5c3317">⚙️ 管理後台</h2>
-      <a href="admin.html" target="_blank" class="btn btn-primary">開啟完整後台 →</a>
-    </div>
-    <div style="background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(84,40,10,.12);padding:20px;text-align:center;color:#7a5c46">
-      <div style="font-size:48px;margin-bottom:12px">⚙️</div>
-      <p style="font-size:15px;font-weight:700">請使用完整管理後台</p>
-      <p style="font-size:13px;margin-top:8px">成員管理、聊天管理、日記管理、航班設定都在獨立的 admin.html 頁面</p>
-    </div>
-  </div>`;
-}
-
-// ============================================================
-// TEAM PAGE - member intro cards
-// ============================================================
-function maskName(name) {
-  if(!name || name.length < 2) return name || '';
-  if(name.length === 2) return name[0] + 'O';
-  return name[0] + 'O'.repeat(name.length - 2) + name[name.length - 1];
-}
-
-async function renderTeamPage() {
-  const grid = document.getElementById('team-grid');
-  if(!grid) return;
-  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);grid-column:1/-1"><div class="loading-spinner"></div></div>';
-  if(!db) return;
-  try {
-    const memSnap = await db.collection('members').get();
-    const memberUids = new Set();
-    const memberEmails = new Set();
-    memSnap.forEach(d => {
-      const data = d.data();
-      if(data.uid) memberUids.add(data.uid);
-      if(data.email) memberEmails.add(data.email.toLowerCase());
-      if(d.id && d.id.length > 10 && !d.id.includes('_')) memberUids.add(d.id);
-    });
-    if(!memberUids.size && !memberEmails.size) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px;margin-bottom:12px">🧑‍🏫</div><p>尚無見習成員資料</p></div>';
-      return;
-    }
-    const profiles = [];
-    const seenUids = new Set();
-    await Promise.all([...memberUids].map(uid =>
-      db.collection('profiles').doc(uid).get()
-        .then(s => { if(s.exists && !seenUids.has(s.id)){ seenUids.add(s.id); profiles.push(s.data()); }})
-        .catch(()=>{})
-    ));
-    if(memberEmails.size > 0) {
-      const allProfs = await db.collection('profiles').get().catch(()=>null);
-      if(allProfs) allProfs.forEach(d => {
-        const data = d.data();
-        if(!seenUids.has(d.id) && data.email && memberEmails.has(data.email.toLowerCase())) {
-          seenUids.add(d.id); profiles.push(data);
-        }
-      });
-    }
-    if(!profiles.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px">🧑‍🏫</div><p>成員尚未填寫個人資料</p></div>';
-      return;
-    }
-    grid.innerHTML = profiles.map(p => buildMemberCard(p)).join('');
-  } catch(e) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">⚠️ ' + esc(e.message) + '<br><small>請確認 Firestore 規則：members 和 profiles 允許 read: if true</small></div>';
-  }
-}
-
-function buildMemberCard(p) {
-  const name   = p.nickname || p.displayName || '見習教師';
-  const masked = p.realName ? maskName(p.realName) : '';
-  const displayName = masked ? masked : name;
-  const photo  = p.photoURL || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=d4650a&color=fff&size=128');
-  const school = p.school || '';
-  const title  = p.jobTitle || '';
-  const expert = p.expertise || '';
-  const motiv  = p.motivation || '';
-  const bio    = p.bio || '';
-  let tagHTML = '';
-  if(expert) {
-    const tags = expert.split(/[，,、]/).slice(0,3);
-    tagHTML = '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">' +
-      tags.map(t => '<span style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700">' + esc(t.trim()) + '</span>').join('') + '</div>';
-  }
-  let bodyHTML = tagHTML;
-  if(motiv) bodyHTML += '<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">參加動機</div><div style="font-size:13px;color:#2c1810;line-height:1.6">' + esc(motiv) + '</div></div>';
-  if(bio)   bodyHTML += '<div><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">自我介紹</div><div style="font-size:13px;color:#2c1810;line-height:1.6">' + esc(bio) + '</div></div>';
-  if(!tagHTML && !motiv && !bio) bodyHTML = '<div style="text-align:center;color:#bbb;font-size:13px;padding:12px 0">尚未填寫介紹</div>';
-  return '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.1);overflow:hidden;display:flex;flex-direction:column">' +
-    '<div style="background:linear-gradient(135deg,#3d1f0a,#d4650a);padding:28px 20px;text-align:center">' +
-    '<img src="' + photo + '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin:0 auto 10px;display:block">' +
-    '<div style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">' + esc(displayName) + '</div>' +
-    (title  ? '<div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:2px">' + esc(title) + '</div>' : '') +
-    (school ? '<div style="font-size:12px;color:rgba(255,255,255,.7)">🏫 ' + esc(school) + '</div>' : '') +
-    '</div>' +
-    '<div style="padding:18px 20px;flex:1">' + bodyHTML + '</div>' +
-    '</div>';
-}
-
-// ============================================================
-// INSTALL PAGE
-// ============================================================
-function installSwitchOS(os) {
-  const ios = document.getElementById('install-ios');
-  const android = document.getElementById('install-android');
-  const btnIos = document.getElementById('itab-ios');
-  const btnAndroid = document.getElementById('itab-android');
-  if(os === 'ios') {
-    if(ios) ios.style.display = 'block';
-    if(android) android.style.display = 'none';
-    if(btnIos){btnIos.style.background='var(--primary)';btnIos.style.color='#fff';btnIos.style.borderColor='var(--primary)';}
-    if(btnAndroid){btnAndroid.style.background='transparent';btnAndroid.style.color='var(--text-muted)';btnAndroid.style.borderColor='var(--cream-dark)';}
-  } else {
-    if(ios) ios.style.display = 'none';
-    if(android) android.style.display = 'block';
-    if(btnAndroid){btnAndroid.style.background='var(--primary)';btnAndroid.style.color='#fff';btnAndroid.style.borderColor='var(--primary)';}
-    if(btnIos){btnIos.style.background='transparent';btnIos.style.color='var(--text-muted)';btnIos.style.borderColor='var(--cream-dark)';}
-  }
-}
-
-// ============================================================
-// EDIT DIARY MODAL
-// ============================================================
-let editingEntry = null;
-async function openEditDiary(date, uid) {
-  if(!currentUser) return;
-  const snap = await db.collection('diaries').doc(date).collection('entries').doc(uid).get();
-  if(!snap.exists) { showToast('找不到日記','error'); return; }
-  editingEntry = {date, uid, ...snap.data()};
-  const modal = document.getElementById('edit-diary-modal');
-  const body  = document.getElementById('edit-diary-body');
-  if(!modal || !body) return;
-  const existingPhotos = editingEntry.photos || [];
-  const sched = SCHEDULE.find(s=>s.date===date);
-  const schedLabel = sched ? 'Day ' + sched.day + ' · ' + date : date;
-  body.innerHTML =
-    '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div>' +
-    '<div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">' + esc(schedLabel) + '</div></div>' +
-    '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日記內容</div>' +
-    '<textarea id="edit-diary-text" style="width:100%;min-height:160px;border:2px solid #f5edd8;border-radius:10px;padding:12px;font-family:Nunito,sans-serif;font-size:14px;line-height:1.7;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810">' + esc(editingEntry.content||'') + '</textarea></div>' +
-    '<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:8px;text-transform:uppercase">照片（原始 Cloudinary · 不限張數）</div>' +
-    '<div id="edit-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' +
-    existingPhotos.map((url,i) => '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>').join('') +
-    '</div><label style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f5edd8;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;color:#5c3317">📷 新增照片<input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleEditPhotoSelect(this)"></label>' +
-    '<span style="font-size:11px;color:#7a5c46;margin-left:8px">已有 <span id="edit-photo-count">'+existingPhotos.length+'</span> 張</span></div>';
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function closeEditDiary() {
-  const modal = document.getElementById('edit-diary-modal');
-  if(modal) modal.style.display = 'none';
-  document.body.style.overflow = '';
-  editingEntry = null;
-}
-function removeEditPhoto(idx) {
-  if(!editingEntry) return;
-  editingEntry.photos = editingEntry.photos || [];
-  editingEntry.photos.splice(idx, 1);
-  const container = document.getElementById('edit-photo-previews');
-  if(container) container.innerHTML = editingEntry.photos.map((url,i) =>
-    '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>'
-  ).join('');
-  const cnt = document.getElementById('edit-photo-count');
-  if(cnt) cnt.textContent = editingEntry.photos.length;
-}
-function handleEditPhotoSelect(input) {
-  if(!editingEntry) return;
-  editingEntry.photos = editingEntry.photos || [];
-  const files = Array.from(input.files).slice(0, 20 - editingEntry.photos.length);
-  files.forEach(f => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      if(!editingEntry._newPhotos) editingEntry._newPhotos = [];
-      editingEntry._newPhotos.push({file:f, preview:e.target.result});
-      const container = document.getElementById('edit-photo-previews');
-      if(container) {
-        const div = document.createElement('div');
-        div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px';
-        div.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
-        container.appendChild(div);
-      }
-      const cnt = document.getElementById('edit-photo-count');
-      if(cnt) cnt.textContent = editingEntry.photos.length + (editingEntry._newPhotos||[]).length;
+async function compressImage(file, maxKB) {
+  maxKB = maxKB || 800;
+  return new Promise(function(resolve){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var canvas = document.createElement('canvas');
+        var w=img.width, h=img.height, mx=2400;
+        if(w>mx||h>mx){var r=Math.min(mx/w,mx/h);w=Math.round(w*r);h=Math.round(h*r);}
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        var q=0.9;
+        var run=function(){canvas.toBlob(function(b){if(b.size>maxKB*1024&&q>0.3){q-=0.1;run();}else resolve(b);},'image/jpeg',q);};
+        run();
+      };
+      img.src=e.target.result;
     };
-    reader.readAsDataURL(f);
+    reader.readAsDataURL(file);
   });
-  input.value = '';
 }
-async function saveEditDiary() {
-  if(!editingEntry || !db) return;
-  const btn = document.getElementById('edit-save-btn');
-  if(btn){btn.textContent='⏳ 儲存中...';btn.disabled=true;}
-  try {
-    const text = document.getElementById('edit-diary-text')?.value.trim() || '';
-    const photoURLs = [...(editingEntry.photos||[])];
-    const newPhotos = editingEntry._newPhotos || [];
-    for(let i=0; i<newPhotos.length; i++) {
-      if(btn) btn.textContent = '⏳ 上傳照片 '+(i+1)+'/'+newPhotos.length+'...';
-      const url = await uploadToCloudinary(newPhotos[i].file);
-      photoURLs.push(url);
+function exportPDF(){ showToast('準備匯出PDF，請稍後...','success'); setTimeout(function(){window.print();},500); }
+function openLoginModal(){ document.getElementById('login-screen').style.display='flex'; }
+
+// ─────────────────────────────────────────────
+// FIREBASE INIT
+// ─────────────────────────────────────────────
+(function initFirebase(){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db=firebase.firestore(); rtdb=firebase.database(); storage=firebase.storage(); auth=firebase.auth();
+  auth.onAuthStateChanged(function(user){
+    if(user){currentUser=user;handleUserLogin(user);}
+    else{currentUser=null;showLoginScreen();}
+  });
+})();
+
+function showLoginScreen(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  if(countdownInterval) clearInterval(countdownInterval);
+}
+function signInWithGoogle(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){showToast('登入失敗: '+e.message,'error');}); }
+function handleAuthBtn(){ if(currentUser) doSignOut(); else signInWithGoogle(); }
+function doSignOut(){ auth.signOut(); }
+function handleGuestMode(){}
+
+async function handleUserLogin(user){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  isAdmin = user.email === ADMIN;
+  try{
+    var snap = await db.collection('members').doc(user.uid).get();
+    if(snap.exists){ isMember=true; }
+    else{
+      var es = await db.collection('members').where('email','==',user.email).get();
+      if(!es.empty){ await db.collection('members').doc(user.uid).set({email:user.email,displayName:user.displayName||user.email,addedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}); isMember=true; }
+      else isMember=false;
     }
-    await db.collection('diaries').doc(editingEntry.date).collection('entries').doc(editingEntry.uid).update({
-      content: text, photos: photoURLs,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast('日記已更新 ✅','success');
-    closeEditDiary();
-    allDiaries = []; renderDiary();
-  } catch(e) { showToast('儲存失敗: '+e.message,'error'); }
-  finally { if(btn){btn.textContent='💾 儲存修改';btn.disabled=false;} }
-}
-
-
-// ============================================================
-// DOM READY
-// ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  wireCfInput();  // wire once only
+  }catch(e){ isMember=false; }
+  try{
+    var ref=db.collection('profiles').doc(user.uid), ps=await ref.get();
+    if(!ps.exists) await ref.set({uid:user.uid,email:user.email,displayName:user.displayName||'',photoURL:user.photoURL||'',nickname:user.displayName||'',bio:'',createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastLogin:firebase.firestore.FieldValue.serverTimestamp()});
+    else await ref.update({displayName:user.displayName||ps.data().displayName||'',photoURL:user.photoURL||ps.data().photoURL||'',email:user.email,lastLogin:firebase.firestore.FieldValue.serverTimestamp()});
+  }catch(e){}
+  updateSidebarUser(user);
+  toggleAdminUI();
+  setupWriteNav();
   startCountdown();
   renderSchedule();
   loadFlightInfo();
   loadStats();
   navigate('home');
-  initChat();
+}
+
+function updateSidebarUser(user){
+  var photo=user.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(user.displayName||'U')+'&background=d4650a&color=fff';
+  ['sidebar-avatar','topbar-avatar','cf-my-av'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=photo;});
+  var sn=document.getElementById('sidebar-name'); if(sn) sn.textContent=user.displayName||user.email;
+  var sr=document.getElementById('sidebar-role'); if(sr) sr.textContent=isAdmin?'管理員':isMember?'見習成員':'訪客';
+}
+function toggleAdminUI(){
+  document.querySelectorAll('.admin-only').forEach(function(el){el.classList.toggle('visible',isAdmin);});
+  var nav=document.getElementById('nav-admin'); if(nav) nav.style.display=isAdmin?'flex':'none';
+}
+function setupWriteNav(){
+  var nav=document.getElementById('nav-write'); if(nav) nav.style.display=isMember?'flex':'none';
+}
+function setLang(lang){ currentLang=lang; }
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+function navigate(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  var pg=document.getElementById('page-'+page); if(pg) pg.classList.add('active');
+  var sel=document.querySelector('[data-page="'+page+'"]'); if(sel) sel.classList.add('active');
+  if(page==='diary'){populateDiaryFilters();renderDiary();}
+  if(page==='gallery'){populateGalleryFilters();renderGallery();}
+  if(page==='write') loadWriteForm();
+  if(page==='profile'){if(!currentUser){openLoginModal();return;}setTimeout(function(){renderProfilePage();},10);}
+  if(page==='admin') setTimeout(function(){renderAdminPage();},10);
+  if(page==='team') renderTeamPage();
+  var sb=document.getElementById('sidebar'); if(sb&&sb.classList.contains('open')) toggleSidebar();
+  window.scrollTo(0,0);
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+
+
+// ─────────────────────────────────────────────
+// COUNTDOWN
+// ─────────────────────────────────────────────
+function startCountdown(){ renderCountdown(); countdownInterval=setInterval(renderCountdown,1000); }
+function renderCountdown(){
+  var section=document.getElementById('countdown-section'); if(!section) return;
+  var now=new Date(); var html='';
+  if(now<ACTIVITY_START){
+    var diff=ACTIVITY_START-now, d=Math.floor(diff/864e5), h=Math.floor(diff%864e5/36e5), m=Math.floor(diff%36e5/6e4), s=Math.floor(diff%6e4/1e3);
+    html='<div class="countdown-card" style="margin-bottom:28px"><h3>🚀 距離出發</h3><div class="countdown-grid"><div class="cd-unit"><div class="cd-num">'+d+'</div><div class="cd-label">天</div></div><div class="cd-unit"><div class="cd-num">'+h+'</div><div class="cd-label">小時</div></div><div class="cd-unit"><div class="cd-num">'+m+'</div><div class="cd-label">分鐘</div></div><div class="cd-unit"><div class="cd-num">'+s+'</div><div class="cd-label">秒</div></div></div></div>';
+  } else if(now<=ACTIVITY_END){
+    var day=Math.min(Math.floor((now-ACTIVITY_START)/864e5)+1,16);
+    html='<div class="countdown-card" style="margin-bottom:28px;background:linear-gradient(135deg,var(--green),#4a7c42)"><h3>🌏 活動進行中</h3><div style="font-size:48px;font-family:\'Playfair Display\',serif;font-weight:900;margin-bottom:8px">Day '+day+'</div><div style="opacity:.8;font-size:15px">'+(SCHEDULE[day-1]?SCHEDULE[day-1].zh:'')+'</div></div>';
+  } else {
+    html='<div class="countdown-card" style="margin-bottom:28px;background:linear-gradient(135deg,#555,#333)"><h3>🏁 活動已結束</h3><div style="font-size:18px;opacity:.8;margin-top:8px">感謝16位教師的精彩旅程！</div></div>';
+  }
+  section.innerHTML=html;
+}
+
+// ─────────────────────────────────────────────
+// HOME STATS
+// ─────────────────────────────────────────────
+async function loadStats(){
+  try{
+    var entries=0, photos=0;
+    await Promise.all(SCHEDULE.map(function(s){
+      return db.collection('diaries').doc(s.date).collection('entries').get()
+        .then(function(snap){entries+=snap.size;snap.forEach(function(d){photos+=(d.data().photos||[]).length;});})
+        .catch(function(){});
+    }));
+    var e=document.getElementById('stat-entries'); if(e) e.textContent=entries;
+    var p=document.getElementById('stat-photos');   if(p) p.textContent=photos;
+  }catch(e){}
+}
+
+// ─────────────────────────────────────────────
+// FLIGHT INFO
+// ─────────────────────────────────────────────
+async function loadFlightInfo(){
+  try{
+    var snap=await db.collection('config').doc('flights').get();
+    var data=snap.exists?snap.data():{};
+    renderFlightCard('depart',data.depart); renderFlightCard('return',data.return);
+    if(isAdmin) prefillFlightEditor(data);
+  }catch(e){renderFlightCard('depart',null);renderFlightCard('return',null);}
+}
+function renderFlightCard(type,info){
+  var body=document.getElementById('flight-'+type+'-body'); if(!body) return;
+  if(!info||!info.flight){body.innerHTML='<div class="empty-state" style="padding:20px"><div class="es-icon">✈️</div><p>尚未填寫航班資訊</p></div>';return;}
+  body.innerHTML='<div class="flight-row"><div class="fr-icon">✈️</div><div class="fr-info"><div class="fr-label">航班</div><div class="fr-val">'+info.flight+'</div></div></div><div class="flight-row"><div class="fr-icon">🕐</div><div class="fr-info"><div class="fr-label">日期/時間</div><div class="fr-val">'+(info.datetime||'-')+'</div></div></div><div class="flight-row"><div class="fr-icon">🗺️</div><div class="fr-info"><div class="fr-label">航線</div><div class="fr-val">'+(info.route||'-')+'</div></div></div>'+(info.note?'<div class="flight-row"><div class="fr-icon">📌</div><div class="fr-info"><div class="fr-label">備註</div><div class="fr-val">'+info.note+'</div></div></div>':'');
+}
+function prefillFlightEditor(data){
+  var d=data.depart||{},r=data.return||{};
+  var fd=['fd-flight','fd-datetime','fd-route','fd-note'],fr=['fr-flight','fr-datetime','fr-route','fr-note'];
+  [d.flight,d.datetime,d.route,d.note].forEach(function(v,i){var el=document.getElementById(fd[i]);if(el)el.value=v||'';});
+  [r.flight,r.datetime,r.route,r.note].forEach(function(v,i){var el=document.getElementById(fr[i]);if(el)el.value=v||'';});
+}
+async function saveFlightInfo(){
+  if(!isAdmin) return;
+  var gv=function(id){return document.getElementById(id)?document.getElementById(id).value.trim():'';};
+  var data={depart:{flight:gv('fd-flight'),datetime:gv('fd-datetime'),route:gv('fd-route'),note:gv('fd-note')},return:{flight:gv('fr-flight'),datetime:gv('fr-datetime'),route:gv('fr-route'),note:gv('fr-note')},updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  try{await db.collection('config').doc('flights').set(data);renderFlightCard('depart',data.depart);renderFlightCard('return',data.return);showToast('航班資訊已儲存 ✈️','success');}
+  catch(e){showToast('儲存失敗: '+e.message,'error');}
+}
+
+// ─────────────────────────────────────────────
+// SCHEDULE
+// ─────────────────────────────────────────────
+function renderSchedule(){
+  var container=document.getElementById('schedule-list'); if(!container) return;
+  var today=new Date().toISOString().split('T')[0];
+  var wd=['日','一','二','三','四','五','六'];
+  container.innerHTML=SCHEDULE.map(function(s){
+    var isToday=s.date===today, d=new Date(s.date+'T00:00:00');
+    return '<div class="sched-item '+(isToday?'today':'')+'" onclick="handleSchedClick(\''+s.date+'\')">'
+      +'<div class="sched-card"><div class="sched-top"><span class="sched-day">Day '+s.day+'</span>'
+      +'<span class="sched-date">📅 '+(d.getMonth()+1)+'月'+d.getDate()+'日（'+wd[d.getDay()]+'）</span>'
+      +(isToday?'<span class="tag tag-amber">今天</span>':'')+'</div>'
+      +'<div class="sched-text">'+s.zh+'</div>'
+      +'<div class="sched-entries" id="sched-count-'+s.date+'"></div>'
+      +'</div></div>';
+  }).join('');
+  loadScheduleEntryCounts();
+}
+async function loadScheduleEntryCounts(){
+  if(!db) return;
+  await Promise.all(SCHEDULE.map(function(s){
+    return db.collection('diaries').doc(s.date).collection('entries').get()
+      .then(function(snap){var el=document.getElementById('sched-count-'+s.date);if(el&&snap.size>0)el.innerHTML='📝 '+snap.size+' 篇日記';})
+      .catch(function(){});
+  }));
+}
+function handleSchedClick(date){
+  navigate('diary');
+  var filter=document.getElementById('diary-filter'); if(filter) filter.value='date:'+date;
+  document.querySelectorAll('#diary-date-pills .filter-pill').forEach(function(p){p.classList.toggle('active',p.dataset.val===date);});
+  renderDiary();
+}
+
+// ─────────────────────────────────────────────
+// DIARY DATA
+// ─────────────────────────────────────────────
+async function loadAllDiaries(){
+  if(_loadingDiaries){await new Promise(function(r){setTimeout(r,300);}); return allDiaries;}
+  _loadingDiaries=true; allDiaries=[];
+  if(!db){_loadingDiaries=false;return allDiaries;}
+  try{
+    await Promise.all(SCHEDULE.map(function(s){
+      return db.collection('diaries').doc(s.date).collection('entries').get()
+        .then(function(snap){snap.forEach(function(d){allDiaries.push(Object.assign({id:d.id,date:s.date},d.data()));});})
+        .catch(function(){});
+    }));
+  }catch(e){console.warn('loadAllDiaries:',e.message);}
+  _loadingDiaries=false; return allDiaries;
+}
+async function loadProfiles(uids){
+  var map={};
+  if(!db||!uids||!uids.length) return map;
+  await Promise.all(uids.map(function(uid){return db.collection('profiles').doc(uid).get().then(function(s){if(s.exists)map[s.id]=s.data();}).catch(function(){});}));
+  return map;
+}
+
+
+// ─────────────────────────────────────────────
+// DIARY FILTERS (pill UI)
+// ─────────────────────────────────────────────
+async function populateDiaryFilters(){
+  if(!allDiaries.length) await loadAllDiaries();
+  var profMap=await loadProfiles([...new Set(allDiaries.map(function(e){return e.uid;}))]);
+  var dates=[...new Set(allDiaries.map(function(e){return e.date;}))].sort().reverse();
+  var uids=[...new Set(allDiaries.map(function(e){return e.uid;}))];
+  function buildPills(containerId, items, labelFn, onSelect){
+    var el=document.getElementById(containerId); if(!el) return;
+    var all=document.createElement('button');
+    all.className='filter-pill active'; all.textContent='全部'; all.dataset.val='';
+    all.onclick=function(){el.querySelectorAll('.filter-pill').forEach(function(p){p.classList.remove('active','active-person');});all.classList.add('active');onSelect('');};
+    el.innerHTML=''; el.appendChild(all);
+    items.forEach(function(val){
+      var pill=document.createElement('button'); pill.className='filter-pill'; pill.textContent=labelFn(val); pill.dataset.val=val;
+      pill.onclick=function(){el.querySelectorAll('.filter-pill').forEach(function(p){p.classList.remove('active','active-person');});pill.classList.add(containerId.indexOf('person')>=0?'active-person':'active');onSelect(val);};
+      el.appendChild(pill);
+    });
+  }
+  buildPills('diary-date-pills',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+d.slice(5):d;},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'date:'+val:'';renderDiary();});
+  buildPills('diary-person-pills',uids,function(uid){return profMap[uid]?profMap[uid].nickname||profMap[uid].displayName||uid.slice(0,8):uid.slice(0,8);},function(val){var f=document.getElementById('diary-filter');if(f)f.value=val?'person:'+val:'';renderDiary();});
+}
+
+async function populateGalleryFilters(){
+  if(!allDiaries.length) await loadAllDiaries();
+  var profMap=await loadProfiles([...new Set(allDiaries.map(function(d){return d.uid;}))]);
+  var dates=[...new Set(allDiaries.map(function(d){return d.date;}))].sort();
+  var uids=[...new Set(allDiaries.map(function(d){return d.uid;}))];
+  function build(cid,sid,items,lFn){
+    var c=document.getElementById(cid); if(!c) return;
+    var sel=document.getElementById(sid);
+    c.innerHTML='';
+    var all=document.createElement('button');all.className='filter-pill active';all.textContent='全部';all.dataset.val='';
+    all.onclick=function(){c.querySelectorAll('.filter-pill').forEach(function(p){p.classList.remove('active','active-person');});all.classList.add('active');if(sel)sel.value='';renderGallery();};
+    c.appendChild(all);
+    items.forEach(function(val){
+      var p=document.createElement('button');p.className='filter-pill';p.textContent=lFn(val);p.dataset.val=val;
+      p.onclick=function(){c.querySelectorAll('.filter-pill').forEach(function(x){x.classList.remove('active','active-person');});p.classList.add(cid.indexOf('person')>=0?'active-person':'active');if(sel)sel.value=val;renderGallery();};
+      c.appendChild(p);
+    });
+  }
+  build('gallery-date-pills','gallery-filter-date',dates,function(d){var s=SCHEDULE.find(function(x){return x.date===d;});return s?'Day '+s.day+' · '+d.slice(5):d;});
+  build('gallery-person-pills','gallery-filter-person',uids,function(uid){return profMap[uid]?profMap[uid].nickname||profMap[uid].displayName||uid.slice(0,8):uid.slice(0,8);});
+}
+
+function setView(view){
+  currentView=view;
+  ['date','person','all'].forEach(function(v){var btn=document.getElementById('vt-'+v);if(btn)btn.classList.toggle('active',v===view);});
+  renderDiary();
+}
+function applyFilter(){ renderDiary(); }
+
+async function renderDiary(){
+  var container=document.getElementById('diary-content'); if(!container) return;
+  container.innerHTML='<div class="loading-spinner" style="margin:40px auto"></div>';
+  if(!allDiaries.length) await loadAllDiaries();
+  var profMap=await loadProfiles([...new Set(allDiaries.map(function(d){return d.uid;}))]);
+  var filterVal=document.getElementById('diary-filter')?document.getElementById('diary-filter').value:'';
+  var sortVal=(document.getElementById('diary-sort')?document.getElementById('diary-sort').value:null)||'newest';
+  var filterDate='', filterPerson='';
+  if(filterVal.startsWith('date:')) filterDate=filterVal.slice(5);
+  if(filterVal.startsWith('person:')) filterPerson=filterVal.slice(7);
+  var entries=allDiaries.slice().filter(function(e){
+    if(filterDate&&e.date!==filterDate) return false;
+    if(filterPerson&&e.uid!==filterPerson) return false;
+    return true;
+  }).sort(function(a,b){
+    var ta=a.updatedAt?a.updatedAt.seconds:a.createdAt?a.createdAt.seconds:0;
+    var tb=b.updatedAt?b.updatedAt.seconds:b.createdAt?b.createdAt.seconds:0;
+    return sortVal==='oldest'?ta-tb:tb-ta;
+  });
+  if(!entries.length){container.innerHTML='<div class="empty-state"><div class="es-icon">📓</div><h3>這裡還沒有日記記錄</h3></div>';return;}
+  var html='';
+  if(currentView==='date'&&!filterDate){
+    var byDate={};
+    entries.forEach(function(e){if(!byDate[e.date])byDate[e.date]=[];byDate[e.date].push(e);});
+    var sortedDates=Object.keys(byDate).sort(sortVal==='oldest'?function(a,b){return a.localeCompare(b);}:function(a,b){return b.localeCompare(a);});
+    sortedDates.forEach(function(date){
+      var sched=SCHEDULE.find(function(s){return s.date===date;});
+      html+='<div style="margin-bottom:28px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+(sched?'<span class="tag tag-orange">Day '+sched.day+'</span>':'')+'<h3 style="font-family:\'Playfair Display\',serif;color:var(--brown);font-size:18px">'+date+'</h3></div><div class="diary-grid">'+byDate[date].map(function(e){return renderDiaryCard(e,profMap);}).join('')+'</div></div>';
+    });
+  } else {
+    html='<div class="diary-grid">'+entries.map(function(e){return renderDiaryCard(e,profMap);}).join('')+'</div>';
+  }
+  container.innerHTML=html;
+  allGalleryPhotos=[];
+  entries.forEach(function(e){(e.photos||[]).forEach(function(url){allGalleryPhotos.push({url:url,uid:e.uid,date:e.date,name:profMap[e.uid]?profMap[e.uid].nickname||profMap[e.uid].displayName||'':''});});});
+}
+
+function renderDiaryCard(entry, profMap){
+  var prof=profMap[entry.uid]||{};
+  var name=prof.nickname||prof.displayName||entry.uid.slice(0,8);
+  var avatar=prof.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=d4650a&color=fff';
+  var photos=entry.photos||[], pLen=photos.length;
+  var pClass=pLen===1?'p1':pLen===2?'p2':pLen===3?'p3':pLen===4?'p4':'p'+Math.min(pLen,10);
+  var canEdit=isAdmin||(currentUser&&currentUser.uid===entry.uid&&isMember);
+  var canDelete=isAdmin||(currentUser&&currentUser.uid===entry.uid);
+  var liked=entry.likes&&entry.likes[currentUser?currentUser.uid:null];
+  var likeCnt=entry.likes?Object.keys(entry.likes).length:0;
+  var comments=entry.comments||[];
+  return '<div class="diary-card" id="dc-'+entry.id+'-'+entry.date+'">'
+    +'<div class="dc-header">'
+    +'<img class="dc-avatar" src="'+avatar+'" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=d4650a&color=fff\'">'
+    +'<div style="flex:1;min-width:0"><div class="dc-name">'+esc(name)+'</div><div class="dc-date">'+entry.date+(entry.updatedAt?' （已更新）':'')+'</div></div>'
+    +'<div style="display:flex;gap:4px">'
+    +(canEdit?'<button class="btn btn-secondary btn-sm btn-icon" onclick="openEditDiary(\''+entry.date+'\',\''+entry.uid+'\')" title="編輯">✏️</button>':'')
+    +(canDelete?'<button class="btn btn-danger btn-sm btn-icon" onclick="deleteDiaryEntry(\''+entry.date+'\',\''+entry.uid+'\')" title="刪除">🗑</button>':'')
+    +'</div></div>'
+    +(photos.length?'<div class="dc-photos '+pClass+'">'+photos.map(function(p,i){return '<img class="dc-photo" src="'+p+'" alt="" loading="lazy" onclick="openLightbox('+i+','+JSON.stringify(photos).replace(/"/g,"'")+',false)" onerror="this.style.display=\'none\'">';}).join('')+'</div>':'')
+    +'<div class="dc-body" id="dcb-'+entry.id+'" style="background:#fff">'+esc(entry.content||'')+'</div>'
+    +'<div style="padding:4px 20px"><button onclick="toggleExpand(\'dcb-'+entry.id+'\')" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0">展開全文 ▼</button></div>'
+    +'<div class="dc-footer">'
+    +'<button class="dc-action '+(liked?'liked':'')+'" onclick="toggleLike(\''+entry.date+'\',\''+entry.uid+'\')">'+(liked?'❤️':'🤍')+' '+likeCnt+'</button>'
+    +'<button class="dc-action" onclick="toggleComments(\'cs-'+entry.id+'\')">💬 '+comments.length+'</button>'
+    +'</div>'
+    +'<div class="dc-comments" id="cs-'+entry.id+'" style="display:none">'
+    +comments.map(function(c,ci){return '<div class="comment-item"><img class="comment-avatar" src="'+(c.userPhoto||'https://ui-avatars.com/api/?name='+encodeURIComponent(c.userName||'U')+'&background=e0d0c0&color=5c3317')+'" alt=""><div class="comment-bubble"><div class="cn">'+esc(c.userName||'')+'</div>'+esc(c.text||'')+'</div>'+(isAdmin?'<button onclick="deleteComment(\''+entry.date+'\',\''+entry.uid+'\','+ci+')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted)">✕</button>':'')+'</div>';}).join('')
+    +'<div class="comment-input-row"><input class="comment-input" id="ci-'+entry.id+'" placeholder="留言..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey)postComment(\''+entry.date+'\',\''+entry.uid+'\',\''+entry.id+'\')"><button class="btn btn-primary btn-sm" onclick="postComment(\''+entry.date+'\',\''+entry.uid+'\',\''+entry.id+'\')">送出</button></div>'
+    +'</div></div>';
+}
+
+function toggleExpand(id){var el=document.getElementById(id);if(!el)return;el.classList.toggle('expanded');var btn=el.nextElementSibling?el.nextElementSibling.querySelector('button'):null;if(btn)btn.textContent=el.classList.contains('expanded')?'收起 ▲':'展開全文 ▼';}
+function toggleComments(id){var el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';}
+async function toggleLike(date,uid){
+  if(!currentUser){showToast('請先登入','error');return;}
+  var ref=db.collection('diaries').doc(date).collection('entries').doc(uid);
+  try{var snap=await ref.get();var likes=snap.data()?snap.data().likes||{}:{};if(likes[currentUser.uid])delete likes[currentUser.uid];else likes[currentUser.uid]=true;await ref.update({likes:likes});allDiaries=[];renderDiary();}
+  catch(e){showToast('操作失敗','error');}
+}
+async function postComment(date,uid,entryId){
+  if(!currentUser){showToast('請先登入','error');return;}
+  var input=document.getElementById('ci-'+entryId);var text=input?input.value.trim():'';if(!text)return;
+  var ref=db.collection('diaries').doc(date).collection('entries').doc(uid);
+  try{var snap=await ref.get();var comments=snap.data()?snap.data().comments||[]:[]; comments.push({uid:currentUser.uid,userName:currentUser.displayName||currentUser.email,userPhoto:currentUser.photoURL||'',text:text,timestamp:new Date().toISOString()});await ref.update({comments:comments});if(input)input.value='';allDiaries=[];renderDiary();showToast('留言已送出 💬','success');}
+  catch(e){showToast('留言失敗','error');}
+}
+async function deleteDiaryEntry(date,uid){
+  if(!confirm('確定要刪除這篇日記嗎？'))return;
+  try{await db.collection('diaries').doc(date).collection('entries').doc(uid).delete();allDiaries=[];renderDiary();showToast('已刪除日記','success');}
+  catch(e){showToast('刪除失敗','error');}
+}
+async function deleteComment(date,uid,idx){
+  var ref=db.collection('diaries').doc(date).collection('entries').doc(uid);
+  try{var snap=await ref.get();var c=snap.data()?snap.data().comments||[]:[]; c.splice(idx,1);await ref.update({comments:c});allDiaries=[];renderDiary();}catch(e){}
+}
+
+
+// ─────────────────────────────────────────────
+// GALLERY
+// ─────────────────────────────────────────────
+async function renderGallery(){
+  var container=document.getElementById('gallery-content');if(!container)return;
+  container.innerHTML='<div class="loading-spinner" style="margin:40px auto"></div>';
+  if(!allDiaries.length) await loadAllDiaries();
+  var profMap=await loadProfiles([...new Set(allDiaries.map(function(d){return d.uid;}))]);
+  var fd=document.getElementById('gallery-filter-date')?document.getElementById('gallery-filter-date').value:'';
+  var fp=document.getElementById('gallery-filter-person')?document.getElementById('gallery-filter-person').value:'';
+  var photos=[];
+  allDiaries.forEach(function(e){
+    if(fd&&e.date!==fd)return; if(fp&&e.uid!==fp)return;
+    (e.photos||[]).forEach(function(url){photos.push({url:url,uid:e.uid,date:e.date,name:profMap[e.uid]?profMap[e.uid].nickname||profMap[e.uid].displayName||'':''});});
+  });
+  allGalleryPhotos=photos;
+  if(!photos.length){container.innerHTML='<div class="empty-state"><div class="es-icon">📷</div><h3>還沒有照片</h3></div>';return;}
+  container.innerHTML=photos.map(function(p,i){return '<div class="gallery-item" onclick="openLightbox('+i+',null,true)"><img src="'+p.url+'" alt="'+esc(p.name)+'" loading="lazy"><div class="gi-overlay">'+esc(p.name)+' · '+p.date+'</div></div>';}).join('');
+}
+
+// ─────────────────────────────────────────────
+// WRITE DIARY
+// ─────────────────────────────────────────────
+function loadWriteForm(){
+  if(!isMember){document.getElementById('write-member-check').style.display='flex';document.getElementById('write-form-wrap').style.display='none';return;}
+  document.getElementById('write-member-check').style.display='none';document.getElementById('write-form-wrap').style.display='block';
+  var sel=document.getElementById('write-date-select');
+  var today=new Date().toISOString().split('T')[0];
+  var wd=['日','一','二','三','四','五','六'];
+  sel.innerHTML=SCHEDULE.map(function(s){var d=new Date(s.date+'T00:00:00');return '<option value="'+s.date+'" '+(s.date===today?'selected':'')+'>'+s.date+'（'+wd[d.getDay()]+'）- Day '+s.day+'</option>';}).join('');
+  updateWriteDate(); loadExistingEntry(sel.value);
+}
+function updateWriteDate(){
+  var date=document.getElementById('write-date-select')?document.getElementById('write-date-select').value:null;if(!date)return;
+  var s=SCHEDULE.find(function(x){return x.date===date;});
+  document.getElementById('write-date-display').textContent=date+' - Day '+(s?s.day:'');
+  document.getElementById('write-sched-display').innerHTML='<span>📅</span><span>'+(s?s.zh:'無行程資訊')+'</span>';
+  loadExistingEntry(date);
+}
+async function loadExistingEntry(date){
+  if(!currentUser||!date||!db)return;
+  try{
+    var snap=await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).get();
+    if(snap.exists){var d=snap.data();document.getElementById('diary-text').value=d.content||'';pendingPhotos=(d.photos||[]).map(function(url){return {url:url,existing:true};});renderPhotoPreviews();}
+    else{document.getElementById('diary-text').value='';pendingPhotos=[];renderPhotoPreviews();}
+  }catch(e){}
+}
+function handlePhotoSelect(input){
+  Array.from(input.files).forEach(function(f){var r=new FileReader();r.onload=function(e){pendingPhotos.push({file:f,preview:e.target.result,existing:false});renderPhotoPreviews();};r.readAsDataURL(f);});
+  input.value='';
+}
+function renderPhotoPreviews(){
+  var c=document.getElementById('photo-previews');if(!c)return;
+  c.innerHTML=pendingPhotos.map(function(p,i){return '<div class="photo-preview-item"><img src="'+(p.existing?p.url:p.preview)+'" alt=""><button class="remove-photo" onclick="removePhoto('+i+')">✕</button></div>';}).join('');
+}
+function removePhoto(idx){pendingPhotos.splice(idx,1);renderPhotoPreviews();}
+async function submitDiary(){
+  if(!currentUser){showToast('請先登入','error');return;}
+  if(!isMember){
+    try{var fs=await db.collection('members').doc(currentUser.uid).get();if(fs.exists)isMember=true;else{var es=await db.collection('members').where('email','==',currentUser.email).get();if(!es.empty)isMember=true;}}catch(e){}
+  }
+  if(!isMember){showToast('你尚未被加入成員名單，請到 admin.html 申請','error');return;}
+  var date=document.getElementById('write-date-select')?document.getElementById('write-date-select').value:null;
+  var content=document.getElementById('diary-text').value.trim();
+  if(!content&&!pendingPhotos.length){showToast('請輸入日記內容或上傳照片','error');return;}
+  var btn=document.getElementById('submit-diary-btn');btn.textContent='⏳ 儲存中...';btn.disabled=true;
+  try{
+    var toUpload=pendingPhotos.filter(function(p){return !p.existing;}), existing=pendingPhotos.filter(function(p){return p.existing;}).map(function(p){return p.url;});
+    var uploaded=[];
+    for(var i=0;i<toUpload.length;i++){btn.textContent='⏳ 上傳照片 '+(i+1)+'/'+toUpload.length+'...';uploaded.push(await uploadToCloudinary(toUpload[i].file));}
+    var photos=uploaded.concat(existing);
+    var profSnap=await db.collection('profiles').doc(currentUser.uid).get();var prof=profSnap.exists?profSnap.data():{};
+    var entry={uid:currentUser.uid,email:currentUser.email,displayName:prof.nickname||currentUser.displayName||'',photoURL:prof.photoURL||currentUser.photoURL||'',content:content,photos:photos,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    await db.collection('diaries').doc(date).set({lastUpdated:firebase.firestore.FieldValue.serverTimestamp(),hasEntries:true},{merge:true});
+    await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).set(entry,{merge:true});
+    showToast('日記已儲存 🎉','success');allDiaries=[];loadStats();clearWriteForm();
+    setTimeout(function(){navigate('diary');},800);
+  }catch(e){showToast('儲存失敗: '+e.message,'error');console.error(e);}
+  finally{btn.textContent='💾 儲存日記';btn.disabled=false;}
+}
+function clearWriteForm(){document.getElementById('diary-text').value='';pendingPhotos=[];renderPhotoPreviews();}
+
+
+// ─────────────────────────────────────────────
+// LIGHTBOX
+// ─────────────────────────────────────────────
+function openLightbox(idx,photos,useGallery){
+  useGallery=useGallery||false;
+  if(useGallery){lbImages=allGalleryPhotos.map(function(p){return {url:p.url,info:p.name+' · '+p.date};});}
+  else if(Array.isArray(photos)){lbImages=photos.map(function(p){return {url:typeof p==='string'?p:p.url,info:''};});}
+  lbIndex=Math.max(0,Math.min(idx,lbImages.length-1));
+  lbZoom=1;lbPanX=0;lbPanY=0;
+  _lbUpdate(false);
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function _lbUpdate(animate){
+  var img=document.getElementById('lb-img'),info=document.getElementById('lb-info');
+  if(!img)return; lbZoom=1;lbPanX=0;lbPanY=0; _lbTransform(img);
+  if(animate){img.style.opacity='0';setTimeout(function(){img.src=lbImages[lbIndex]?lbImages[lbIndex].url:'';img.style.opacity='1';},120);}
+  else img.src=lbImages[lbIndex]?lbImages[lbIndex].url:'';
+  if(info)info.textContent=(lbIndex+1)+' / '+lbImages.length+(lbImages[lbIndex]&&lbImages[lbIndex].info?' · '+lbImages[lbIndex].info:'');
+}
+function _lbTransform(img){if(!img)img=document.getElementById('lb-img');if(img){img.style.transform='scale('+lbZoom+') translate('+lbPanX/lbZoom+'px,'+lbPanY/lbZoom+'px)';img.style.cursor=lbZoom>1?'grab':'zoom-in';}}
+function lbNav(dir){if(lbZoom>1){lbZoom=1;lbPanX=0;lbPanY=0;_lbTransform();return;}lbIndex=(lbIndex+dir+lbImages.length)%lbImages.length;_lbUpdate(true);}
+function lbGoTo(idx){lbIndex=idx;_lbUpdate(true);}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';lbZoom=1;lbPanX=0;lbPanY=0;}
+
+// ─────────────────────────────────────────────
+// FLOATING CHAT WIDGET
+// ─────────────────────────────────────────────
+function chatToggle(){
+  var win=document.getElementById('chat-float'),fab=document.getElementById('chat-fab');
+  var isOpen=win.classList.contains('cf-open');
+  if(isOpen){win.classList.remove('cf-open');setTimeout(function(){win.style.display='none';},250);if(fab)fab.classList.remove('cf-active');}
+  else{win.style.display='flex';requestAnimationFrame(function(){win.classList.add('cf-open');});if(fab)fab.classList.add('cf-active');cfUnreadCount=0;updateChatBadge();initChat();setTimeout(function(){var m=document.getElementById('cf-msgs');if(m)m.scrollTop=m.scrollHeight;},100);}
+}
+function cfSetSize(sz){var win=document.getElementById('chat-float');if(!win)return;win.classList.remove('cf-sm','cf-md','cf-lg');win.classList.add('cf-'+sz);}
+function cfToggleFullscreen(){var win=document.getElementById('chat-float');if(!win)return;cfFullscreen=!cfFullscreen;win.classList.toggle('cf-fullscreen',cfFullscreen);}
+function updateChatBadge(){
+  var dot=document.getElementById('chat-badge-dot'),nb=document.getElementById('chat-badge');
+  if(dot)dot.style.display=cfUnreadCount>0?'block':'none';
+  if(nb){nb.textContent=cfUnreadCount>0?cfUnreadCount:'';nb.style.display=cfUnreadCount>0?'inline':'none';}
+}
+function initChat(){
+  if(cfChatListener&&cfChatQuery){try{cfChatQuery.off('value',cfChatListener);}catch(e){}cfChatListener=null;cfChatQuery=null;}
+  if(!rtdb){return;}
+  updateCfUserBar();
+  cfChatQuery=rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
+  var handler=function(snap){
+    try{var msgs=[];if(snap&&typeof snap.forEach==='function')snap.forEach(function(c){try{var v=c.val();if(v)msgs.push(Object.assign({id:c.key},v));}catch(e){}});renderCfMessages(msgs);}
+    catch(e){console.warn('Chat render:',e);}
+  };
+  cfChatListener=handler;
+  cfChatQuery.on('value',handler,function(err){console.warn('Chat listener:',err);});
+}
+function renderCfMessages(msgs){
+  var container=document.getElementById('cf-msgs');if(!container)return;
+  var myUid=currentUser?currentUser.uid:sessionStorage.getItem('guestUid');
+  var myGuestUid=sessionStorage.getItem('guestUid');
+  var wasAtBottom=container.scrollHeight-container.scrollTop-container.clientHeight<100;
+  var isOpen=document.getElementById('chat-float')?document.getElementById('chat-float').classList.contains('cf-open'):false;
+  var html='<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
+  var lastDate='';
+  msgs.forEach(function(msg){
+    var isMe=!!(myUid&&(msg.uid===myUid||(myGuestUid&&msg.uid===myGuestUid)));
+    var d=msg.timestamp?new Date(msg.timestamp):new Date();
+    var ds=d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+    if(ds!==lastDate){lastDate=ds;html+='<div class="cf-date-sep">— '+ds+' —</div>';}
+    var time=d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    var av=msg.userPhoto||'https://ui-avatars.com/api/?name='+encodeURIComponent(msg.userName||'U')+'&background='+(isMe?'d4650a':'8b5e3c')+'&color=fff';
+    var content='';
+    if(msg.recalled)content=isAdmin?'<span class="cf-recalled-admin"><span class="cf-recalled-badge">已收回</span> '+esc(msg.text||'')+'</span>':'<span class="cf-recalled">⚠️ 此訊息已收回</span>';
+    else if(msg.imageURL)content='<img src="'+msg.imageURL+'" class="cf-img-msg" onclick="openLightbox(0,[{url:\''+msg.imageURL+'\',info:\'\'}],false)">';
+    else content=esc(msg.text||'');
+    var actions='';
+    if(isMe&&!msg.recalled)actions+='<button onclick="cfRecallMsg(\''+msg.id+'\')" class="cf-action-btn">↩ 收回</button>';
+    if(isAdmin&&!msg.recalled)actions+=' <button onclick="cfDeleteMsg(\''+msg.id+'\')" class="cf-action-btn" style="background:#fff;border-color:#e74c3c;color:#e74c3c">🗑</button>';
+    html+='<div class="cf-row '+(isMe?'me':'')+'" data-msgid="'+msg.id+'">'
+      +(!isMe?'<img src="'+av+'" class="cf-av" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=8b5e3c&color=fff\'">':'')
+      +'<div class="cf-bubble-wrap" style="'+(isMe?'align-items:flex-end':'')+'">'
+      +(!isMe?'<div class="cf-uname">'+esc(msg.userName||'')+'</div>':'')
+      +'<div class="cf-bubble '+(isMe?'me':'other')+'">'+content+'</div>'
+      +'<div style="display:flex;align-items:center;'+(isMe?'justify-content:flex-end;':'')+'gap:6px;padding:0 2px">'
+      +(isMe?actions+'<span class="cf-time" style="padding:0">'+time+'</span>':'<span class="cf-time" style="padding:0">'+time+'</span>'+actions)
+      +'</div></div>'
+      +(isMe?'<img src="'+(currentUser&&currentUser.photoURL?currentUser.photoURL:av)+'" class="cf-av" onerror="this.src=\'https://ui-avatars.com/api/?name=U&background=d4650a&color=fff\'">':'')
+      +'</div>';
+  });
+  container.innerHTML=html;
+  if(!isOpen){cfUnreadCount++;updateChatBadge();}
+  if(wasAtBottom||isOpen)container.scrollTop=container.scrollHeight;
+}
+function updateCfUserBar(){
+  var bar=document.getElementById('cf-guest-bar'),nameEl=document.getElementById('cf-name-display'),avEl=document.getElementById('cf-my-av');
+  if(currentUser){if(bar)bar.style.display='none';if(avEl)avEl.src=currentUser.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(currentUser.displayName||'U')+'&background=d4650a&color=fff';}
+  else{if(bar)bar.style.display='flex';var gn=sessionStorage.getItem('guestName')||'訪客';if(nameEl)nameEl.textContent='以「'+gn+'」聊天';if(avEl)avEl.src='https://ui-avatars.com/api/?name='+encodeURIComponent(gn)+'&background=8b5e3c&color=fff';}
+}
+function wireCfInput(){
+  if(_chatWired)return; _chatWired=true;
+  var input=document.getElementById('cf-input'),sendBtn=document.getElementById('cf-send'),imgInput=document.getElementById('cf-img-input');
+  if(!input||!sendBtn)return;
+  input.addEventListener('keydown',function(e){if(e.isComposing)return;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();cfSendMessage();}});
+  input.addEventListener('input',function(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,100)+'px';});
+  sendBtn.onclick=cfSendMessage;
+  if(imgInput)imgInput.onchange=async function(e){
+    for(var i=0;i<e.target.files.length;i++){
+      var file=e.target.files[i];
+      var btn=document.getElementById('cf-send');if(btn){btn.textContent='⏳';btn.disabled=true;}
+      try{
+        var url=await uploadToCloudinary(file);
+        var uN,uP,uid;
+        if(currentUser){uN=sessionStorage.getItem('profileNickname')||currentUser.displayName||currentUser.email;uP=currentUser.photoURL||'';uid=currentUser.uid;}
+        else{var gn=sessionStorage.getItem('guestName')||'訪客';uN=gn+' 👋';uP='';uid=sessionStorage.getItem('guestUid')||'guest_'+Math.random().toString(36).slice(2,8);sessionStorage.setItem('guestUid',uid);}
+        await rtdb.ref('chat').push({uid:uid,userName:uN,userPhoto:uP,text:'',imageURL:url,timestamp:Date.now()});
+      }catch(err){showToast('圖片上傳失敗','error');}
+      finally{var b2=document.getElementById('cf-send');if(b2){b2.textContent='➤';b2.disabled=false;}}
+    }
+    e.target.value='';
+  };
+}
+async function cfSendMessage(){
+  if(_isSendingMsg)return;
+  var input=document.getElementById('cf-input');var text=input?input.value.trim():'';if(!text||!rtdb)return;
+  _isSendingMsg=true; if(input){input.value='';input.style.height='';}
+  var uN,uP,uid;
+  if(currentUser){uN=sessionStorage.getItem('profileNickname')||currentUser.displayName||currentUser.email;uP=currentUser.photoURL||'';uid=currentUser.uid;}
+  else{var gn=sessionStorage.getItem('guestName');if(!gn){gn=prompt('請輸入你的暱稱（訪客）：','');if(gn===null){_isSendingMsg=false;return;}gn=gn.trim().slice(0,20)||'訪客';sessionStorage.setItem('guestName',gn);updateCfUserBar();}uN=gn+' 👋';uP='';uid=sessionStorage.getItem('guestUid')||'guest_'+Math.random().toString(36).slice(2,8);sessionStorage.setItem('guestUid',uid);}
+  try{await rtdb.ref('chat').push({uid:uid,userName:uN,userPhoto:uP,text:text,timestamp:Date.now()});}
+  catch(e){showToast('發送失敗：'+e.message,'error');}
+  finally{_isSendingMsg=false;}
+}
+async function cfRecallMsg(id){if(!rtdb)return;try{await rtdb.ref('chat/'+id).update({recalled:true});showToast('訊息已收回','success');}catch(e){showToast('收回失敗','error');}}
+async function cfDeleteMsg(id){if(!isAdmin||!rtdb)return;try{await rtdb.ref('chat/'+id).remove();}catch(e){showToast('刪除失敗','error');}}
+async function cfChangeGuestName(){var n=prompt('輸入新暱稱：',sessionStorage.getItem('guestName')||'訪客');if(!n)return;sessionStorage.setItem('guestName',n.trim().slice(0,20)||'訪客');updateCfUserBar();}
+async function clearAllChat(){if(!isAdmin||!rtdb)return;if(!confirm('確定清空所有聊天記錄？'))return;try{await rtdb.ref('chat').remove();showToast('聊天已清空','success');}catch(e){showToast('清空失敗','error');}}
+
+
+// ─────────────────────────────────────────────
+// PROFILE PAGE
+// ─────────────────────────────────────────────
+function renderProfilePage(){
+  var target=document.getElementById('profile-render-target');if(!target){console.error('Missing profile-render-target');return;}if(!currentUser){openLoginModal();return;}
+  var u=currentUser,photo=u.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(u.displayName||'U')+'&background=d4650a&color=fff';
+  var inp=function(id,ph){return '<input id="'+id+'" type="text" placeholder="'+ph+'" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:\'Nunito\',sans-serif;outline:none;box-sizing:border-box;color:#2c1810;background:#fafaf8" onfocus="this.style.borderColor=\'#d4650a\';this.style.background=\'#fff\'" onblur="this.style.borderColor=\'#e8e0d4\';this.style.background=\'#fafaf8\'">';};
+  var lbl=function(t){return '<label style="display:block;font-size:11px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">'+t+'</label>';};
+  target.innerHTML='<div style="padding:32px 0;font-family:\'Nunito\',sans-serif"><div style="margin-bottom:24px"><h2 style="font-family:\'Playfair Display\',serif;font-size:26px;color:#5c3317">👤 個人檔案</h2><p style="font-size:13px;color:#7a5c46;margin-top:4px">這些資料會顯示在「見習成員」介紹頁面</p></div><div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.12);max-width:600px"><div style="padding:32px 36px">'
+    +'<div style="text-align:center;margin-bottom:32px"><div style="position:relative;display:inline-block"><img id="prof-av" src="'+photo+'" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block"><label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px">📷</label><input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)"></div><div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點 📷 更換頭像</div></div>'
+    +'<div style="margin-bottom:16px">'+lbl('暱稱 / 顯示名稱')+inp('prof-nickname','你的暱稱')+'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px"><div>'+lbl('服務學校')+inp('prof-school','如：高雄市○○國小')+'</div><div>'+lbl('職稱')+inp('prof-title','如：教師、組長、主任')+'</div></div>'
+    +'<div style="margin-bottom:16px">'+lbl('專長領域')+inp('prof-expertise','如：AI教育、STEAM、UDL（用逗號分隔）')+'</div>'
+    +'<div style="margin-bottom:16px">'+lbl('參加動機與期待')+'<textarea id="prof-motivation" placeholder="分享你參加這次澳洲冒險的動機與期待..." rows="3" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:\'Nunito\',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6" onfocus="this.style.borderColor=\'#d4650a\';this.style.background=\'#fff\'" onblur="this.style.borderColor=\'#e8e0d4\';this.style.background=\'#fafaf8\'"></textarea></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px"><div>'+lbl('真實姓名 <span style="font-size:10px;background:#f5edd8;padding:2px 6px;border-radius:6px;font-weight:600;text-transform:none">公開顯示王O明</span>')+inp('prof-realname','如：王小明')+'</div><div>'+lbl('Email')+'<input type="text" value="'+(u.email||'')+'" disabled style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:\'Nunito\',sans-serif;color:#aaa;background:#f5f5f3;box-sizing:border-box"></div></div>'
+    +'<div style="margin-bottom:28px">'+lbl('自我介紹')+'<textarea id="prof-bio" placeholder="簡短介紹自己..." rows="3" style="width:100%;padding:11px 14px;border:1.5px solid #e8e0d4;border-radius:10px;font-size:14px;font-family:\'Nunito\',sans-serif;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810;background:#fafaf8;line-height:1.6" onfocus="this.style.borderColor=\'#d4650a\';this.style.background=\'#fff\'" onblur="this.style.borderColor=\'#e8e0d4\';this.style.background=\'#fafaf8\'"></textarea></div>'
+    +'<button onclick="profSave()" style="width:100%;padding:13px;background:#d4650a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:\'Nunito\',sans-serif" onmouseover="this.style.background=\'#a84d08\'" onmouseout="this.style.background=\'#d4650a\'">💾 儲存個人資料</button>'
+    +'<div id="prof-status" style="text-align:center;margin-top:12px;font-size:13px;font-weight:600;min-height:20px"></div>'
+    +'</div></div></div>';
+  if(db&&u) db.collection('profiles').doc(u.uid).get().then(function(snap){
+    if(snap.exists){var d=snap.data();var sv=function(id,v){var el=document.getElementById(id);if(el&&v)el.value=v;};
+    sv('prof-nickname',d.nickname);sv('prof-bio',d.bio);sv('prof-school',d.school);sv('prof-title',d.jobTitle);sv('prof-expertise',d.expertise);sv('prof-motivation',d.motivation);sv('prof-realname',d.realName);
+    var av=document.getElementById('prof-av');if(av&&d.photoURL)av.src=d.photoURL;}
+  }).catch(function(e){console.warn('Profile load:',e.message);});
+}
+async function profSave(){
+  if(!currentUser||!db)return;
+  var gv=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
+  var status=document.getElementById('prof-status');if(status)status.textContent='儲存中...';
+  try{
+    await db.collection('profiles').doc(currentUser.uid).update({nickname:gv('prof-nickname'),bio:gv('prof-bio'),school:gv('prof-school'),jobTitle:gv('prof-title'),expertise:gv('prof-expertise'),motivation:gv('prof-motivation'),realName:gv('prof-realname')});
+    var sn=document.getElementById('sidebar-name');if(sn&&gv('prof-nickname'))sn.textContent=gv('prof-nickname');
+    sessionStorage.setItem('profileNickname',gv('prof-nickname'));
+    if(status){status.textContent='✅ 儲存成功！';status.style.color='#2d5a27';}
+    setTimeout(function(){if(status)status.textContent='';},2500);
+    showToast('個人資料已儲存 ✨','success');
+  }catch(e){if(status){status.textContent='❌ '+e.message;status.style.color='#c0392b';}}
+}
+async function profUploadAvatar(input){
+  if(!input.files[0]||!currentUser)return;
+  var status=document.getElementById('prof-status');if(status){status.textContent='上傳頭像中...';status.style.color='#7a5c46';}
+  try{
+    var url=await uploadToCloudinary(input.files[0]);
+    await db.collection('profiles').doc(currentUser.uid).update({photoURL:url});
+    ['prof-av','sidebar-avatar','topbar-avatar','cf-my-av'].forEach(function(id){var el=document.getElementById(id);if(el)el.src=url;});
+    if(status){status.textContent='✅ 頭像已更新！';status.style.color='#2d5a27';}
+    setTimeout(function(){if(status)status.textContent='';},2500);
+    showToast('頭像已更新 📷','success');
+  }catch(e){if(status){status.textContent='❌ '+e.message;status.style.color='#c0392b';}showToast('上傳失敗: '+e.message,'error');}
+}
+
+
+// ─────────────────────────────────────────────
+// ADMIN / TEAM / INSTALL / EDIT DIARY
+// ─────────────────────────────────────────────
+function renderAdminPage(){
+  var target=document.getElementById('admin-render-target');if(!target)return;
+  if(!isAdmin){target.innerHTML='<div style="text-align:center;padding:60px;color:#7a5c46"><div style="font-size:48px;margin-bottom:12px">🔒</div><p>僅管理員可見</p></div>';return;}
+  target.innerHTML='<div style="font-family:\'Nunito\',sans-serif"><div style="margin-bottom:20px"><h2 style="font-family:\'Playfair Display\',serif;font-size:26px;color:#5c3317">⚙️ 管理後台</h2></div><div style="background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(84,40,10,.1);padding:28px;text-align:center;color:#7a5c46"><div style="font-size:48px;margin-bottom:12px">⚙️</div><p style="font-size:15px;font-weight:700;margin-bottom:8px">請使用完整管理後台</p><p style="font-size:13px;margin-bottom:20px">成員管理、聊天管理、日記管理、航班設定</p><a href="admin.html" target="_blank" class="btn btn-primary" style="text-decoration:none;display:inline-flex">開啟完整後台 →</a></div></div>';
+}
+
+function maskName(n){if(!n||n.length<2)return n||'';if(n.length===2)return n[0]+'O';return n[0]+'O'.repeat(n.length-2)+n[n.length-1];}
+
+async function renderTeamPage(){
+  var grid=document.getElementById('team-grid');if(!grid)return;
+  grid.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted);grid-column:1/-1"><div class="loading-spinner"></div></div>';
+  if(!db)return;
+  try{
+    var memSnap=await db.collection('members').get();
+    var uids=new Set(),emails=new Set();
+    memSnap.forEach(function(d){var data=d.data();if(data.uid)uids.add(data.uid);if(data.email)emails.add(data.email.toLowerCase());if(d.id&&d.id.length>10&&d.id.indexOf('_')<0)uids.add(d.id);});
+    if(!uids.size&&!emails.size){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px">🧑‍🏫</div><p>尚無見習成員資料</p></div>';return;}
+    var profiles=[],seen=new Set();
+    await Promise.all([...uids].map(function(uid){return db.collection('profiles').doc(uid).get().then(function(s){if(s.exists&&!seen.has(s.id)){seen.add(s.id);profiles.push(s.data());}}).catch(function(){});}));
+    if(emails.size){var all=await db.collection('profiles').get().catch(function(){return null;});if(all)all.forEach(function(d){var data=d.data();if(!seen.has(d.id)&&data.email&&emails.has(data.email.toLowerCase())){seen.add(d.id);profiles.push(data);}});}
+    if(!profiles.length){grid.innerHTML='<div style="text-align:center;padding:60px;color:var(--text-muted);grid-column:1/-1"><div style="font-size:48px">🧑‍🏫</div><p>成員尚未填寫個人資料</p></div>';return;}
+    grid.innerHTML=profiles.map(function(p){
+      var name=p.nickname||p.displayName||'見習教師',masked=p.realName?maskName(p.realName):'',dn=masked||name;
+      var photo=p.photoURL||'https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=d4650a&color=fff&size=128';
+      var body='';
+      if(p.expertise)body+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">'+p.expertise.split(/[，,、]/).slice(0,3).map(function(t){return '<span style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:700">'+esc(t.trim())+'</span>';}).join('')+'</div>';
+      if(p.motivation)body+='<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">參加動機</div><div style="font-size:13px;color:#2c1810;line-height:1.6">'+esc(p.motivation)+'</div></div>';
+      if(p.bio)body+='<div><div style="font-size:10px;font-weight:800;color:#7a5c46;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">自我介紹</div><div style="font-size:13px;color:#2c1810;line-height:1.6">'+esc(p.bio)+'</div></div>';
+      if(!body)body='<div style="text-align:center;color:#bbb;font-size:13px;padding:12px 0">尚未填寫介紹</div>';
+      return '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(84,40,10,.1);overflow:hidden;display:flex;flex-direction:column"><div style="background:linear-gradient(135deg,#3d1f0a,#d4650a);padding:28px 20px;text-align:center"><img src="'+photo+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);margin:0 auto 10px;display:block"><div style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">'+esc(dn)+'</div>'+(p.jobTitle?'<div style="font-size:12px;color:rgba(255,255,255,.8);margin-bottom:2px">'+esc(p.jobTitle)+'</div>':'')+(p.school?'<div style="font-size:12px;color:rgba(255,255,255,.7)">🏫 '+esc(p.school)+'</div>':'')+'</div><div style="padding:18px 20px;flex:1">'+body+'</div></div>';
+    }).join('');
+  }catch(e){grid.innerHTML='<div style="text-align:center;padding:40px;color:#e74c3c;grid-column:1/-1">⚠️ '+esc(e.message)+'<br><small>請確認 Firestore 規則 members / profiles allow read: if true</small></div>';}
+}
+
+function installSwitchOS(os){
+  var ios=document.getElementById('install-ios'),and=document.getElementById('install-android');
+  var bi=document.getElementById('itab-ios'),ba=document.getElementById('itab-android');
+  if(os==='ios'){if(ios)ios.style.display='block';if(and)and.style.display='none';if(bi){bi.style.background='var(--primary)';bi.style.color='#fff';bi.style.borderColor='var(--primary)';}if(ba){ba.style.background='transparent';ba.style.color='var(--text-muted)';ba.style.borderColor='var(--cream-dark)';}}
+  else{if(ios)ios.style.display='none';if(and)and.style.display='block';if(ba){ba.style.background='var(--primary)';ba.style.color='#fff';ba.style.borderColor='var(--primary)';}if(bi){bi.style.background='transparent';bi.style.color='var(--text-muted)';bi.style.borderColor='var(--cream-dark)';}}
+}
+
+async function openEditDiary(date,uid){
+  if(!currentUser)return;
+  var snap=await db.collection('diaries').doc(date).collection('entries').doc(uid).get();
+  if(!snap.exists){showToast('找不到日記','error');return;}
+  editingEntry=Object.assign({date:date,uid:uid},snap.data());
+  var modal=document.getElementById('edit-diary-modal'),body=document.getElementById('edit-diary-body');
+  if(!modal||!body)return;
+  var ep=editingEntry.photos||[],sched=SCHEDULE.find(function(s){return s.date===date;});
+  body.innerHTML='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日期</div><div style="background:#f5edd8;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#5c3317">'+(sched?'Day '+sched.day+' · '+date:date)+'</div></div>'
+    +'<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:6px;text-transform:uppercase">日記內容</div><textarea id="edit-diary-text" style="width:100%;min-height:160px;border:2px solid #f5edd8;border-radius:10px;padding:12px;font-family:Nunito,sans-serif;font-size:14px;line-height:1.7;outline:none;resize:vertical;box-sizing:border-box;color:#2c1810">'+esc(editingEntry.content||'')+'</textarea></div>'
+    +'<div><div style="font-size:12px;font-weight:800;color:#7a5c46;margin-bottom:8px;text-transform:uppercase">照片（不限張數）</div>'
+    +'<div id="edit-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'+ep.map(function(url,i){return '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>';}).join('')+'</div>'
+    +'<label style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f5edd8;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;color:#5c3317">📷 新增照片<input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleEditPhotoSelect(this)"></label>'
+    +' <span style="font-size:11px;color:#7a5c46">已有 <span id="edit-photo-count">'+ep.length+'</span> 張</span></div>';
+  modal.style.display='flex';document.body.style.overflow='hidden';
+}
+function closeEditDiary(){var m=document.getElementById('edit-diary-modal');if(m)m.style.display='none';document.body.style.overflow='';editingEntry=null;}
+function removeEditPhoto(idx){if(!editingEntry)return;editingEntry.photos=editingEntry.photos||[];editingEntry.photos.splice(idx,1);var c=document.getElementById('edit-photo-previews');if(c)c.innerHTML=editingEntry.photos.map(function(url,i){return '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover"><button onclick="removeEditPhoto('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px">✕</button></div>';}).join('');var cnt=document.getElementById('edit-photo-count');if(cnt)cnt.textContent=editingEntry.photos.length;}
+function handleEditPhotoSelect(input){if(!editingEntry)return;editingEntry.photos=editingEntry.photos||[];Array.from(input.files).forEach(function(f){var r=new FileReader();r.onload=function(e){if(!editingEntry._newPhotos)editingEntry._newPhotos=[];editingEntry._newPhotos.push({file:f,preview:e.target.result});var c=document.getElementById('edit-photo-previews');if(c){var d=document.createElement('div');d.style.cssText='position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;flex:0 0 80px';d.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';c.appendChild(d);}var cnt=document.getElementById('edit-photo-count');if(cnt)cnt.textContent=editingEntry.photos.length+(editingEntry._newPhotos||[]).length;};r.readAsDataURL(f);});input.value='';}
+async function saveEditDiary(){
+  if(!editingEntry||!db)return;
+  var btn=document.getElementById('edit-save-btn');if(btn){btn.textContent='⏳ 儲存中...';btn.disabled=true;}
+  try{
+    var text=document.getElementById('edit-diary-text')?document.getElementById('edit-diary-text').value.trim():'';
+    var urls=(editingEntry.photos||[]).slice();
+    var np=editingEntry._newPhotos||[];
+    for(var i=0;i<np.length;i++){if(btn)btn.textContent='⏳ 上傳照片 '+(i+1)+'/'+np.length+'...';urls.push(await uploadToCloudinary(np[i].file));}
+    await db.collection('diaries').doc(editingEntry.date).collection('entries').doc(editingEntry.uid).update({content:text,photos:urls,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    showToast('日記已更新 ✅','success');closeEditDiary();allDiaries=[];renderDiary();
+  }catch(e){showToast('儲存失敗: '+e.message,'error');}
+  finally{if(btn){btn.textContent='💾 儲存修改';btn.disabled=false;}}
+}
+
+// ─────────────────────────────────────────────
+// DOM READY - single listener
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  // Wire chat input (once)
+  wireCfInput();
+
+  // Lightbox events
+  var lb=document.getElementById('lightbox');
+  if(lb){
+    lb.addEventListener('click',function(e){if(e.target.id==='lightbox')closeLightbox();});
+    lb.addEventListener('dblclick',function(e){if(e.target.id==='lb-img'){lbZoom=lbZoom>1?1:2.5;lbPanX=0;lbPanY=0;_lbTransform();}});
+    lb.addEventListener('mousedown',function(e){if(e.target.id!=='lb-img'||lbZoom<=1)return;lbDragging=true;lbDragX=e.clientX-lbPanX;lbDragY=e.clientY-lbPanY;e.target.style.cursor='grabbing';});
+    lb.addEventListener('mousemove',function(e){if(!lbDragging)return;lbPanX=e.clientX-lbDragX;lbPanY=e.clientY-lbDragY;_lbTransform();});
+    lb.addEventListener('mouseup',function(){lbDragging=false;_lbTransform();});
+    lb.addEventListener('wheel',function(e){e.preventDefault();if(e.target.id==='lb-img'||lbZoom>1){lbZoom=Math.max(1,Math.min(5,lbZoom+(e.deltaY<0?0.3:-0.3)));if(lbZoom===1){lbPanX=0;lbPanY=0;}_lbTransform();}else lbNav(e.deltaY>0?1:-1);},{passive:false});
+    lb.addEventListener('touchstart',function(e){if(e.touches.length===1){lbTouchX=e.touches[0].clientX;lbTouchY=e.touches[0].clientY;}else if(e.touches.length===2)lbPinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
+    lb.addEventListener('touchmove',function(e){if(e.touches.length===2){e.preventDefault();var dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);lbZoom=Math.max(1,Math.min(5,lbZoom*(dist/lbPinchStart)));lbPinchStart=dist;_lbTransform();}},{passive:false});
+    lb.addEventListener('touchend',function(e){if(e.changedTouches.length===1&&lbZoom===1){var dx=e.changedTouches[0].clientX-lbTouchX,dy=e.changedTouches[0].clientY-lbTouchY;if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50)lbNav(dx<0?1:-1);else if(Math.abs(dy)>80&&Math.abs(dx)<50)closeLightbox();}},{passive:true});
+  }
+  document.addEventListener('keydown',function(e){
+    if(!document.getElementById('lightbox').classList.contains('open'))return;
+    if(e.key==='ArrowLeft')lbNav(-1);else if(e.key==='ArrowRight')lbNav(1);else if(e.key==='Escape')closeLightbox();
+    else if(e.key==='+'||e.key==='='){lbZoom=Math.min(5,lbZoom+0.5);_lbTransform();}
+    else if(e.key==='-'){lbZoom=Math.max(1,lbZoom-0.5);if(lbZoom===1){lbPanX=0;lbPanY=0;}_lbTransform();}
+  });
 });
+
 
 </script>
 
-<!-- FLOATING CHAT WIDGET -->
-<div id="chat-fab" onclick="chatToggle()" title="聊天">
-  <span id="chat-fab-icon">💬</span><span id="chat-fab-label" class="fab-label">聊天</span>
-  <span id="chat-badge-dot" class="chat-badge-dot" style="display:none"></span>
+<!-- ── FLOATING CHAT FAB ── -->
+<div id="chat-fab" onclick="chatToggle()" title="聊天" style="position:fixed;bottom:10%;right:2.5%;z-index:200;width:60px;height:60px;border-radius:50%;background:var(--primary);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(212,101,10,.4);transition:all .2s;font-size:20px">
+  <span id="chat-fab-icon">💬</span>
+  <span style="font-size:10px;font-weight:800;margin-top:1px">聊天</span>
+  <span id="chat-badge-dot" style="position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:#e74c3c;border:2px solid #fff;display:none"></span>
 </div>
 
-<div id="chat-float">
+<!-- ── FLOATING CHAT WINDOW ── -->
+<div id="chat-float" style="display:none;position:fixed;bottom:calc(10% + 80px);right:2.5%;width:340px;border-radius:16px;background:#fff;border:1px solid #ddd8ff;box-shadow:0 8px 32px rgba(0,0,0,.18);flex-direction:column;z-index:199;overflow:hidden;transition:height .2s ease;max-height:calc(80vh - 80px)">
   <!-- Header -->
   <div class="cf-header">
-    <img id="cf-logo-av" src="https://ui-avatars.com/api/?name=🦘&background=d4650a&color=fff" class="cf-logo-av">
-    <div class="cf-header-info">
-      <div class="cf-header-title">澳洲冒險・即...</div>
-      <div class="cf-header-sub"><span class="cf-live-dot"></span> LIVE・與16位見習教師即時互動</div>
+    <img id="cf-logo-av" src="https://ui-avatars.com/api/?name=🦘&background=d4650a&color=fff" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:800;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">澳洲冒險・即...</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:4px"><span class="cf-live-dot"></span> LIVE・與16位見習教師即時互動</div>
     </div>
-    <div class="cf-header-actions">
-      <button class="cf-hbtn" onclick="cfSetSize('sm')" title="小">小</button>
-      <button class="cf-hbtn" onclick="cfSetSize('md')" title="中">中</button>
-      <button class="cf-hbtn" onclick="cfSetSize('lg')" title="大">大</button>
-      <button class="cf-hbtn" onclick="cfToggleFullscreen()" title="全螢幕">⛶</button>
-      <button class="cf-hbtn" onclick="chatToggle()" title="關閉">✕</button>
+    <div style="display:flex;gap:3px">
+      <button class="cf-hbtn" onclick="cfSetSize('sm')">小</button>
+      <button class="cf-hbtn" onclick="cfSetSize('md')">中</button>
+      <button class="cf-hbtn" onclick="cfSetSize('lg')">大</button>
+      <button class="cf-hbtn" onclick="cfToggleFullscreen()">⛶</button>
+      <button class="cf-hbtn" onclick="chatToggle()">✕</button>
     </div>
   </div>
-
   <!-- Guest bar -->
   <div id="cf-guest-bar" class="cf-guest-bar" style="display:none">
-    <span class="cf-gb-icon">👋</span>
-    <span id="cf-name-display" class="cf-gb-name">以訪客身分聊天</span>
+    <span style="font-size:14px">👋</span>
+    <span id="cf-name-display" style="flex:1;font-size:12px;font-weight:700;color:var(--brown)">以訪客身分聊天</span>
     <button class="cf-gb-btn" onclick="cfChangeGuestName()">改名</button>
-    <button class="cf-gb-btn" style="background:var(--green)" onclick="openLoginModal()">登入</button>
+    <button class="cf-gb-btn" style="background:var(--green);color:#fff" onclick="openLoginModal()">登入</button>
   </div>
-
   <!-- Messages -->
-  <div id="cf-msgs">
+  <div id="cf-msgs" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:4px;background:#f5f4ff">
     <div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>
   </div>
-
   <!-- Input -->
-  <div id="cf-footer">
-    <img id="cf-my-av" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" alt="">
-    <textarea id="cf-input" placeholder="輸入訊息… Shift+Enter 換行" rows="1"></textarea>
-    <button id="cf-img-btn" onclick="document.getElementById('cf-img-input').click()" title="傳送圖片">🖼</button>
-    <input type="file" id="cf-img-input" accept="image/*" multiple>
-    <button id="cf-send">➤</button>
+  <div id="cf-footer" style="padding:9px 11px;border-top:1px solid #ede9ff;background:#fff;display:flex;align-items:flex-end;gap:6px">
+    <img id="cf-my-av" src="https://ui-avatars.com/api/?name=?&background=8b5e3c&color=fff" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">
+    <textarea id="cf-input" placeholder="輸入訊息… Shift+Enter 換行" rows="1" style="flex:1;border:1px solid #d0c8ff;border-radius:20px;padding:7px 12px;font-family:'Nunito',sans-serif;font-size:13px;outline:none;resize:none;min-height:34px;max-height:100px;overflow-y:auto;background:#faf9ff;line-height:1.4"></textarea>
+    <button id="cf-img-btn" onclick="document.getElementById('cf-img-input').click()" style="width:30px;height:30px;border:none;background:transparent;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center">🖼</button>
+    <input type="file" id="cf-img-input" accept="image/*" multiple style="display:none">
+    <button id="cf-send" style="width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s">➤</button>
   </div>
 </div>
 
-<!-- EDIT DIARY MODAL -->
-<div id="edit-diary-modal" onclick="if(event.target.id==='edit-diary-modal')closeEditDiary()">
-  <div id="edit-diary-inner">
-    <div class="edit-diary-hdr">
-      <h3>✏️ 編輯日記</h3>
-      <button onclick="closeEditDiary()">✕</button>
+<!-- ── EDIT DIARY MODAL ── -->
+<div id="edit-diary-modal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px" onclick="if(event.target.id==='edit-diary-modal')closeEditDiary()">
+  <div id="edit-diary-inner" style="background:#fff;border-radius:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));padding:20px 24px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:space-between">
+      <h3 style="font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin:0">✏️ 編輯日記</h3>
+      <button onclick="closeEditDiary()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
     <div id="edit-diary-body" style="padding:24px"></div>
     <div style="padding:0 24px 24px;display:flex;justify-content:flex-end;gap:10px">
@@ -2499,405 +1820,6 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 </div>
-<script>
-// ============================================================
-// WRITE DIARY - FORM
-// ============================================================
-function loadWriteForm() {
-  if(!isMember) {
-    document.getElementById('write-member-check').style.display = 'flex';
-    document.getElementById('write-form-wrap').style.display = 'none';
-    return;
-  }
-  document.getElementById('write-member-check').style.display = 'none';
-  document.getElementById('write-form-wrap').style.display = 'block';
-  const sel = document.getElementById('write-date-select');
-  const today = new Date().toISOString().split('T')[0];
-  const weekdays = ['日','一','二','三','四','五','六'];
-  sel.innerHTML = SCHEDULE.map((s,i) => {
-    const d = new Date(s.date + 'T00:00:00');
-    const wd = weekdays[d.getDay()];
-    return `<option value="${s.date}" ${s.date===today?'selected':''}>${s.date}（${wd}）- Day ${s.day}</option>`;
-  }).join('');
-  updateWriteDate();
-  loadExistingEntry(sel.value);
-}
-function updateWriteDate() {
-  const date = document.getElementById('write-date-select')?.value;
-  if(!date) return;
-  const sched = SCHEDULE.find(s=>s.date===date);
-  document.getElementById('write-date-display').textContent = date + ' - Day ' + (sched?.day||'');
-  document.getElementById('write-sched-display').innerHTML = `<span>📅</span><span>${sched?sched.zh:'無行程資訊'}</span>`;
-  loadExistingEntry(date);
-}
-async function loadExistingEntry(date) {
-  if(!currentUser || !date || !db) return;
-  try {
-    const snap = await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).get();
-    if(snap.exists) {
-      const data = snap.data();
-      document.getElementById('diary-text').value = data.content || '';
-      pendingPhotos = (data.photos||[]).map(url => ({url, existing:true}));
-      renderPhotoPreviews();
-    } else {
-      document.getElementById('diary-text').value = '';
-      pendingPhotos = [];
-      renderPhotoPreviews();
-    }
-  } catch(e) {}
-}
-function handlePhotoSelect(input) {
-  const files = Array.from(input.files);
-  files.forEach(f => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      pendingPhotos.push({file:f, preview:e.target.result, existing:false});
-      renderPhotoPreviews();
-    };
-    reader.readAsDataURL(f);
-  });
-  input.value = '';
-}
-function renderPhotoPreviews() {
-  const container = document.getElementById('photo-previews');
-  if(!container) return;
-  container.innerHTML = pendingPhotos.map((p,i) =>
-    `<div class="photo-preview-item">
-      <img src="${p.existing?p.url:p.preview}" alt="">
-      <button class="remove-photo" onclick="removePhoto(${i})">✕</button>
-    </div>`
-  ).join('');
-}
-function removePhoto(idx) { pendingPhotos.splice(idx,1); renderPhotoPreviews(); }
-
-async function submitDiary() {
-  if(!currentUser) { showToast('請先登入','error'); return; }
-  if(!isMember) {
-    // Live re-check
-    try {
-      const fs = await db.collection('members').doc(currentUser.uid).get();
-      if(fs.exists) { isMember = true; }
-      else {
-        const es = await db.collection('members').where('email','==',currentUser.email).get();
-        if(!es.empty) isMember = true;
-      }
-    } catch(e){}
-    if(!isMember) { showToast('你尚未被加入成員名單，請聯絡管理員 (admin.html)','error'); return; }
-  }
-  const date = document.getElementById('write-date-select')?.value;
-  const content = document.getElementById('diary-text').value.trim();
-  if(!content && pendingPhotos.length===0){ showToast('請輸入日記內容或上傳照片','error'); return; }
-  const btn = document.getElementById('submit-diary-btn');
-  btn.textContent='⏳ 儲存中...'; btn.disabled=true;
-  try {
-    const photoURLs = [];
-    const toUpload = pendingPhotos.filter(p=>!p.existing);
-    const existing = pendingPhotos.filter(p=>p.existing).map(p=>p.url);
-    for(let i=0;i<toUpload.length;i++){
-      btn.textContent=`⏳ 上傳照片 ${i+1}/${toUpload.length}...`;
-      photoURLs.push(await uploadToCloudinary(toUpload[i].file));
-    }
-    photoURLs.push(...existing);
-    const profSnap = await db.collection('profiles').doc(currentUser.uid).get();
-    const prof = profSnap.exists ? profSnap.data() : {};
-    const entry = {
-      uid: currentUser.uid, email: currentUser.email,
-      displayName: prof.nickname||currentUser.displayName||'',
-      photoURL: prof.photoURL||currentUser.photoURL||'',
-      content, photos: photoURLs,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    // Create parent doc first (prevents ghost document)
-    await db.collection('diaries').doc(date).set({
-      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(), hasEntries: true
-    }, {merge:true});
-    await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).set(entry, {merge:true});
-    showToast('日記已儲存 🎉','success');
-    allDiaries=[]; loadStats();
-    clearWriteForm();
-    setTimeout(() => navigate('diary'), 800);
-  } catch(e) {
-    showToast('儲存失敗: '+e.message,'error');
-    console.error('submitDiary:', e);
-  } finally { btn.textContent='💾 儲存日記'; btn.disabled=false; }
-}
-function clearWriteForm() {
-  document.getElementById('diary-text').value='';
-  pendingPhotos=[]; renderPhotoPreviews();
-}
-
-// ============================================================
-// IMAGE COMPRESSION
-// ============================================================
-async function compressImage(file, maxKB=800) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w=img.width, h=img.height, maxDim=2400;
-        if(w>maxDim||h>maxDim){const r=Math.min(maxDim/w,maxDim/h);w=Math.round(w*r);h=Math.round(h*r);}
-        canvas.width=w; canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        let q=0.9;
-        const compress=()=>canvas.toBlob(blob=>{
-          if(blob.size>maxKB*1024&&q>0.3){q-=0.1;compress();}else resolve(blob);
-        },'image/jpeg',q);
-        compress();
-      };
-      img.src=e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// ============================================================
-// FLOATING CHAT WIDGET
-// ============================================================
-function chatToggle() {
-  const win = document.getElementById('chat-float');
-  const fab = document.getElementById('chat-fab');
-  const isOpen = win.classList.contains('cf-open');
-  if(isOpen) {
-    win.classList.remove('cf-open');
-    setTimeout(()=>{ win.style.display='none'; }, 250);
-    fab.classList.remove('cf-active');
-  } else {
-    win.style.display='flex';
-    requestAnimationFrame(()=>win.classList.add('cf-open'));
-    fab.classList.add('cf-active');
-    cfUnreadCount = 0;
-    updateChatBadge();
-    initChat();
-    const msgs = document.getElementById('cf-msgs');
-    if(msgs) setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,100);
-  }
-}
-
-function cfSetSize(sz) {
-  const win = document.getElementById('chat-float');
-  if(!win) return;
-  win.classList.remove('cf-sm','cf-md','cf-lg');
-  win.classList.add('cf-' + sz);
-}
-
-function cfToggleFullscreen() {
-  const win = document.getElementById('chat-float');
-  if(!win) return;
-  cfFullscreen = !cfFullscreen;
-  win.classList.toggle('cf-fullscreen', cfFullscreen);
-}
-
-function updateChatBadge() {
-  const dot = document.getElementById('chat-badge-dot');
-  const navBadge = document.getElementById('chat-badge');
-  if(dot) dot.style.display = cfUnreadCount > 0 ? 'block' : 'none';
-  if(navBadge) {
-    navBadge.textContent = cfUnreadCount > 0 ? cfUnreadCount : '';
-    navBadge.style.display = cfUnreadCount > 0 ? 'inline' : 'none';
-  }
-}
-
-function initChat() {
-  if(cfChatListener && cfChatQuery) {
-    try { cfChatQuery.off('value', cfChatListener); } catch(e) {}
-    cfChatListener = null; cfChatQuery = null;
-  }
-  if(!rtdb) { console.warn('rtdb not ready'); return; }
-  updateCfUserBar();
-  cfChatQuery = rtdb.ref('chat').orderByChild('timestamp').limitToLast(80);
-  const handler = (snap) => {
-    try {
-      const msgs = [];
-      if(snap && typeof snap.forEach==='function') {
-        snap.forEach(c => { try{ const v=c.val(); if(v) msgs.push({id:c.key,...v}); }catch(e){} });
-      }
-      renderCfMessages(msgs);
-    } catch(e) { console.warn('Chat render:', e.message); }
-  };
-  cfChatListener = handler;
-  cfChatQuery.on('value', handler, err => console.warn('Chat listener:', err.message));
-}
-
-function renderCfMessages(msgs) {
-  const container = document.getElementById('cf-msgs');
-  if(!container) return;
-  const myUid = currentUser ? currentUser.uid : sessionStorage.getItem('guestUid');
-  const myGuestUid = sessionStorage.getItem('guestUid');
-  const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-  const isOpen = document.getElementById('chat-float')?.classList.contains('cf-open');
-  container.innerHTML = '<div class="cf-sys">💬 歡迎來到澳洲冒險即時聊天室！<br>雖然你沒有親臨現場，但我們在線上等你 🦘</div>';
-  let lastDate = '';
-  msgs.forEach(msg => {
-    const isMe = myUid && (msg.uid===myUid || (myGuestUid && msg.uid===myGuestUid));
-    const d = msg.timestamp ? new Date(msg.timestamp) : new Date();
-    const dateStr = d.toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
-    if(dateStr !== lastDate) {
-      lastDate = dateStr;
-      container.innerHTML += `<div class="cf-date-sep">— ${dateStr} —</div>`;
-    }
-    const time = d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-    const avatar = msg.userPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.userName||'U')}&background=${isMe?'d4650a':'8b5e3c'}&color=fff`;
-    let contentHTML = '';
-    if(msg.recalled) {
-      if(isAdmin) contentHTML = `<span class="cf-recalled-admin"><span class="cf-recalled-badge">已收回</span> ${esc(msg.text||'')}</span>`;
-      else contentHTML = `<span class="cf-recalled">⚠️ 此訊息已收回</span>`;
-    } else if(msg.imageURL) {
-      contentHTML = `<img src="${msg.imageURL}" class="cf-img-msg" onclick="openLightbox(0,[{url:'${msg.imageURL}',info:''}])">`;
-      if(msg.text) contentHTML += '<br>' + esc(msg.text);
-    } else {
-      contentHTML = esc(msg.text||'');
-    }
-    let actions = '';
-    if(isMe && !msg.recalled) {
-      actions = `<button onclick="cfRecallMsg('${msg.id}')" class="cf-action-btn" title="收回訊息">↩ 收回</button>`;
-    }
-    if(isAdmin && !msg.recalled) {
-      actions += ` <button onclick="cfDeleteMsg('${msg.id}')" class="cf-action-btn" style="background:#fff;border-color:#e74c3c;color:#e74c3c">🗑</button>`;
-    }
-    container.innerHTML += `<div class="cf-row ${isMe?'me':''}" data-msgid="${msg.id}">
-      ${!isMe?`<img src="${avatar}" class="cf-av" onerror="this.src='https://ui-avatars.com/api/?name=U&background=8b5e3c&color=fff'">`:''}
-      <div class="cf-bubble-wrap" style="${isMe?'align-items:flex-end':''}">
-        ${!isMe?`<div class="cf-uname">${esc(msg.userName||'')}</div>`:''}
-        <div class="cf-bubble ${isMe?'me':'other'}">${contentHTML}</div>
-        <div style="display:flex;align-items:center;${isMe?'justify-content:flex-end;':''}gap:6px;padding:0 2px">
-          ${isMe?`${actions}<span class="cf-time" style="padding:0">${time}</span>`:
-                 `<span class="cf-time" style="padding:0">${time}</span>${actions}`}
-        </div>
-      </div>
-      ${isMe?`<img src="${currentUser?.photoURL||avatar}" class="cf-av" onerror="this.src='https://ui-avatars.com/api/?name=U&background=d4650a&color=fff'">`:''}
-    </div>`;
-  });
-  if(!isOpen) { cfUnreadCount++; updateChatBadge(); }
-  if(wasAtBottom || isOpen) container.scrollTop = container.scrollHeight;
-}
-
-function updateCfUserBar() {
-  const bar = document.getElementById('cf-guest-bar');
-  const nameEl = document.getElementById('cf-name-display');
-  const avEl = document.getElementById('cf-my-av');
-  if(currentUser) {
-    if(bar) bar.style.display = 'none';
-    if(avEl) avEl.src = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'U')}&background=d4650a&color=fff`;
-  } else {
-    if(bar) bar.style.display = 'flex';
-    const gn = sessionStorage.getItem('guestName') || '訪客';
-    if(nameEl) nameEl.textContent = '以「' + gn + '」聊天';
-    if(avEl) avEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(gn)}&background=8b5e3c&color=fff`;
-  }
-}
-
-let _chatWired2 = false;
-function wireCfInput() {
-  if(_chatWired2) return;
-  _chatWired2 = true;
-  const input = document.getElementById('cf-input');
-  const sendBtn = document.getElementById('cf-send');
-  const imgInput = document.getElementById('cf-img-input');
-  if(!input || !sendBtn) return;
-  input.addEventListener('keydown', e => {
-    if(e.isComposing) return;
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cfSendMessage(); }
-  });
-  input.addEventListener('input', () => {
-    input.style.height='auto';
-    input.style.height=Math.min(input.scrollHeight,100)+'px';
-  });
-  sendBtn.onclick = cfSendMessage;
-  if(imgInput) {
-    imgInput.onchange = async (e) => {
-      const files = Array.from(e.target.files);
-      if(!files.length) return;
-      for(const file of files) {
-        const btn = document.getElementById('cf-send');
-        if(btn){btn.textContent='⏳';btn.disabled=true;}
-        try {
-          const url = await uploadToCloudinary(file);
-          let userName, userPhoto, uid;
-          if(currentUser) {
-            userName = sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email;
-            userPhoto = currentUser.photoURL||''; uid = currentUser.uid;
-          } else {
-            const gn = sessionStorage.getItem('guestName')||'訪客';
-            userName=gn+' 👋'; userPhoto='';
-            uid = sessionStorage.getItem('guestUid')||'guest_'+Math.random().toString(36).slice(2,8);
-            sessionStorage.setItem('guestUid',uid);
-          }
-          await rtdb.ref('chat').push({uid, userName, userPhoto, text:'', imageURL:url, timestamp:Date.now()});
-        } catch(err) { showToast('圖片上傳失敗','error'); }
-        finally { const btn=document.getElementById('cf-send'); if(btn){btn.textContent='➤';btn.disabled=false;} }
-      }
-      e.target.value='';
-    };
-  }
-}
-
-async function cfSendMessage() {
-  if(_isSendingMsg) return;
-  const input = document.getElementById('cf-input');
-  const text = input?.value.trim();
-  if(!text || !rtdb) return;
-  _isSendingMsg = true;
-  if(input){ input.value=''; input.style.height=''; }
-  let userName, userPhoto, uid;
-  if(currentUser) {
-    userName = sessionStorage.getItem('profileNickname') || currentUser.displayName || currentUser.email;
-    userPhoto = currentUser.photoURL||''; uid = currentUser.uid;
-  } else {
-    let gn = sessionStorage.getItem('guestName');
-    if(!gn) {
-      gn = prompt('請輸入你的暱稱（訪客）：','');
-      if(gn===null){ _isSendingMsg=false; return; }
-      gn = gn.trim().slice(0,20)||'訪客';
-      sessionStorage.setItem('guestName',gn);
-      updateCfUserBar();
-    }
-    userName=gn+' 👋'; userPhoto='';
-    uid=sessionStorage.getItem('guestUid')||'guest_'+Math.random().toString(36).slice(2,8);
-    sessionStorage.setItem('guestUid',uid);
-  }
-  try {
-    await rtdb.ref('chat').push({uid, userName, userPhoto, text, timestamp:Date.now()});
-  } catch(e) { showToast('發送失敗：'+e.message,'error'); }
-  finally { _isSendingMsg=false; }
-}
-
-async function cfRecallMsg(msgId) {
-  if(!rtdb) return;
-  try {
-    await rtdb.ref('chat/'+msgId).update({recalled:true});
-    showToast('訊息已收回','success');
-  } catch(e){ showToast('收回失敗','error'); }
-}
-
-async function cfDeleteMsg(msgId) {
-  if(!isAdmin||!rtdb) return;
-  try { await rtdb.ref('chat/'+msgId).remove(); }
-  catch(e){ showToast('刪除失敗','error'); }
-}
-
-async function cfChangeGuestName() {
-  const newName = prompt('輸入新暱稱：', sessionStorage.getItem('guestName')||'訪客');
-  if(!newName) return;
-  sessionStorage.setItem('guestName', newName.trim().slice(0,20)||'訪客');
-  updateCfUserBar();
-}
-
-async function clearAllChat() {
-  if(!isAdmin||!rtdb) return;
-  if(!confirm('確定清空所有聊天記錄？')) return;
-  try{ await rtdb.ref('chat').remove(); showToast('聊天已清空','success'); }
-  catch(e){ showToast('清空失敗','error'); }
-}
-
-function openLoginModal() {
-  // Show login screen  
-  document.getElementById('login-screen').style.display='flex';
-}
-
-</script>
 
 </body>
 </html>
