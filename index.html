@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦘</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>🦘 澳洲冒險：AI教室實驗室</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -756,9 +757,13 @@ textarea.diary-input:focus{border-color:var(--primary)}
         <div class="page-header">
           <h2>👤 <span data-i18n="page-profile">個人檔案</span></h2>
         </div>
-        <div class="profile-layout">
+        <div class="profile-layout" id="profile-layout-wrap">
           <div class="card">
             <div class="card-body">
+              <div id="profile-load-notice" style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;display:none">
+                <div class="loading-spinner" style="margin:0 auto 8px"></div>載入中...
+              </div>
+              <div id="profile-form-content">
               <div class="profile-avatar-section">
                 <div class="profile-avatar-wrap" onclick="document.getElementById('avatar-file-input').click()">
                   <img id="profile-avatar-big" src="https://ui-avatars.com/api/?name=U&background=d4650a&color=fff" alt="">
@@ -780,6 +785,7 @@ textarea.diary-input:focus{border-color:var(--primary)}
                 <input class="input-field" id="profile-email" disabled style="width:100%;opacity:.6">
               </div>
               <button class="btn btn-primary" onclick="saveProfile()" style="width:100%">💾 <span data-i18n="save-profile">儲存個人資料</span></button>
+              </div><!-- /profile-form-content -->
             </div>
           </div>
         </div>
@@ -804,14 +810,14 @@ textarea.diary-input:focus{border-color:var(--primary)}
                 <input class="input-field" id="add-member-name" placeholder="顯示名稱" style="max-width:140px">
                 <button class="btn btn-primary btn-sm" onclick="addMember()">＋</button>
               </div>
-              <div class="member-list" id="member-list"><div class="loading-spinner"></div></div>
+              <div class="member-list" id="member-list"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">🔄 載入成員中...</div></div>
             </div>
           </div>
           <!-- Stats -->
           <div class="card">
             <div class="card-header"><span style="font-weight:800">📊 活動統計</span></div>
             <div class="card-body" id="admin-stats">
-              <div class="loading-spinner"></div>
+              <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">🔄 統計載入中...</div>
             </div>
           </div>
         </div>
@@ -1289,10 +1295,16 @@ function navigate(page) {
   if(page === 'gallery') { populateGalleryFilters(); renderGallery(); }
   if(page === 'write') loadWriteForm();
   if(page === 'profile') {
-    if(!currentUser) { openLoginModal(); navigate('home'); return; }
-    loadProfileForm();
+    if(!currentUser) {
+      // Show login modal but still show the page structure
+      setTimeout(() => openLoginModal(), 100);
+      navigate('home');
+      return;
+    }
+    // Show page immediately, load data async
+    setTimeout(() => loadProfileForm(), 50);
   }
-  if(page === 'admin' && isAdmin) loadAdminPanel();
+  if(page === 'admin' && isAdmin) setTimeout(() => loadAdminPanel(), 50);
   
   // Close mobile sidebar
   const sb = document.getElementById('sidebar');
@@ -2453,16 +2465,28 @@ async function loadProfileForm() {
   if(!currentUser) return;
   const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
   const setSrc = (id, src) => { const el = document.getElementById(id); if(el) el.src = src; };
+  
+  // Show email immediately from auth (no DB needed)
+  setVal('profile-email', currentUser.email);
+  const photo = currentUser.photoURL || 
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'U')}&background=d4650a&color=fff`;
+  setSrc('profile-avatar-big', photo);
+  setVal('profile-nickname', currentUser.displayName || '');
+  
+  // Then try to load saved profile from DB
+  if(!db) return;
   try {
     const snap = await db.collection('profiles').doc(currentUser.uid).get();
     if(snap.exists) {
       const d = snap.data();
-      setVal('profile-nickname', d.nickname || '');
-      setVal('profile-bio', d.bio || '');
+      if(d.nickname) setVal('profile-nickname', d.nickname);
+      if(d.bio) setVal('profile-bio', d.bio);
       if(d.photoURL) setSrc('profile-avatar-big', d.photoURL);
     }
-    setVal('profile-email', currentUser.email);
-  } catch(e) { console.warn('Profile load:', e.message); }
+  } catch(e) { 
+    console.warn('Profile DB load:', e.message);
+    // Form still shows with auth data
+  }
 }
 
 async function saveProfile() {
