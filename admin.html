@@ -493,18 +493,20 @@ async function loadMembers() {
 
   const isMem   = p => !!(memberMap[p.uid] || memberMap[(p.email||'').toLowerCase()]);
   const isAdm   = p => p.email === ADMIN;
-  const members = profiles.filter(p => !isAdm(p) && isMem(p));
-  const admins  = profiles.filter(p => isAdm(p));
-  const guests  = profiles.filter(p => !isAdm(p) && !isMem(p));
+  // ALL members (including admin if they joined)
+  const allMembers = profiles.filter(p => isMem(p));  // includes admin if in members list
+  const members    = profiles.filter(p => !isAdm(p) && isMem(p));
+  const admins     = profiles.filter(p => isAdm(p));
+  const guests     = profiles.filter(p => !isAdm(p) && !isMem(p));
 
   // Update counters
   const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
-  setEl('mem-cnt',   `${members.length}/16`);
+  setEl('mem-cnt',   `${allMembers.length}/16`);
   setEl('admin-cnt', admins.length);
-  setEl('member-badge', `${members.length} / 16`);
+  setEl('member-badge', `${allMembers.length} / 16`);
   setEl('admin-badge',  `${admins.length} 位`);
   const mb = document.getElementById('member-count-badge');
-  if(mb) mb.textContent = members.length + ' 位成員';
+  if(mb) mb.textContent = allMembers.length + ' 位成員';
 
   // ── ALL USERS LIST ──
   const allEl = document.getElementById('all-users-list');
@@ -517,8 +519,8 @@ async function loadMembers() {
   // ── MEMBERS LIST ──
   const memEl = document.getElementById('member-list');
   if(memEl) {
-    if(!members.length) memEl.innerHTML = '<div class="loading-msg">尚無成員，到「所有登入者」分頁新增</div>';
-    else memEl.innerHTML = members.map(p => memberDetailRow(p, memberMap)).join('');
+    if(!allMembers.length) memEl.innerHTML = '<div class="loading-msg">尚無成員，到「所有登入者」分頁新增</div>';
+    else memEl.innerHTML = allMembers.map(p => memberDetailRow(p, isAdm(p), memberMap)).join('');
   }
 
   // ── ADMIN LIST ──
@@ -582,20 +584,24 @@ function userRow(p, isAdmin, isMember, memberMap) {
   </div>`;
 }
 
-function memberDetailRow(p, memberMap) {
+function memberDetailRow(p, isAdminUser, memberMap) {
   const memData = memberMap[p.uid] || memberMap[(p.email||'').toLowerCase()] || {};
   const name = p.nickname || p.displayName || p.email || p.uid.slice(0,8);
   const realName = memData.realName || '';
   const photo = p.photoURL;
+  const avatarBorder = isAdminUser ? '#f5a623' : '#d4650a';
   const avatarHTML = photo
-    ? `<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #d4650a">`
-    : `<div class="member-avatar">${name.slice(0,2).toUpperCase()}</div>`;
+    ? `<img src="${photo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${avatarBorder}">`
+    : `<div class="member-avatar" style="background:${avatarBorder}">${name.slice(0,2).toUpperCase()}</div>`;
+  const badge = isAdminUser
+    ? `<span style="background:#f5a623;color:#1a0f05;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px;margin-left:4px">👑 管理員成員</span>`
+    : `<span style="background:#d4650a;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px;margin-left:4px">✅ 成員</span>`;
 
   return `<div class="member-item" style="flex-wrap:wrap;align-items:flex-start;gap:12px" id="mem-row-${p.uid}">
     <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
       ${avatarHTML}
       <div class="member-info">
-        <div class="member-name">${esc(name)} <span style="background:#d4650a;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:1px 8px">✅ 成員</span></div>
+        <div class="member-name">${esc(name)}${badge}</div>
         <div class="member-email">${esc(p.email||'')}</div>
       </div>
     </div>
@@ -607,7 +613,7 @@ function memberDetailRow(p, memberMap) {
         style="width:150px;padding:6px 10px;border:1.5px solid #f5edd8;border-radius:8px;font-size:13px;font-family:'Nunito',sans-serif;outline:none"
         onfocus="this.style.borderColor='#d4650a'" onblur="this.style.borderColor='#f5edd8'">
       <button class="btn btn-sec btn-sm" onclick="saveMemberInfo('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">💾 儲存</button>
-      <button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">移除</button>
+      <button class="btn btn-red btn-sm" onclick="removeMemberByUID('${p.uid}','${(p.email||'').replace(/'/g,"\'")}')">退出成員</button>
     </div>
   </div>`;
 }
