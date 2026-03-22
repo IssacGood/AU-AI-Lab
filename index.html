@@ -825,19 +825,13 @@ textarea.diary-input:focus{border-color:var(--primary)}
       </div>
 
       <!-- ====== CHAT ====== -->
-      <div class="page" id="page-chat">
-        <div class="chat-layout">
-          <div class="chat-header">
-            <span style="font-size:22px">💬</span>
-            <div>
-              <div style="font-weight:800;font-size:16px" data-i18n="chat-title">即時聊天室</div>
-              <div style="font-size:12px;opacity:.75" data-i18n="chat-sub">與我們即時互動</div>
-            </div>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-              <div class="chat-live-dot"></div>
-              <span style="font-size:12px;opacity:.75">LIVE</span>
-            </div>
-          </div>
+          <div class="page" id="page-chat">
+        <div style="text-align:center;padding:60px 24px">
+          <div style="font-size:64px;margin-bottom:16px">💬</div>
+          <h3 style="font-family:'Playfair Display',serif;color:var(--brown);margin-bottom:12px">即時聊天室</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px">點擊右下角的聊天按鈕開啟聊天視窗</p>
+          <button class="btn btn-primary" onclick="chatToggle()">💬 開啟聊天室</button>
+        </div>
       </div>
 
       <!-- ====== PROFILE ====== -->
