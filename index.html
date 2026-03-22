@@ -1855,9 +1855,21 @@ function removePhoto(idx) {
 
 async function submitDiary() {
   if(!currentUser) { showToast("請先登入", "error"); return; }
+  // Re-verify membership in real-time (in case user just got added)
   if(!isMember) {
-    showToast("你尚未被加入成員名單，請聯絡管理員", "error");
-    return;
+    // Do a live check before giving up
+    try {
+      const freshSnap = await db.collection('members').doc(currentUser.uid).get();
+      if(freshSnap.exists) { isMember = true; }
+      else {
+        const emailSnap = await db.collection('members').where('email','==',currentUser.email).get();
+        if(!emailSnap.empty) { isMember = true; }
+      }
+    } catch(e) {}
+    if(!isMember) {
+      showToast("你尚未被加入成員名單，請聯絡管理員 (admin.html)", "error");
+      return;
+    }
   }
   const date = document.getElementById('write-date-select')?.value;
   const content = document.getElementById('diary-text').value.trim();
@@ -1906,6 +1918,16 @@ async function submitDiary() {
     
   } catch(e) {
     showToast("儲存失敗: " + e.message, "error");
+    console.error('submitDiary error:', e);
+    // Show persistent error in button area
+    const btnWrap = btn?.parentElement;
+    if(btnWrap) {
+      const errDiv = document.createElement('div');
+      errDiv.style.cssText = 'color:#e74c3c;font-size:13px;font-weight:700;margin-top:8px;text-align:right';
+      errDiv.textContent = '❌ ' + e.message;
+      btnWrap.appendChild(errDiv);
+      setTimeout(() => errDiv.remove(), 8000);
+    }
   } finally {
     btn.textContent = '💾 儲存日記';
     btn.disabled = false;
@@ -2757,11 +2779,14 @@ function renderProfilePage() {
           <!-- Avatar -->
           <div style="text-align:center;margin-bottom:28px">
             <label style="cursor:pointer;display:inline-block">
-              <img id="prof-av" src="${photo}"
-                style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block;margin:0 auto">
-              <div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點擊更換頭像</div>
-              <input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)">
-            </label>
+              <div style="position:relative;display:inline-block">
+                <img id="prof-av" src="${photo}"
+                  style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #d4650a;display:block">
+                <label for="prof-av-input" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;background:#d4650a;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:13px" title="更換頭像">📷</label>
+                <input type="file" id="prof-av-input" accept="image/*" style="display:none" onchange="profUploadAvatar(this)">
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:#7a5c46;font-weight:600">點 📷 更換頭像</div>
+            </div>
           </div>
 
           <!-- Nickname -->
