@@ -1498,16 +1498,19 @@ function renderSchedule() {
 }
 
 async function loadScheduleEntryCounts() {
+  if(!db) return;
   try {
     const snap = await db.collection('diaries').get();
     snap.forEach(dateDoc => {
-      const el = document.getElementById(`sched-count-${dateDoc.id}`);
-      if(el) {
-        const count = Object.keys(dateDoc.data()).length;
-        if(count > 0) el.innerHTML = `📝 ${count} 篇日記`;
-      }
+      db.collection('diaries').doc(dateDoc.id).collection('entries').get()
+        .then(entriesSnap => {
+          const el = document.getElementById('sched-count-' + dateDoc.id);
+          if(el && entriesSnap.size > 0) {
+            el.innerHTML = '📝 ' + entriesSnap.size + ' 篇日記';
+          }
+        }).catch(() => {});
     });
-  } catch(e) {}
+  } catch(e) { console.warn('Entry counts:', e.message); }
 }
 
 function handleSchedClick(date) {
@@ -1524,21 +1527,21 @@ async function loadAllDiaries() {
   allDiaries = [];
   if(!db) return allDiaries;
   try {
-    const datesSnap = await db.collection('diaries').get();
-    const promises = [];
-    datesSnap.forEach(dateDoc => {
-      const dateStr = dateDoc.id;
-      promises.push(
-        db.collection('diaries').doc(dateStr).collection('entries').get()
-          .then(entriesSnap => {
-            entriesSnap.forEach(entDoc => {
-              allDiaries.push({id: entDoc.id, date: dateStr, ...entDoc.data()});
-            });
-          }).catch(e => console.warn('Diary load error:', dateStr, e.message))
-      );
-    });
+    // Query each of the 16 schedule dates directly
+    // This bypasses the Ghost Document problem entirely
+    const promises = SCHEDULE.map(s =>
+      db.collection('diaries').doc(s.date).collection('entries').get()
+        .then(entriesSnap => {
+          entriesSnap.forEach(entDoc => {
+            allDiaries.push({id: entDoc.id, date: s.date, ...entDoc.data()});
+          });
+        })
+        .catch(() => {})
+    );
     await Promise.all(promises);
-  } catch(e) { console.warn('loadAllDiaries:', e.message); }
+  } catch(e) {
+    console.warn('loadAllDiaries:', e.message);
+  }
   return allDiaries;
 }
 
@@ -1907,6 +1910,12 @@ async function submitDiary() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     
+    // CRITICAL: Create parent doc first (prevents Ghost Document trap)
+    await db.collection('diaries').doc(date).set({
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+      hasEntries: true
+    }, { merge: true });
+
     await db.collection('diaries').doc(date).collection('entries').doc(currentUser.uid).set(entryData, {merge:true});
     
     showToast("日記已儲存 🎉", "success");
