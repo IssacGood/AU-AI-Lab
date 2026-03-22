@@ -1504,8 +1504,12 @@ async function populateDiaryFilters() {
   const filterEl = document.getElementById('diary-filter');
   
   if(currentView === 'date') {
-    filterEl.innerHTML = '<option value="">所有日期</option>' + 
-      SCHEDULE.map(s => `<option value="${s.date}">Day ${s.day} - ${s.date.slice(5)}</option>`).join('');
+    filterEl.innerHTML = '<option value="">所有日期</option>' +
+      SCHEDULE.map(s => {
+        const d = new Date(s.date);
+        const wd = ['日','一','二','三','四','五','六'][d.getDay()];
+        return `<option value="${s.date}">Day ${s.day} · ${s.date.slice(5)}（${wd}）</option>`;
+      }).join('');
   } else if(currentView === 'person') {
     const people = [...new Set(allDiaries.map(d => d.uid))];
     const profMap = await loadProfiles(people);
@@ -1732,7 +1736,14 @@ function loadWriteForm() {
   // Populate date select
   const sel = document.getElementById('write-date-select');
   const today = new Date().toISOString().split('T')[0];
-  sel.innerHTML = SCHEDULE.map(s => `<option value="${s.date}" ${s.date===today?'selected':''}>${s.date} - Day ${s.day}</option>`).join('');
+  sel.innerHTML = SCHEDULE.map(s => {
+    const d = new Date(s.date);
+    const wdZh = ['日','一','二','三','四','五','六'][d.getDay()];
+    const wdEn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    const wd = currentLang === 'en' ? wdEn : wdZh;
+    const label = `${s.date}（${wd}）- Day ${s.day}`;
+    return `<option value="${s.date}" ${s.date===today?'selected':''}>${label}</option>`;
+  }).join('');
   
   updateWriteDate();
   loadExistingEntry(sel.value);
@@ -1916,7 +1927,12 @@ async function populateGalleryFilters() {
   if(!dateEl || !personEl) return;
   
   const dates = [...new Set(allDiaries.map(d=>d.date))].sort();
-  dateEl.innerHTML = '<option value="">所有日期</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  dateEl.innerHTML = '<option value="">所有日期</option>' + dates.map(d => {
+    const sched = SCHEDULE.find(s=>s.date===d);
+    const wd = ['日','一','二','三','四','五','六'][new Date(d).getDay()];
+    const label = sched ? `Day ${sched.day} · ${d.slice(5)}（${wd}）` : `${d}（${wd}）`;
+    return `<option value="${d}">${label}</option>`;
+  }).join('');
   
   const people = [...new Set(allDiaries.map(d=>d.uid))];
   personEl.innerHTML = '<option value="">所有成員</option>' + people.map(uid=>`<option value="${uid}">${profMap[uid]?.nickname||uid.slice(0,8)}</option>`).join('');
