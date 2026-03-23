@@ -1909,10 +1909,11 @@ async function saveEditDiary(){
 // ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   _wireLightbox();
-  wireCfInput();
+  // wireCfInput is in chat.js — called via window after chat.js loads
 });
 
 </script>
 
+<script src="chat.js"></script>
 </body>
 </html>
