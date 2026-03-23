@@ -353,6 +353,7 @@ window.cfDeleteMsg        = cfDeleteMsg;
 window.cfChangeGuestName  = cfChangeGuestName;
 window.clearAllChat       = clearAllChat;
 window.initChat           = initChat;
+window.wireCfInput        = wireCfInput;
 window.updateCfUserBar    = updateCfUserBar;
 window.updateChatBadge    = updateChatBadge;
 
