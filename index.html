@@ -1596,6 +1596,7 @@ function openLightbox(idx,photos,useGallery){
   _lbReset();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow='hidden';
+  _lbUpdate(false);  // must come AFTER classList.add so img is visible
 }
 
 function _lbReset(){
