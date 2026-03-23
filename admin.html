@@ -132,6 +132,26 @@ body{font-family:'Nunito',sans-serif;background:#f0ede8;color:#2c1810;min-height
 .stab-active{background:var(--pri);border-color:var(--pri);color:#fff}
 .stab-active:hover{background:var(--pri-dark)}
 
+
+/* ── Lightbox ── */
+#lb-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.93);display:none;align-items:center;justify-content:center;overflow:hidden}
+#lb-overlay.open{display:flex}
+#lb-overlay img{max-width:92vw;max-height:85vh;object-fit:contain;border-radius:8px;box-shadow:0 0 80px rgba(0,0,0,.5);cursor:grab;transform-origin:center;transition:opacity .12s}
+#lb-overlay img.drag{cursor:grabbing;transition:none}
+#lb-btn-close{position:fixed;top:14px;right:18px;background:rgba(255,255,255,.15);border:none;color:#fff;width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:20px;z-index:10000}
+#lb-btn-close:hover{background:rgba(255,255,255,.3)}
+.lb-arrow{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;width:48px;height:48px;border-radius:50%;cursor:pointer;font-size:24px;z-index:10000}
+.lb-arrow:hover{background:rgba(255,255,255,.3)}
+#lb-prev{left:12px}
+#lb-next{right:12px}
+#lb-zoom-ctrl{position:fixed;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10000}
+#lb-zoom-ctrl button{background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border:none;color:#fff;height:36px;border-radius:20px;cursor:pointer;font-weight:700;font-size:14px;padding:0 14px}
+#lb-zoom-ctrl button:hover{background:rgba(255,255,255,.25)}
+#lb-caption{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:600;backdrop-filter:blur(6px);white-space:nowrap;max-width:80vw;overflow:hidden;text-overflow:ellipsis}
+/* ── Thumbnail grid for diary photos ── */
+.photo-thumbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.photo-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;cursor:pointer;transition:transform .15s,box-shadow .15s;border:2px solid transparent}
+.photo-thumb:hover{transform:scale(1.08);box-shadow:0 4px 12px rgba(0,0,0,.3);border-color:var(--pri)}
 </style>
 </head>
 <body>
@@ -202,6 +222,7 @@ body{font-family:'Nunito',sans-serif;background:#f0ede8;color:#2c1810;min-height
       <div class="tab" onclick="switchTab('chat')">💬 聊天</div>
       <div class="tab" onclick="switchTab('diary')">📓 日記</div>
       <div class="tab" onclick="switchTab('flights')">✈️ 航班</div>
+      <div class="tab" onclick="switchTab('photos')">🖼️ 照片管理</div>
     </div>
 
     <!-- ===== MEMBERS TAB ===== -->
@@ -322,6 +343,29 @@ body{font-family:'Nunito',sans-serif;background:#f0ede8;color:#2c1810;min-height
       </div>
     </div>
 
+
+    <!-- ===== PHOTOS TAB ===== -->
+    <div class="section" id="tab-photos">
+      <div class="card">
+        <div class="card-hdr">
+          <h3>🖼️ 照片管理</h3>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="photo-filter-date" class="input" style="width:160px;padding:6px 10px">
+              <option value="">所有日期</option>
+            </select>
+            <select id="photo-filter-person" class="input" style="width:160px;padding:6px 10px">
+              <option value="">所有成員</option>
+            </select>
+            <button class="btn btn-sec btn-sm" onclick="loadPhotos()">🔄 重整</button>
+            <span id="photo-count-badge" style="background:rgba(212,101,10,.1);color:#a84d08;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:800">0 張</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="photo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px"></div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 </div><!-- /app -->
 
@@ -424,6 +468,7 @@ function switchTab(name) {
   if(name === 'diary') loadDiaries();
   if(name === 'flights') loadFlights();
   if(name === 'members') loadMembers();
+  if(name === 'photos') loadPhotos();
 }
 
 // ── STATS ──
@@ -782,27 +827,34 @@ async function loadDiaries() {
     el.innerHTML = all.map(e => {
       const name = profMap[e.uid]?.nickname || profMap[e.uid]?.displayName || e.uid.slice(0,8);
       const sched = SCHEDULE.find(s=>s.date===e.date);
-      const photos = (e.photos||[]).length;
-      const preview = (e.content||'').slice(0,80) + ((e.content||'').length>80?'...':'');
-      return `<div class="diary-item">
-        <div class="diary-tag">${sched?'Day '+sched.day:e.date}</div>
-        <div style="flex:1;min-width:0">
+      const photoList = e.photos || [];
+      const preview = (e.content||'').slice(0,100) + ((e.content||'').length>100?'...':'');
+      const thumbsHTML = photoList.slice(0,6).map((url,i) =>
+        `<img class="photo-thumb" src="${url}" title="點擊放大" onclick="event.stopPropagation();lbOpen(${JSON.stringify(photoList)},${i},'${esc(name)} · ${e.date}')">`
+      ).join('') + (photoList.length>6?`<div style="font-size:11px;color:var(--muted);align-self:center">+${photoList.length-6}</div>`:'');
+      return `<div class="diary-item" style="flex-direction:column;align-items:flex-start;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <div class="diary-tag">${sched?'Day '+sched.day:e.date}</div>
           <span style="font-weight:700;font-size:13px">${esc(name)}</span>
-          <span style="color:var(--muted);font-size:11px;margin-left:8px">${e.date}</span>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(preview)||'（無文字）'}</div>
-          <div style="font-size:11px;color:var(--pri);margin-top:2px">${photos} 張照片 · ${(e.comments||[]).length} 留言 · ${Object.keys(e.likes||{}).length} 讚</div>
+          <span style="color:var(--muted);font-size:11px">${e.date}</span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <span style="font-size:11px;color:var(--pri);font-weight:700">${photoList.length}張</span>
+            <button class="btn btn-red btn-sm" onclick="deleteDiary('${e.date}','${e.uid}',this.closest('.diary-item'))">刪除</button>
+          </div>
         </div>
-        <button class="btn btn-red btn-sm" onclick="deleteDiary('${e.date}','${e.uid}',this)">刪除</button>
+        ${preview ? `<div style="font-size:13px;color:var(--text);padding:0 2px">${esc(preview)}</div>` : ''}
+        ${photoList.length ? `<div class="photo-thumbs">${thumbsHTML}</div>` : ''}
+        <div style="font-size:11px;color:var(--muted)">${(e.comments||[]).length} 留言 · ${Object.keys(e.likes||{}).length} 讚</div>
       </div>`;
     }).join('');
   } catch(e) { el.innerHTML = `<div class="loading-msg" style="color:#e74c3c">⚠️ ${e.message}</div>`; }
 }
 
-async function deleteDiary(date, uid, btn) {
+async function deleteDiary(date, uid, el) {
   if(!confirm('確定刪除這篇日記？')) return;
   try {
     await db.collection('diaries').doc(date).collection('entries').doc(uid).delete();
-    btn?.closest('.diary-item')?.remove();
+    el?.remove();
     toast('已刪除日記', 'success');
     loadStats();
   } catch(e) { toast('失敗: ' + e.message, 'error'); }
@@ -834,5 +886,142 @@ async function saveFlights() {
   } catch(e) { toast('失敗: ' + e.message, 'error'); }
 }
 </script>
+
+<!-- ── LIGHTBOX ── -->
+<div id="lb-overlay" onclick="if(event.target===this)lbClose()">
+  <button id="lb-btn-close" onclick="lbClose()">×</button>
+  <button class="lb-arrow" id="lb-prev" onclick="lbNav(-1)">‹</button>
+  <img id="lb-img" src="" alt="">
+  <button class="lb-arrow" id="lb-next" onclick="lbNav(1)">›</button>
+  <div id="lb-zoom-ctrl">
+    <button onclick="lbZoomIn()">＋</button>
+    <button onclick="lbZoomReset()" id="lb-pct">100%</button>
+    <button onclick="lbZoomOut()">－</button>
+  </div>
+  <div id="lb-caption"></div>
+</div>
+
+
+<script>
+// ── LIGHTBOX ──
+var _lbImgs=[], _lbIdx=0, _lbZoom=1, _lbPanX=0, _lbPanY=0;
+var _lbDrag=false, _lbDX=0, _lbDY=0, _lbDPX=0, _lbDPY=0;
+
+function lbOpen(urls, idx, caption) {
+  _lbImgs = Array.isArray(urls) ? urls : [urls];
+  _lbIdx  = Math.max(0, Math.min(idx||0, _lbImgs.length-1));
+  _lbZoom=1; _lbPanX=0; _lbPanY=0;
+  document.getElementById('lb-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  _lbShow(false);
+  var cap=document.getElementById('lb-caption'); if(cap) cap.textContent=caption||'';
+  document.getElementById('lb-prev').style.display=_lbImgs.length>1?'':'none';
+  document.getElementById('lb-next').style.display=_lbImgs.length>1?'':'none';
+}
+function lbClose() {
+  document.getElementById('lb-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  _lbZoom=1; _lbPanX=0; _lbPanY=0;
+}
+function lbNav(dir) {
+  if(_lbZoom>1){_lbZoom=1;_lbPanX=0;_lbPanY=0;_lbApply();return;}
+  _lbIdx=(_lbIdx+dir+_lbImgs.length)%_lbImgs.length; _lbShow(true);
+}
+function _lbShow(anim) {
+  var img=document.getElementById('lb-img'); if(!img)return;
+  _lbZoom=1;_lbPanX=0;_lbPanY=0;_lbApply();
+  if(anim){img.style.opacity='0';setTimeout(function(){img.src=_lbImgs[_lbIdx];img.style.opacity='1';},130);}
+  else img.src=_lbImgs[_lbIdx];
+}
+function _lbApply() {
+  var img=document.getElementById('lb-img'); if(!img)return;
+  img.style.transform='translate('+_lbPanX+'px,'+_lbPanY+'px) scale('+_lbZoom+')';
+  var pct=document.getElementById('lb-pct'); if(pct) pct.textContent=Math.round(_lbZoom*100)+'%';
+}
+function lbZoomIn() { _lbZoom=Math.min(_lbZoom*1.5,8); _lbApply(); }
+function lbZoomOut(){ _lbZoom=Math.max(_lbZoom/1.5,1); if(_lbZoom===1){_lbPanX=0;_lbPanY=0;} _lbApply(); }
+function lbZoomReset(){ _lbZoom=1;_lbPanX=0;_lbPanY=0;_lbApply(); }
+
+document.addEventListener('DOMContentLoaded', function(){
+  var img=document.getElementById('lb-img');
+  var ov=document.getElementById('lb-overlay');
+  if(!img||!ov) return;
+  img.addEventListener('dblclick',function(e){e.stopPropagation();_lbZoom=_lbZoom>1?1:2.5;if(_lbZoom===1){_lbPanX=0;_lbPanY=0;}_lbApply();});
+  ov.addEventListener('wheel',function(e){e.preventDefault();var d=e.deltaY<0?1.15:1/1.15;_lbZoom=Math.max(1,Math.min(8,_lbZoom*d));if(_lbZoom===1){_lbPanX=0;_lbPanY=0;}_lbApply();},{passive:false});
+  img.addEventListener('mousedown',function(e){if(_lbZoom<=1)return;e.preventDefault();_lbDrag=true;_lbDX=e.clientX;_lbDY=e.clientY;_lbDPX=_lbPanX;_lbDPY=_lbPanY;img.classList.add('drag');});
+  window.addEventListener('mousemove',function(e){if(!_lbDrag)return;_lbPanX=_lbDPX+(e.clientX-_lbDX);_lbPanY=_lbDPY+(e.clientY-_lbDY);_lbApply();});
+  window.addEventListener('mouseup',function(){if(_lbDrag){_lbDrag=false;img.classList.remove('drag');}});
+  document.addEventListener('keydown',function(e){
+    if(!ov.classList.contains('open'))return;
+    if(e.key==='Escape')lbClose();
+    else if(e.key==='ArrowLeft')lbNav(-1);
+    else if(e.key==='ArrowRight')lbNav(1);
+    else if(e.key==='+'||e.key==='=')lbZoomIn();
+    else if(e.key==='-')lbZoomOut();
+    else if(e.key==='0')lbZoomReset();
+  });
+});
+
+// ── PHOTOS TAB ──
+async function loadPhotos() {
+  const grid=document.getElementById('photo-grid');
+  const badge=document.getElementById('photo-count-badge');
+  const fdSel=document.getElementById('photo-filter-date');
+  const fpSel=document.getElementById('photo-filter-person');
+  if(!grid) return;
+  grid.innerHTML='<div class="loading-msg"><div class="spinner"></div>載入照片...</div>';
+  try {
+    let allEntries=[];
+    const dates=await db.collection('diaries').get();
+    await Promise.all(dates.docs.map(d=>
+      db.collection('diaries').doc(d.id).collection('entries').get()
+        .then(es=>es.forEach(e=>allEntries.push({date:d.id,...e.data(),uid:e.id})))
+        .catch(()=>{})
+    ));
+    const uids=[...new Set(allEntries.map(e=>e.uid))];
+    const profMap={};
+    await Promise.all(uids.map(uid=>db.collection('profiles').doc(uid).get().then(s=>{if(s.exists)profMap[uid]=s.data();}).catch(()=>{})));
+
+    // Populate filters once
+    if(fdSel&&fdSel.options.length<=1){
+      [...new Set(allEntries.map(e=>e.date))].sort().forEach(d=>{var o=new Option(d,d);fdSel.appendChild(o);});
+    }
+    if(fpSel&&fpSel.options.length<=1){
+      uids.forEach(uid=>{var o=new Option(profMap[uid]?.nickname||profMap[uid]?.displayName||uid.slice(0,8),uid);fpSel.appendChild(o);});
+    }
+
+    const curDate=fdSel?.value||'', curPerson=fpSel?.value||'';
+    let allPhotos=[];
+    allEntries.forEach(e=>{
+      if(curDate&&e.date!==curDate) return;
+      if(curPerson&&e.uid!==curPerson) return;
+      const name=profMap[e.uid]?.nickname||profMap[e.uid]?.displayName||e.uid.slice(0,8);
+      (e.photos||[]).forEach((url,i)=>allPhotos.push({url,date:e.date,uid:e.uid,name,allUrls:e.photos,idx:i}));
+    });
+
+    if(badge) badge.textContent=allPhotos.length+' 張';
+    if(!allPhotos.length){grid.innerHTML='<div class="loading-msg">無照片</div>';return;}
+
+    grid.innerHTML='';
+    allPhotos.forEach(function(p){
+      const div=document.createElement('div');
+      div.style.cssText='position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;background:#f0ede8;cursor:pointer;';
+      div.onclick=()=>lbOpen(p.allUrls,p.idx,p.name+' · '+p.date);
+      const img=document.createElement('img');
+      img.src=p.url; img.loading='lazy';
+      img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s';
+      img.onerror=()=>div.style.display='none';
+      const ov=document.createElement('div');
+      ov.style.cssText='position:absolute;bottom:0;left:0;right:0;padding:5px 7px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10px;font-weight:700;opacity:0;transition:opacity .2s';
+      ov.textContent=p.name+' · '+p.date.slice(5);
+      div.appendChild(img); div.appendChild(ov);
+      div.addEventListener('mouseover',()=>{img.style.transform='scale(1.06)';ov.style.opacity='1';});
+      div.addEventListener('mouseout', ()=>{img.style.transform='';ov.style.opacity='0';});
+      grid.appendChild(div);
+    });
+  } catch(e){grid.innerHTML='<div class="loading-msg" style="color:red">⚠️ '+e.message+'</div>';}
+}
+</script>
+
 </body>
 </html>
