@@ -495,10 +495,16 @@ async function loadStats() {
         });
       }).catch(()=>{})
     ));
-    const mems = await db.collection('members').get().catch(()=>({size:0}));
+    const mems = await db.collection('members').get().catch(()=>({docs:[]}));
     const chat = await rtdb.ref('chat').once('value');
-    
-    document.getElementById('s-members').textContent  = mems.size || 0;
+    // Count unique member UIDs (deduplicate email-based and uid-based docs)
+    const memUids = new Set();
+    mems.docs.forEach(d => {
+      const data = d.data();
+      if(data.uid) memUids.add(data.uid);
+      else if(d.id && d.id.length > 10 && !d.id.includes('@')) memUids.add(d.id);
+    });
+    document.getElementById('s-members').textContent  = memUids.size || 0;
     document.getElementById('s-entries').textContent  = entries;
     document.getElementById('s-photos').textContent   = photos;
     document.getElementById('s-chat').textContent     = chat.numChildren();
